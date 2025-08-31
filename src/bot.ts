@@ -45,7 +45,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleAntibotRooms(readyClient);
 	void handleMediaForum(readyClient);
 	// TODO: Not implemented yet? void handleMessageLogging(readyClient);
-    void handleAchievements(readClient);
+    void handleAchievements(readyClient);
 	void handleSendingEmbedMessages(readyClient);
 	void handleNewsEmbeds(readyClient);
 	void handleStreamingNotifications(readyClient);

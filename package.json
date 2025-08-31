@@ -1,0 +1,29 @@
+{
+	"name": "allcom-bot",
+	"version": "1.0.0",
+	"description": "Allcom Discord bot with modular architecture",
+	"private": true,
+	"type": "module",
+	"main": "src/bot.ts",
+	"scripts": {
+		"dev": "bun --watch src/bot.ts",
+		"test": "bun test",
+		"test:watch": "bun test --watch"
+	},
+	"dependencies": {
+		"@orpc/client": "^1.8.5",
+		"discord.js": "dev",
+		"dotenv": "^17.2.1",
+		"execa": "^9.6.0",
+		"glob": "^11.0.3"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.2",
+		"@types/bun": "^1.2.21",
+		"@types/node": "^24.3.0",
+		"@typescript/native-preview": "latest"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

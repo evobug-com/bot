@@ -97,7 +97,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		// Format leaderboard fields
 		const fields = await Promise.all(
 			topUsers.map(async ({ user, metricValue }, index) => {
-				const medal = index <= 3 ? ["🥇", "🥈", "🥉"][index] : `#${index + 1}`;
+				const medal = index <= 2 ? ["🥇", "🥈", "🥉"][index] : `#${index + 1}`;
 
 				// Determine display name
 				let displayName: string;

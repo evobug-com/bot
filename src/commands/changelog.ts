@@ -13,7 +13,7 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 			components: [
 				new ContainerBuilder().addTextDisplayComponents((b) =>
 					b.setContent(`# Allcom Bot v2
-Ahoj! Už je to zhruba **5 měsíců**, co pracuji na nové verzi bota. Během té doby jsem ho několikrát kompletně předělal, protože jsem nebyl spokojený s výsledky. Cílem je vytvořit něco **originálního** a **komplexního**. Většina z vás tu vidí jen jednoho dalšího uživatele „Allcom“, který zdánlivě nic nedělá a občas ho někdo použije k příkazům \` /daily\` nebo \` /work\`. Ve skutečnosti je to **mnohem víc**. Proto vznikl tenhle **changelog**, kde popíšu změny a co plánuju dál.
+Ahoj! Už je to zhruba **5 měsíců**, co pracuji na nové verzi bota. Během té doby jsem ho několikrát kompletně předělal, protože jsem nebyl spokojený s výsledky. Cílem je vytvořit něco **originálního** a **komplexního**. Většina z vás tu vidí jen jednoho dalšího uživatele „Allcom“, který zdánlivě nic nedělá a občas ho někdo použije k příkazům \`/daily\` nebo \`/work\`. Ve skutečnosti je to **mnohem víc**. Proto vznikl tenhle **changelog**, kde popíšu změny a co plánuju dál.
 ## Co je Allcom Bot v2?
 Od nuly přepsaný starý bot, aby běžel na našem **novém backendu**. To nám otevírá cestu ke **škálování** a dalším funkcím. Bot vznikl pro **tento server**. Od této verze ho lze technicky přidat i na jiné servery, ale to **neplánujeme**.
 ## Novinky
@@ -31,7 +31,7 @@ Zavádíme **kvízový systém**, kterým musí projít každý:
 Přidáváme **Allcom Warning System** (inspirovaný pravidly Discordu):
 * Admin nebo moderátor může udělit **varování** za porušení pravidel (spam, urážky, atd.).
 * Uživatel sbírá **body**; po překročení **100 bodů** je **automaticky zabanován**.
-* Proti varování se lze odvolat přes příkaz \` /review\`.
+* Proti varování se lze odvolat přes příkaz \`/review\`.
 * Všechna varování **expirují po 3 měsících**.
 * Počet bodů se odvíjí od **závažnosti přestupku**.
 * Systém umí dočasně **blokovat nahrávání obrázků**, **používání reakcí**, **omezovat zprávy** a další – vždy podle závažnosti.
@@ -44,12 +44,7 @@ Přidáváme **Allcom Warning System** (inspirovaný pravidly Discordu):
 * Lidi co mají zde aktivní aspoň 1 server booster, tak dostávají násobitel 1.3x ke každé xp a coins odměně. 
 ## Serverové změny
 * **Zakázali** jsme psaní do <#1325522814895263777>. Místnost slouží k **reakcím na nově příchozí**. Chceme, aby svítila jen, když **opravdu** někdo přijde – ne kvůli offtopic debatám.
-* S okamžitou platností platí **nová pravidla** inspirovaná **Discord Community**. Pravidla si **musíte** přečíst, jinak **neprojdete kvízem**.
-### Změny platné od **pondělí 1. 9. 2025**
-* Server přejde na **nejvyšší verifikační level** – na Discordu musíte mít **ověřené telefonní číslo** (ochrana proti botům a raidům).
-* Spojí se místnosti **„Kuchař“** a **„Pekař“** do jedné.
-* Přejmenujeme **„Milovník Hudby“** na **„Hudba“** a **„Sportovec“** na **„Sport“**.
-* Zruší se místnosti **„Influencer“** a **„návrhy-staré“**.`),
+* S okamžitou platností platí **nová pravidla** inspirovaná **Discord Community**. Pravidla si **musíte** přečíst, jinak **neprojdete kvízem**.`),
 				),
 			],
 			flags: MessageFlags.IsComponentsV2,
@@ -57,7 +52,13 @@ Přidáváme **Allcom Warning System** (inspirovaný pravidly Discordu):
 		{
 			components: [
 				new ContainerBuilder().addTextDisplayComponents((b) =>
-					b.setContent(`## Co plánujeme dál?
+					b.setContent(`### Změny platné od **středy 3. 9. 2025**
+* Server přejde na **nejvyšší verifikační level** – na Discordu musíte mít **ověřené telefonní číslo** (ochrana proti botům a raidům).
+* Spojí se místnosti **„Kuchař“** a **„Pekař“** do jedné.
+* Přejmenujeme **„Milovník Hudby“** na **„Hudba“** a **„Sportovec“** na **„Sport“**.
+* Zruší se místnosti **„Influencer“** a **„návrhy-staré“**.
+* Všem se zruší role "Verifikován" a místo toho dostane "Částečně verifikován" (dokud neudělají kvíz)
+## Co plánujeme dál?
 ### **Bodovací systém (body aktivity)**
 Pracujeme na **bodovacím systému**, který bude oceňovat aktivitu. Je **oddělený** od \`/work\` a \`/daily\` – půjde o **body aktivity**. Oboje má smysl a kdo chce ze serveru vytěžit maximum, měl by **sbírat oboje**.
 ### **Allcom Shop**

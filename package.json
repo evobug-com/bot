@@ -11,7 +11,7 @@
 		"test:watch": "bun test --watch"
 	},
 	"dependencies": {
-		"@orpc/client": "^1.8.5",
+		"@orpc/client": "^1.8.6",
 		"discord.js": "dev",
 		"dotenv": "^17.2.1",
 		"execa": "^9.6.0",

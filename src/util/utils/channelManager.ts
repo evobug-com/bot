@@ -1,4 +1,11 @@
-import type { Guild, GuildBasedChannel, TextChannel, VoiceChannel } from "discord.js";
+import type {
+	Guild,
+	GuildBasedChannel,
+	MessageCreateOptions,
+	MessagePayload,
+	TextChannel,
+	VoiceChannel,
+} from "discord.js";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../config/channels.js";
 import { reportError } from "../config/roles.js";
 
@@ -109,7 +116,7 @@ export class ChannelManager {
 	static async sendMessage(
 		guild: Guild,
 		channelKey: keyof typeof DISCORD_CHANNELS,
-		message: string | { content?: string; embeds?: unknown[] },
+		message: string | MessageCreateOptions | MessagePayload,
 	): Promise<boolean> {
 		try {
 			const channel = await ChannelManager.getTextChannel(guild, channelKey);

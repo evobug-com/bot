@@ -235,7 +235,8 @@ async function loadExistingChannels(client: Client<true>) {
 				if (!virtualVoiceChannelsByGuild.has(guild.id)) {
 					virtualVoiceChannelsByGuild.set(guild.id, new Map());
 				}
-				const guildChannels = virtualVoiceChannelsByGuild.get(guild.id)!;
+				const guildChannels = virtualVoiceChannelsByGuild.get(guild.id);
+				if (!guildChannels) throw new Error("This should never happen");
 
 				const channels = await guild.channels.fetch();
 
@@ -365,34 +366,36 @@ async function getVirtualVoiceChannelPermissions(state: VoiceState): Promise<rea
 	];
 
 	// Add owner permissions if configured
-	if (config.permissions.ownerFullControl) {
-		permissions.push({
-			// Give owner full control
-			id: state.member?.id,
-			type: OverwriteType.Member,
-			allow: [
-				PermissionFlagsBits.ViewChannel,
-				PermissionFlagsBits.Connect,
-				PermissionFlagsBits.ManageChannels,
-				PermissionFlagsBits.MoveMembers,
-				PermissionFlagsBits.MuteMembers,
-				PermissionFlagsBits.DeafenMembers,
-				PermissionFlagsBits.Stream,
-				PermissionFlagsBits.Speak,
-			],
-		});
-	} else {
-		// Basic owner permissions only
-		permissions.push({
-			id: state.member?.id,
-			type: OverwriteType.Member,
-			allow: [
-				PermissionFlagsBits.ViewChannel,
-				PermissionFlagsBits.Connect,
-				PermissionFlagsBits.Stream,
-				PermissionFlagsBits.Speak,
-			],
-		});
+	if (state.member?.id) {
+		if (config.permissions.ownerFullControl) {
+			permissions.push({
+				// Give owner full control
+				id: state.member.id,
+				type: OverwriteType.Member,
+				allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.ManageChannels,
+					PermissionFlagsBits.MoveMembers,
+					PermissionFlagsBits.MuteMembers,
+					PermissionFlagsBits.DeafenMembers,
+					PermissionFlagsBits.Stream,
+					PermissionFlagsBits.Speak,
+				],
+			});
+		} else {
+			// Basic owner permissions only
+			permissions.push({
+				id: state.member.id,
+				type: OverwriteType.Member,
+				allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.Stream,
+					PermissionFlagsBits.Speak,
+				],
+			});
+		}
 	}
 
 	// Add verified role permissions if configured
@@ -452,7 +455,7 @@ async function createVirtualVoiceChannel(state: VoiceState) {
 		if (!virtualVoiceChannelsByGuild.has(state.guild.id)) {
 			virtualVoiceChannelsByGuild.set(state.guild.id, new Map());
 		}
-		const guildChannels = virtualVoiceChannelsByGuild.get(state.guild.id)!;
+		const guildChannels = virtualVoiceChannelsByGuild.get(state.guild.id) ?? new Map();
 		guildChannels.set(virtualChannel.id, {
 			id: virtualChannel.id,
 			guildId: state.guild.id,

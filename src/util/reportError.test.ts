@@ -11,7 +11,7 @@ describe("Error Reporting Logic", () => {
 			id: "1381322985754988544",
 			name: "✍︱071︱bot-info",
 			isTextBased: () => true,
-			send: mock(async (_message: any) => ({ id: "msg123" })),
+			send: mock(async (_message: unknown) => ({ id: "msg123" })),
 		} as unknown as TextChannel;
 
 		// Setup mock guild

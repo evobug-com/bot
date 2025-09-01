@@ -248,7 +248,10 @@ async function handleStreamStart(presence: Presence, streamChannel: TextChannel)
 	}
 
 	const userId = presence.user?.id;
-	const member = presence.member!;
+	if (!userId || !presence.member) {
+		return;
+	}
+	const member = presence.member;
 
 	// Cancel any existing pending notification
 	const existingPending = pendingNotifications.get(userId);
@@ -323,7 +326,10 @@ async function handleStreamStart(presence: Presence, streamChannel: TextChannel)
 
 async function handleStreamEnd(presence: Presence, streamChannel: TextChannel): Promise<void> {
 	const userId = presence.user?.id;
-	const member = presence.member!;
+	if (!userId || !presence.member) {
+		return;
+	}
+	const member = presence.member;
 
 	// Cancel pending notification
 	const pending = pendingNotifications.get(userId);
@@ -349,7 +355,7 @@ async function handleStreamEnd(presence: Presence, streamChannel: TextChannel): 
 
 	// Delete stream notification if enabled
 	const activeStream = activeStreams.get(userId);
-	if (deleteOnStreamEnd && activeStream) {
+	if (deleteOnStreamEnd && activeStream && activeStream.messageId) {
 		try {
 			const message = await streamChannel.messages.fetch(activeStream.messageId).catch(() => null);
 			if (message && !message.pinned) {
@@ -428,7 +434,7 @@ async function handleRemoveStreamButton(interaction: ButtonInteraction, userId: 
 		}
 
 		const streamChannel = guild.channels.cache.get(activeStream.channelId) as TextChannel;
-		if (streamChannel) {
+		if (streamChannel && activeStream.messageId) {
 			const message = await streamChannel.messages.fetch(activeStream.messageId).catch(() => null);
 			if (message) {
 				await message.delete();
@@ -574,7 +580,9 @@ async function cleanupOldStreamMessages(guild: Guild): Promise<void> {
 		for (const [userId, stream] of activeStreams) {
 			if (!streamingMembers.has(userId)) {
 				try {
-					const message = await streamChannel.messages.fetch(stream.messageId).catch(() => null);
+					const message = stream.messageId
+						? await streamChannel.messages.fetch(stream.messageId).catch(() => null)
+						: null;
 					if (message && !message.pinned) {
 						await message.delete();
 						log("info", `Deleted old stream message for user ${userId}`);
@@ -604,13 +612,38 @@ async function cleanupOldStreamMessages(guild: Guild): Promise<void> {
 async function loadPersistedData(client: Client): Promise<void> {
 	try {
 		const data = await readFile(persistenceFile, "utf-8");
-		const parsed = JSON.parse(data) as any;
+		const parsed = JSON.parse(data) as {
+			activeStreams?: Record<
+				string,
+				{
+					startTime: string;
+					channelId: string;
+					guildId: string;
+					gameName?: string;
+					userId?: string;
+					messageId?: string;
+				}
+			>;
+			pendingNotifications?: Record<
+				string,
+				{
+					userId: string;
+					memberId: string;
+					guildId: string;
+					streamActivity: Activity;
+					streamChannelId: string;
+					scheduledTime: string;
+				}
+			>;
+			activeDMMessages?: Record<string, { messageId: string; guildId?: string }>;
+		};
 
 		// Load active streams
 		if (parsed.activeStreams) {
-			for (const [userId, stream] of Object.entries(parsed.activeStreams as Record<string, any>)) {
+			for (const [userId, stream] of Object.entries(parsed.activeStreams)) {
 				activeStreams.set(userId, {
 					...stream,
+					userId,
 					startTime: new Date(stream.startTime),
 				});
 			}
@@ -618,7 +651,7 @@ async function loadPersistedData(client: Client): Promise<void> {
 
 		// Load active DM messages
 		if (parsed.activeDMMessages) {
-			for (const [userId, dmData] of Object.entries(parsed.activeDMMessages as Record<string, ActiveDMMessage>)) {
+			for (const [userId, dmData] of Object.entries(parsed.activeDMMessages)) {
 				try {
 					// Try to fetch the user to get their DM channel
 					const user = await client.users.fetch(userId).catch(() => null);
@@ -644,9 +677,7 @@ async function loadPersistedData(client: Client): Promise<void> {
 		// Load and reschedule pending notifications
 		if (parsed.pendingNotifications) {
 			const now = Date.now();
-			for (const [userId, notifData] of Object.entries(
-				parsed.pendingNotifications as Record<string, PendingNotificationData>,
-			)) {
+			for (const [userId, notifData] of Object.entries(parsed.pendingNotifications)) {
 				try {
 					const scheduledTime = new Date(notifData.scheduledTime).getTime();
 					const remainingTime = scheduledTime - now;
@@ -811,7 +842,7 @@ function _getGuildForUser(client: Client, userId: string): Guild | null {
 
 interface ActiveStream {
 	userId: string;
-	messageId: string;
+	messageId?: string;
 	channelId: string;
 	guildId: string;
 	startTime: Date;

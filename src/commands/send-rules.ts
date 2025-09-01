@@ -47,7 +47,8 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 		}
 
 		// Check if bot can send messages to the channel
-		if (!targetChannel.permissionsFor(interaction.guild?.members.me!)?.has(PermissionFlagsBits.SendMessages)) {
+		const botMember = interaction.guild?.members.me;
+		if (!botMember || !targetChannel.permissionsFor(botMember)?.has(PermissionFlagsBits.SendMessages)) {
 			await interaction.editReply({
 				content: `❌ I don't have permission to send messages in ${targetChannel}.`,
 			});

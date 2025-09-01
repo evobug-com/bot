@@ -13,7 +13,7 @@ export const data = new ChatInputCommandBuilder()
 	.setDescription("Sends an embed to the current channel")
 	.setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages);
 
-export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
+export const execute = async ({ interaction }: CommandContext): Promise<void> => {
 	// Create the modal
 	const modal = new ModalBuilder().setCustomId("sendEmbedModal").setTitle("Embed Message");
 

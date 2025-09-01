@@ -33,7 +33,10 @@ export async function registerCommands(guild: Guild) {
 	try {
 		const result = await guild.commands.set(Object.values(commands).map((command) => command.data));
 		result.forEach((command) => {
-			commands[command.name]?.instances[guild.id] = command;
+			const cmd = commands[command.name];
+			if (cmd?.instances) {
+				cmd.instances[guild.id] = command;
+			}
 		});
 		console.log(`Successfully loaded ${guild.commands.cache.size} application (/) commands.`);
 	} catch (error) {

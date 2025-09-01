@@ -92,7 +92,13 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				await new Promise((resolve) => setTimeout(resolve, 2000));
 			}
 
-			const activity = workActivities[Math.floor(Math.random() * workActivities.length)]!;
+			const activity = workActivities[Math.floor(Math.random() * workActivities.length)];
+			if (!activity) {
+				await interaction.editReply({
+					content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",
+				});
+				return;
+			}
 
 			const embed = createUradPraceEmbed().addFields(
 				{

@@ -1,3 +1,4 @@
+import type { ComponentBuilder } from "@discordjs/builders";
 import { ORPCError } from "@orpc/client";
 import { ActionRowBuilder, ChatInputCommandBuilder, MessageFlags, SecondaryButtonBuilder } from "discord.js";
 import { getDbUser, orpc } from "../client/client.ts";
@@ -6,6 +7,8 @@ import {
 	type AccountStandingData,
 	createStandingDisplay,
 	type Violation,
+	type ViolationSeverity,
+	type ViolationType,
 } from "../data/violationData.ts";
 import { createErrorEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";
@@ -24,7 +27,7 @@ export const data = new ChatInputCommandBuilder()
 			.setRequired(false),
 	);
 
-export const execute = async ({ interaction, dbUser }: CommandContext) => {
+export const execute = async ({ interaction }: CommandContext) => {
 	if (!interaction.guild) {
 		await interaction.reply({
 			content: "❌ Tento příkaz lze použít pouze na serveru.",
@@ -94,11 +97,12 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 			nextExpiration: standingResponse.nextExpirationDate ? new Date(standingResponse.nextExpirationDate) : undefined,
 		};
 
-		const violations: Violation[] = violationsResponse.map((v: any) => ({
+		const violations: Violation[] = violationsResponse.map((v) => ({
 			...v,
+			type: v.type as ViolationType,
+			severity: v.severity as ViolationSeverity,
 			issuedAt: new Date(v.issuedAt),
 			expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
-			expiredAt: v.expiredAt ? new Date(v.expiredAt) : null,
 			reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
 			restrictions:
 				typeof v.restrictions === "string" ? (v.restrictions ? JSON.parse(v.restrictions) : []) : v.restrictions || [],
@@ -108,7 +112,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 		const display = createStandingDisplay(standingData, violations, viewingOthers ? targetUser.tag : undefined);
 
 		// Add action buttons if viewing own standing
-		const components = [display];
+		const components: ComponentBuilder<any>[] = [display];
 		if (!viewingOthers && standingData.activeViolations > 0) {
 			const viewViolationsButton = new SecondaryButtonBuilder()
 				.setCustomId("view_violations")
@@ -120,7 +124,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 				.setLabel("Požádat o přezkoumání")
 				.setEmoji({ name: "📝" });
 
-			const actionRow = new ActionRowBuilder().addComponents(viewViolationsButton, requestReviewButton) as any;
+			const actionRow = new ActionRowBuilder().addComponents(viewViolationsButton, requestReviewButton);
 
 			components.push(actionRow);
 		}

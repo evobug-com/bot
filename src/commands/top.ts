@@ -69,7 +69,7 @@ export const data = new ChatInputCommandBuilder()
 			.setMaxValue(25),
 	);
 
-export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
+export const execute = async ({ interaction }: CommandContext): Promise<void> => {
 	await interaction.deferReply();
 
 	try {

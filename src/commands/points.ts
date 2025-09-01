@@ -21,7 +21,7 @@ export const data = new ChatInputCommandBuilder()
 			.setRequired(false),
 	);
 
-export const execute = async ({ interaction, dbUser }: CommandContext) => {
+export const execute = async ({ interaction }: CommandContext) => {
 	const targetUser = interaction.options.getUser("user") || interaction.user;
 
 	try {

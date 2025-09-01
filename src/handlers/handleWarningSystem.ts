@@ -225,7 +225,7 @@ export async function issueViolation(
 			reason: violation.reason,
 			contentSnapshot: violation.contentSnapshot || undefined,
 			context: violation.context || undefined,
-			issuedBy: violation.issuedBy,
+			issuedBy: violation.issuedBy || 0,
 			expiresInDays: violation.expiresAt
 				? Math.ceil((violation.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 				: undefined,
@@ -279,11 +279,10 @@ export async function issueViolation(
 		return createdViolation;
 	} catch (error) {
 		log("error", "Failed to issue violation:", error);
-		await reportError(
-			client.guilds.cache.get(violation.guildId) || client.guilds.cache.first()!,
-			"Failed to issue violation",
-			String(error),
-		);
+		const guild = client.guilds.cache.get(violation.guildId) || client.guilds.cache.first();
+		if (guild) {
+			await reportError(guild, "Failed to issue violation", String(error));
+		}
 		return null;
 	}
 }
@@ -306,7 +305,9 @@ async function applyRestrictions(
 
 		// Update restrictions cache
 		const userRestrictions = activeRestrictions.get(userId) || new Set();
-		restrictions.forEach((r) => userRestrictions.add(r));
+		restrictions.forEach((r) => {
+			userRestrictions.add(r);
+		});
 		activeRestrictions.set(userId, userRestrictions);
 
 		// Apply Discord-level restrictions
@@ -416,7 +417,7 @@ async function logViolationToAudit(client: Client<true>, violation: Violation): 
 		const guild = client.guilds.cache.get(violation.guildId);
 		if (!guild) return;
 
-		const auditChannel = ChannelManager.getTextChannel(guild, "BOT_INFO" as any); // Use BOT_INFO until AUDIT_LOG is added
+		const auditChannel = await ChannelManager.getTextChannel(guild, "BOT_INFO"); // Use BOT_INFO until AUDIT_LOG is added
 		if (!auditChannel) return;
 
 		const user = await client.users.fetch(String(violation.userId)).catch(() => null);
@@ -581,8 +582,10 @@ async function getUserViolations(userId: string, guildId: string): Promise<Viola
 		});
 
 		// Extract violations from response and convert types
-		const violations = (response.violations || []).map((v: any) => ({
+		const violations = (response.violations || []).map((v) => ({
 			...v,
+			type: v.type as ViolationType,
+			severity: v.severity as ViolationSeverity,
 			issuedAt: new Date(v.issuedAt),
 			expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
 			reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
@@ -628,7 +631,9 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
 						const userRestrictions = activeRestrictions.get(dbUser.discordId);
 						if (userRestrictions) {
 							if (Array.isArray(violation.restrictions)) {
-								violation.restrictions.forEach((r: FeatureRestriction) => userRestrictions.delete(r));
+								violation.restrictions.forEach((r: FeatureRestriction) => {
+									userRestrictions.delete(r);
+								});
 							}
 							if (userRestrictions.size === 0) {
 								activeRestrictions.delete(dbUser.discordId);
@@ -754,7 +759,10 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 			// Get violation expiration info
 			let violationInfo = "";
 			try {
-				const dbUser = await getDbUser(message.guild!, message.author.id);
+				if (!message.guild) {
+					return;
+				}
+				const dbUser = await getDbUser(message.guild, message.author.id);
 				const violations = violationCache.get(String(dbUser.id)) || [];
 				const activeViolations = violations.filter((v) => !isExpired(v));
 
@@ -925,7 +933,13 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 			}
 
 			// Use the first mutual guild (typically there's only one - Allcom)
-			const guild = mutualGuilds.first()!;
+			const guild = mutualGuilds.first();
+			if (!guild) {
+				await interaction.reply({
+					content: "❌ Chyba při hledání serveru.",
+				});
+				return;
+			}
 
 			// Get the user's database info
 			const dbUser = await getDbUser(guild, interaction.user.id);
@@ -954,7 +968,7 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 				includeExpired: false,
 			});
 
-			const violations: Violation[] = (violationsListResponse.violations || []).map((v: any) => ({
+			const violations: Violation[] = (violationsListResponse.violations || []).map((v) => ({
 				...v,
 				type: v.type as ViolationType,
 				severity: v.severity as ViolationSeverity,
@@ -1170,7 +1184,9 @@ async function loadActiveViolations(client: Client<true>): Promise<void> {
 
 						for (const violation of activeViolations) {
 							if (Array.isArray(violation.restrictions)) {
-								violation.restrictions.forEach((r) => allRestrictions.add(r));
+								for (const r of violation.restrictions) {
+									allRestrictions.add(r);
+								}
 							}
 						}
 

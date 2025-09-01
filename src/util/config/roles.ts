@@ -1,4 +1,4 @@
-import type { Guild } from "discord.js";
+import type { Guild, Role } from "discord.js";
 
 export interface RoleConfig {
 	id: string;
@@ -71,7 +71,7 @@ export const DISCORD_ROLES = {
 export async function getRoleByConfig(
 	guild: Guild,
 	roleConfig: RoleConfig,
-): Promise<{ role: any; updated: boolean } | null> {
+): Promise<{ role: Role; updated: boolean } | null> {
 	// First try by ID
 	let role = guild.roles.cache.get(roleConfig.id);
 
@@ -93,7 +93,7 @@ export async function getRoleByConfig(
 /**
  * Report an error to the bot-info channel
  */
-export async function reportError(guild: Guild, errorType: string, message: string, details?: any): Promise<void> {
+export async function reportError(guild: Guild, errorType: string, message: string, details?: unknown): Promise<void> {
 	try {
 		// Import dynamically to avoid circular dependency
 		const { DISCORD_CHANNELS } = await import("./channels.js");

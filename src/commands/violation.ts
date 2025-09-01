@@ -110,7 +110,7 @@ export const data = new ChatInputCommandBuilder()
 			.setMaxLength(200),
 	);
 
-export const execute = async ({ interaction, dbUser }: CommandContext) => {
+export const execute = async ({ interaction }: CommandContext) => {
 	if (!interaction.guild) {
 		await interaction.reply({
 			content: "❌ Tento příkaz lze použít pouze na serveru.",

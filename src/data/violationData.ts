@@ -111,7 +111,7 @@ export interface Violation {
 	restrictions: FeatureRestriction[] | string;
 
 	// Metadata
-	issuedBy: number;
+	issuedBy: number | null;
 	issuedAt: Date;
 	expiresAt?: Date | null;
 	expiredAt?: Date | null;

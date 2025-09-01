@@ -1,7 +1,12 @@
 import { ORPCError } from "@orpc/client";
 import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
 import { getDbUser, orpc } from "../client/client.ts";
-import { createViolationListDisplay, type Violation } from "../data/violationData.ts";
+import {
+	createViolationListDisplay,
+	type Violation,
+	type ViolationSeverity,
+	type ViolationType,
+} from "../data/violationData.ts";
 import { createErrorEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";
 
@@ -27,7 +32,7 @@ export const data = new ChatInputCommandBuilder()
 			.setRequired(false),
 	);
 
-export const execute = async ({ interaction, dbUser }: CommandContext) => {
+export const execute = async ({ interaction }: CommandContext) => {
 	if (!interaction.guild) {
 		await interaction.reply({
 			content: "❌ Tento příkaz lze použít pouze na serveru.",
@@ -62,11 +67,12 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 		const violations = response.violations || [];
 
 		// Convert API response to our Violation type
-		const typedViolations: Violation[] = violations.map((v: any) => ({
+		const typedViolations: Violation[] = violations.map((v) => ({
 			...v,
+			type: v.type as ViolationType,
+			severity: v.severity as ViolationSeverity,
 			issuedAt: new Date(v.issuedAt),
 			expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
-			expiredAt: v.expiredAt ? new Date(v.expiredAt) : null,
 			reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
 			restrictions:
 				typeof v.restrictions === "string" ? (v.restrictions ? JSON.parse(v.restrictions) : []) : v.restrictions || [],

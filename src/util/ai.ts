@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
+import os from "node:os";
 import * as path from "node:path";
-import os from "os";
 
 export async function generateAiResponse(
 	prompt: string,
-	model = "sonnet",
+	_model = "sonnet",
 ): Promise<
 	Partial<{
 		title: string;
@@ -81,7 +81,7 @@ export async function generateAiResponse(
 					try {
 						const parsed = JSON.parse(line);
 						messages.push(parsed);
-					} catch (e) {
+					} catch (_e) {
 						// Skip non-JSON lines
 					}
 				}
@@ -128,7 +128,7 @@ function extractJsonFromResponse(response: string) {
 	// First, try to parse as-is (best case scenario)
 	try {
 		return JSON.parse(response);
-	} catch (e) {
+	} catch (_e) {
 		// Continue with extraction methods
 	}
 
@@ -152,7 +152,7 @@ function extractJsonFromResponse(response: string) {
 		try {
 			const extracted = cleaned.substring(firstBrace, lastBrace + 1);
 			return JSON.parse(extracted);
-		} catch (e) {
+		} catch (_e) {
 			// Continue trying
 		}
 	}
@@ -164,7 +164,7 @@ function extractJsonFromResponse(response: string) {
 		try {
 			const extracted = cleaned.substring(firstBracket, lastBracket + 1);
 			return JSON.parse(extracted);
-		} catch (e) {
+		} catch (_e) {
 			// Continue trying
 		}
 	}

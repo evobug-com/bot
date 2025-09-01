@@ -28,7 +28,6 @@ import {
 	type Message,
 	MessageFlags,
 	type PartialGuildMember,
-	PermissionFlagsBits,
 	SecondaryButtonBuilder,
 	SeparatorSpacingSize,
 	type VoiceState,
@@ -37,7 +36,6 @@ import { getDbUser, orpc } from "../client/client.ts";
 import {
 	AccountStanding,
 	type AccountStandingData,
-	AccountStandingLabels,
 	calculateAccountStanding,
 	calculateSeverityScore,
 	createStandingDisplay,
@@ -45,7 +43,6 @@ import {
 	createViolationListDisplay,
 	DefaultExpirationDays,
 	FeatureRestriction,
-	FeatureRestrictionLabels,
 	isExpired,
 	type Violation,
 	ViolationSeverity,
@@ -254,7 +251,7 @@ export async function issueViolation(
 
 		// Get Discord ID from database user for applying restrictions
 		const dbUser = await orpc.users.get({ id: violation.userId }).catch(() => null);
-		if (dbUser && dbUser.discordId) {
+		if (dbUser?.discordId) {
 			// Apply restrictions using Discord ID
 			const restrictionsArray = Array.isArray(violation.restrictions) ? violation.restrictions : [];
 			await applyRestrictions(client, dbUser.discordId, violation.guildId, restrictionsArray);
@@ -626,7 +623,7 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
 
 					// Get Discord ID to remove restrictions
 					const dbUser = await orpc.users.get({ id: parseInt(userId, 10) }).catch(() => null);
-					if (dbUser && dbUser.discordId) {
+					if (dbUser?.discordId) {
 						// Remove associated restrictions using Discord ID
 						const userRestrictions = activeRestrictions.get(dbUser.discordId);
 						if (userRestrictions) {
@@ -768,7 +765,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 						return restrictionsList.length > 0;
 					});
 
-					if (relevantViolation && relevantViolation.expiresAt) {
+					if (relevantViolation?.expiresAt) {
 						const now = new Date();
 						const timeLeft = relevantViolation.expiresAt.getTime() - now.getTime();
 						const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
@@ -816,9 +813,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 					);
 
 					container.addTextDisplayComponents((display) =>
-						display.setContent(
-							`## 📝 Obsah smazané zprávy:\n` + `\`\`\`\n${message.content.substring(0, 1900)}\n\`\`\``,
-						),
+						display.setContent(`## 📝 Obsah smazané zprávy:\n\`\`\`\n${message.content.substring(0, 1900)}\n\`\`\``),
 					);
 				}
 
@@ -834,7 +829,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 					components: [container, actionRow],
 					flags: MessageFlags.IsComponentsV2,
 				});
-			} catch (dmError) {
+			} catch (_dmError) {
 				// User has DMs disabled, log it
 				log("warn", `Could not send restriction DM to user ${message.author.id} - DMs disabled`);
 			}
@@ -847,7 +842,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 /**
  * Handle voice restrictions
  */
-async function handleVoiceRestrictions(oldState: VoiceState, newState: VoiceState): Promise<void> {
+async function handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceState): Promise<void> {
 	const userId = newState.member?.id;
 	if (!userId) return;
 
@@ -965,7 +960,7 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 				severity: v.severity as ViolationSeverity,
 				issuedAt: new Date(v.issuedAt),
 				expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
-					reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
+				reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
 				restrictions:
 					typeof v.restrictions === "string"
 						? v.restrictions
@@ -1185,7 +1180,7 @@ async function loadActiveViolations(client: Client<true>): Promise<void> {
 							log("info", `Applied ${allRestrictions.size} restrictions to user ${member.user.tag} (${member.id})`);
 						}
 					}
-				} catch (error) {}
+				} catch (_error) {}
 			}
 		}
 

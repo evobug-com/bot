@@ -247,7 +247,7 @@ async function handleStreamStart(presence: Presence, streamChannel: TextChannel)
 		return;
 	}
 
-	const userId = presence.user!.id;
+	const userId = presence.user?.id;
 	const member = presence.member!;
 
 	// Cancel any existing pending notification
@@ -322,7 +322,7 @@ async function handleStreamStart(presence: Presence, streamChannel: TextChannel)
 }
 
 async function handleStreamEnd(presence: Presence, streamChannel: TextChannel): Promise<void> {
-	const userId = presence.user!.id;
+	const userId = presence.user?.id;
 	const member = presence.member!;
 
 	// Cancel pending notification
@@ -773,7 +773,7 @@ async function savePersistedData(): Promise<void> {
  * Get the guild associated with a user's stream notification
  * Checks multiple sources to find the guild ID
  */
-function getGuildForUser(client: Client, userId: string): Guild | null {
+function _getGuildForUser(client: Client, userId: string): Guild | null {
 	// Check pending notifications first (most likely to have guild info during active stream)
 	const pending = pendingNotifications.get(userId);
 	if (pending) {

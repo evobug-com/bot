@@ -227,7 +227,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			} else {
 				await interaction.editReply({ embeds: [embed] });
 			}
-		} catch (e) {
+		} catch (_e) {
 			const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se vyzvednout denní dávku. Zkus to prosím později.");
 			await interaction.editReply({ embeds: [errorEmbed] });
 			return;

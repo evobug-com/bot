@@ -1,4 +1,4 @@
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "discord.js";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed, createInfoEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";

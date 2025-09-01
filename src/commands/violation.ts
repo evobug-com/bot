@@ -2,14 +2,11 @@ import {
 	ChatInputCommandBuilder,
 	type ChatInputCommandInteraction,
 	ContainerBuilder,
-	type Guild,
 	MessageFlags,
 	PermissionFlagsBits,
-	SeparatorBuilder,
 	SeparatorSpacingSize,
-	TextDisplayBuilder,
 } from "discord.js";
-import { getDbUser, orpc } from "../client/client.ts";
+import { getDbUser } from "../client/client.ts";
 import {
 	DefaultExpirationDays,
 	FeatureRestriction,

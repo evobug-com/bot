@@ -80,7 +80,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 							: []
 						: violationResponse.restrictions || [],
 			} as Violation;
-		} catch (error) {
+		} catch (_error) {
 			await interaction.editReply({
 				content:
 					"❌ Porušení s tímto ID nebylo nalezeno. Použijte příkaz `/violations` pro zobrazení vašich porušení a jejich ID.",

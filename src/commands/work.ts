@@ -75,7 +75,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			});
 
 			const { earnedTotalCoins, earnedTotalXp, boostCoinsBonus, boostXpBonus } = work.claimStats;
-			
+
 			// Calculate display values (without boost)
 			const displayCoins = earnedTotalCoins - boostCoinsBonus;
 			const displayXp = earnedTotalXp - boostXpBonus;
@@ -130,11 +130,11 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 						value: `+${work.claimStats.boostXpBonus} (${boostPercentage}%)`,
 						inline: true,
 					},
-                    {
-                        name: "\u200B", // Empty field to force new row
-                        value: "\u200B",
-                        inline: true,
-                    },
+					{
+						name: "\u200B", // Empty field to force new row
+						value: "\u200B",
+						inline: true,
+					},
 				);
 			}
 
@@ -159,7 +159,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			} else {
 				await interaction.editReply({ embeds: [embed] });
 			}
-		} catch (e) {
+		} catch (_e) {
 			const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se dokončit práci. Zkuste to prosím později.");
 			await interaction.editReply({ embeds: [errorEmbed] });
 			return;

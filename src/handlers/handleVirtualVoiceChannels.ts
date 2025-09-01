@@ -241,7 +241,7 @@ async function loadExistingChannels(client: Client<true>) {
 
 				// First, clean up non-existent channels from our tracking
 				const channelsToRemove: string[] = [];
-				for (const [channelId, channelData] of guildChannels) {
+				for (const [channelId, _channelData] of guildChannels) {
 					const channel = channels.get(channelId);
 					if (!channel) {
 						// Channel doesn't exist in Discord anymore
@@ -368,7 +368,7 @@ async function getVirtualVoiceChannelPermissions(state: VoiceState): Promise<rea
 	if (config.permissions.ownerFullControl) {
 		permissions.push({
 			// Give owner full control
-			id: state.member!.id,
+			id: state.member?.id,
 			type: OverwriteType.Member,
 			allow: [
 				PermissionFlagsBits.ViewChannel,
@@ -384,7 +384,7 @@ async function getVirtualVoiceChannelPermissions(state: VoiceState): Promise<rea
 	} else {
 		// Basic owner permissions only
 		permissions.push({
-			id: state.member!.id,
+			id: state.member?.id,
 			type: OverwriteType.Member,
 			allow: [
 				PermissionFlagsBits.ViewChannel,

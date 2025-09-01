@@ -2,7 +2,7 @@ import type { Guild, GuildBasedChannel, TextChannel, VoiceChannel } from "discor
 import { DISCORD_CHANNELS, getChannelByConfig } from "../config/channels.js";
 import { reportError } from "../config/roles.js";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
+// biome-ignore lint/complexity/noStaticOnlyClass: This is a manager class with static methods
 export class ChannelManager {
 	private static channelCache = new Map<string, string>(); // channelKey -> actualChannelId
 
@@ -109,7 +109,7 @@ export class ChannelManager {
 	static async sendMessage(
 		guild: Guild,
 		channelKey: keyof typeof DISCORD_CHANNELS,
-		message: string | { content?: string; embeds?: any[] },
+		message: string | { content?: string; embeds?: unknown[] },
 	): Promise<boolean> {
 		try {
 			const channel = await ChannelManager.getTextChannel(guild, channelKey);

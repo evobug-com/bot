@@ -43,10 +43,10 @@ export const execute = async ({ interaction, dbUser }: CommandContext) => {
 
 	try {
 		// Get database user ID from Discord ID
-		let targetDbUser;
+		let targetDbUser: Awaited<ReturnType<typeof getDbUser>> | undefined;
 		try {
 			targetDbUser = await getDbUser(interaction.guild, targetUser.id);
-		} catch (error) {
+		} catch (_error) {
 			// User not registered in database - show clean standing
 			const cleanStanding: AccountStandingData = {
 				standing: AccountStanding.ALL_GOOD,

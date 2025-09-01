@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/complexity/noStaticOnlyClass: <explanation> */
+/** biome-ignore-all lint/complexity/noStaticOnlyClass: This is a manager class with static methods */
 import type { Guild, GuildMember, Role } from "discord.js";
 import { DISCORD_ROLES, getRoleByConfig, reportError } from "../config/roles.js";
 

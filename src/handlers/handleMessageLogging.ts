@@ -2,7 +2,7 @@ import { type Client, Events, type Message, type OmitPartialGroupDMChannel, type
 import { dbUserExists } from "../client/client.ts";
 import { createLogger } from "../util/logger.ts";
 
-const log = createLogger("MessageLogger");
+const _log = createLogger("MessageLogger");
 
 export const handleMessageLogging = async (client: Client<true>) => {
 	client.on(Events.MessageCreate, handleMessageCreate);
@@ -23,7 +23,7 @@ async function handleMessageCreate(message: OmitPartialGroupDMChannel<Message<bo
 }
 
 async function handleMessageUpdate(
-	oldMessage: OmitPartialGroupDMChannel<Message<boolean> | PartialMessage>,
+	_oldMessage: OmitPartialGroupDMChannel<Message<boolean> | PartialMessage>,
 	newMessage: OmitPartialGroupDMChannel<Message<boolean>>,
 ) {
 	if (!newMessage.member) return;

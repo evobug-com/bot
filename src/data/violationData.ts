@@ -1,14 +1,4 @@
-import {
-	ActionRowBuilder,
-	ContainerBuilder,
-	type MessageCreateOptions,
-	MessageFlags,
-	PrimaryButtonBuilder,
-	SecondaryButtonBuilder,
-	SeparatorBuilder,
-	SeparatorSpacingSize,
-	TextDisplayBuilder,
-} from "discord.js";
+import { ContainerBuilder, type MessageCreateOptions, MessageFlags, SeparatorSpacingSize } from "discord.js";
 
 /**
  * Violation System Data and Types

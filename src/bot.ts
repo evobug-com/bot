@@ -1,9 +1,8 @@
-import { read } from "node:fs";
-import { Client, Events, GatewayIntentBits, type Guild } from "discord.js";
+import { Client, Events, GatewayIntentBits } from "discord.js";
+import { handleAchievements } from "./handlers/handleAchievements.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
 import { handleMediaForum } from "./handlers/handleMediaForum.ts";
-import { handleMessageLogging } from "./handlers/handleMessageLogging.ts";
 import { handleNewsEmbeds } from "./handlers/handleNewsEmbeds.ts";
 import { handleRulesVerification } from "./handlers/handleRulesVerification.ts";
 import { handleSendingEmbedMessages } from "./handlers/handleSendingEmbedMessages.ts";
@@ -12,7 +11,6 @@ import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannel
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
 import { ensureUserRegistered } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
-import {handleAchievements} from "./handlers/handleAchievements.ts";
 
 // Create a new client instance
 const client = new Client({
@@ -45,7 +43,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleAntibotRooms(readyClient);
 	void handleMediaForum(readyClient);
 	// TODO: Not implemented yet? void handleMessageLogging(readyClient);
-    void handleAchievements(readyClient);
+	void handleAchievements(readyClient);
 	void handleSendingEmbedMessages(readyClient);
 	void handleNewsEmbeds(readyClient);
 	void handleStreamingNotifications(readyClient);

@@ -158,12 +158,25 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 	// Add level progress if available
 	if (work.levelProgress) {
+        // Fix progress calculation if user has more XP than needed
+        let actualProgress = work.levelProgress.xpProgress;
+        let actualNeeded = work.levelProgress.xpNeeded;
+
+        // If progress is greater than needed, it means they leveled up
+        // but the API might not be returning correct post-level-up values
+        if (actualProgress >= actualNeeded) {
+            // Calculate overflow XP for next level
+            actualProgress = actualProgress - actualNeeded;
+            // For now, assume next level needs 100 more XP than current
+            actualNeeded = actualNeeded + 100;
+        }
+
 		const progress = work.levelProgress;
 		const progressBar = createProgressBar(progress.xpProgress, progress.xpNeeded);
 		embed.addFields({
 			name: "📊 Postup na další úroveň",
-			value: progressBar,
-			inline: false,
+            value: `${progressBar}\n${actualProgress}/${actualNeeded} XP`,
+            inline: false,
 		});
 	}
 

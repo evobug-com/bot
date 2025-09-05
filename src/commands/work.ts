@@ -30,150 +30,152 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 	await interaction.deferReply();
 
-	try {
-		// Check cooldown first
-		const cooldown = await orpc.users.stats.work.cooldown({ userId: dbUser.id });
+	// Check cooldown first
+	const [cooldownError, cooldown] = await orpc.users.stats.work.cooldown({ userId: dbUser.id });
 
-		if (cooldown.isOnCooldown) {
-			const timeRemaining = formatTimeRemaining(cooldown.cooldownRemaining || 0);
-			const embed = createUradPraceEmbed()
-				.addFields(
-					...[
-						{
-							name: "Tvůj stav",
-							value: "Šlofííčkuješ",
-						},
-						{
-							name: "Odpočatý budeš za",
-							value: timeRemaining,
-						},
-					],
-				)
-				.setFooter({ text: "Za flákání se neplatí! Zkus to znovu později.\nTip: Pracovat můžeš jednou za 60 minut" })
-				.setThumbnail("https://cdn.discordapp.com/emojis/1326286362760187944.png");
-
-			await interaction.editReply({ embeds: [embed] });
-			return;
-		}
-
-		try {
-			// Get user's boost count (how many times they've boosted)
-			let boostCount = 0;
-			if (interaction.guild && interaction.member) {
-				// Check if member has the premium subscriber role (server booster)
-				const member = await interaction.guild.members.fetch(interaction.user.id);
-				if (member.premiumSince) {
-					// User is a booster, but Discord doesn't tell us how many boosts they have
-					// We'll count 5 boost per premium subscriber for simplicity
-					boostCount = 3;
-				}
-			}
-
-			const work = await orpc.users.stats.work.claim({
-				userId: dbUser.id,
-				boostCount,
-			});
-
-			const { earnedTotalCoins, earnedTotalXp, boostCoinsBonus, boostXpBonus } = work.claimStats;
-
-			// Calculate display values (without boost)
-			const displayCoins = earnedTotalCoins - boostCoinsBonus;
-			const displayXp = earnedTotalXp - boostXpBonus;
-
-			// Check for level up
-			if (work.levelUp) {
-				const levelUpEmbed = createLevelUpEmbed(
-					`Level ${work.levelUp.newLevel}!`,
-					`Gratulujeme! Dosáhli jste úrovně ${work.levelUp.newLevel} a získáváte bonus ${work.levelUp.bonusCoins} mincí!`,
-				);
-				await interaction.editReply({ embeds: [levelUpEmbed] });
-
-				// Wait a bit before showing the main reward
-				await new Promise((resolve) => setTimeout(resolve, 2000));
-			}
-
-			const activity = workActivities[Math.floor(Math.random() * workActivities.length)];
-			if (!activity) {
-				await interaction.editReply({
-					content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",
-				});
-				return;
-			}
-
-			const embed = createUradPraceEmbed().addFields(
-				{
-					name: activity.title,
-					value: activity.activity,
-				},
-				{
-					name: "🪙 Získané mince",
-					value: `+${displayCoins}`,
-					inline: true,
-				},
-				{
-					name: "⭐ Získané XP",
-					value: `+${displayXp}`,
-					inline: true,
-				},
-			);
-
-			// Add boost bonus fields if user is a booster
-			if (work.claimStats.boostCoinsBonus > 0 || work.claimStats.boostXpBonus > 0) {
-				const boostPercentage = Math.round((work.claimStats.boostMultiplier - 1) * 100);
-				embed.addFields(
-					{
-						name: "\u200B", // Empty field to force new row
-						value: "\u200B",
-						inline: true,
-					},
-					{
-						name: "💜 Boost mincí",
-						value: `+${work.claimStats.boostCoinsBonus} (${boostPercentage}%)`,
-						inline: true,
-					},
-					{
-						name: "💜 Boost XP",
-						value: `+${work.claimStats.boostXpBonus} (${boostPercentage}%)`,
-						inline: true,
-					},
-					{
-						name: "\u200B", // Empty field to force new row
-						value: "\u200B",
-						inline: true,
-					},
-				);
-			}
-
-			// Add level progress if available
-			if (work.levelProgress) {
-				const progress = work.levelProgress;
-				const progressBar = createProgressBar(progress.xpProgress, progress.xpNeeded);
-				embed.addFields({
-					name: "📊 Postup na další úroveň",
-					value: progressBar,
-					inline: false,
-				});
-			}
-
-			embed.setFooter({
-				text: `💰 Celkem: ${work.updatedStats.coinsCount} mincí • ⭐ Úroveň ${work.levelProgress.currentLevel} • 💼 Práce #${work.updatedStats.workCount}`,
-			});
-
-			// Update or send the embed
-			if (work.levelUp) {
-				await interaction.followUp({ embeds: [embed] });
-			} else {
-				await interaction.editReply({ embeds: [embed] });
-			}
-		} catch (_e) {
-			const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se dokončit práci. Zkuste to prosím později.");
-			await interaction.editReply({ embeds: [errorEmbed] });
-			return;
-		}
-	} catch (error) {
-		console.error("Error executing work command:", error);
-		const errorEmbed = createErrorEmbed("Chyba", "Při provádění práce došlo k chybě. Zkuste to prosím později.");
+	if (cooldownError) {
+		console.error("Error checking work cooldown:", cooldownError);
+		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se zkontrolovat cooldown. Zkuste to prosím později.");
 		await interaction.editReply({ embeds: [errorEmbed] });
+		return;
+	}
+
+	if (cooldown.isOnCooldown) {
+		const timeRemaining = formatTimeRemaining(cooldown.cooldownRemaining || 0);
+		const embed = createUradPraceEmbed()
+			.addFields(
+				...[
+					{
+						name: "Tvůj stav",
+						value: "Šlofííčkuješ",
+					},
+					{
+						name: "Odpočatý budeš za",
+						value: timeRemaining,
+					},
+				],
+			)
+			.setFooter({ text: "Za flákání se neplatí! Zkus to znovu později.\nTip: Pracovat můžeš jednou za 60 minut" })
+			.setThumbnail("https://cdn.discordapp.com/emojis/1326286362760187944.png");
+
+		await interaction.editReply({ embeds: [embed] });
+		return;
+	}
+
+	// Get user's boost count (how many times they've boosted)
+	let boostCount = 0;
+	if (interaction.guild && interaction.member) {
+		// Check if member has the premium subscriber role (server booster)
+		const member = await interaction.guild.members.fetch(interaction.user.id);
+		if (member.premiumSince) {
+			// User is a booster, but Discord doesn't tell us how many boosts they have
+			// We'll count 5 boost per premium subscriber for simplicity
+			boostCount = 3;
+		}
+	}
+
+	const [workError, work] = await orpc.users.stats.work.claim({
+		userId: dbUser.id,
+		boostCount,
+	});
+
+	if (workError) {
+		console.error("Error executing work command:", workError);
+		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se dokončit práci. Zkuste to prosím později.");
+		await interaction.editReply({ embeds: [errorEmbed] });
+		return;
+	}
+
+	const { earnedTotalCoins, earnedTotalXp, boostCoinsBonus, boostXpBonus } = work.claimStats;
+
+	// Calculate display values (without boost)
+	const displayCoins = earnedTotalCoins - boostCoinsBonus;
+	const displayXp = earnedTotalXp - boostXpBonus;
+
+	// Check for level up
+	if (work.levelUp) {
+		const levelUpEmbed = createLevelUpEmbed(
+			`Level ${work.levelUp.newLevel}!`,
+			`Gratulujeme! Dosáhli jste úrovně ${work.levelUp.newLevel} a získáváte bonus ${work.levelUp.bonusCoins} mincí!`,
+		);
+		await interaction.editReply({ embeds: [levelUpEmbed] });
+
+		// Wait a bit before showing the main reward
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+	}
+
+	const activity = workActivities[Math.floor(Math.random() * workActivities.length)];
+	if (!activity) {
+		await interaction.editReply({
+			content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",
+		});
+		return;
+	}
+
+	const embed = createUradPraceEmbed().addFields(
+		{
+			name: activity.title,
+			value: activity.activity,
+		},
+		{
+			name: "🪙 Získané mince",
+			value: `+${displayCoins}`,
+			inline: true,
+		},
+		{
+			name: "⭐ Získané XP",
+			value: `+${displayXp}`,
+			inline: true,
+		},
+	);
+
+	// Add boost bonus fields if user is a booster
+	if (work.claimStats.boostCoinsBonus > 0 || work.claimStats.boostXpBonus > 0) {
+		const boostPercentage = Math.round((work.claimStats.boostMultiplier - 1) * 100);
+		embed.addFields(
+			{
+				name: "\u200B", // Empty field to force new row
+				value: "\u200B",
+				inline: true,
+			},
+			{
+				name: "💜 Boost mincí",
+				value: `+${work.claimStats.boostCoinsBonus} (${boostPercentage}%)`,
+				inline: true,
+			},
+			{
+				name: "💜 Boost XP",
+				value: `+${work.claimStats.boostXpBonus} (${boostPercentage}%)`,
+				inline: true,
+			},
+			{
+				name: "\u200B", // Empty field to force new row
+				value: "\u200B",
+				inline: true,
+			},
+		);
+	}
+
+	// Add level progress if available
+	if (work.levelProgress) {
+		const progress = work.levelProgress;
+		const progressBar = createProgressBar(progress.xpProgress, progress.xpNeeded);
+		embed.addFields({
+			name: "📊 Postup na další úroveň",
+			value: progressBar,
+			inline: false,
+		});
+	}
+
+	embed.setFooter({
+		text: `💰 Celkem: ${work.updatedStats.coinsCount} mincí • ⭐ Úroveň ${work.levelProgress.currentLevel} • 💼 Práce #${work.updatedStats.workCount}`,
+	});
+
+	// Update or send the embed
+	if (work.levelUp) {
+		await interaction.followUp({ embeds: [embed] });
+	} else {
+		await interaction.editReply({ embeds: [embed] });
 	}
 };
 

@@ -24,72 +24,11 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction }: CommandContext) => {
 	const targetUser = interaction.options.getUser("user") || interaction.user;
 
-	try {
-		const { stats, levelProgress } = await orpc.users.stats.user({
-			discordId: targetUser.id,
-		});
+	const [error, result] = await orpc.users.stats.user({
+		discordId: targetUser.id,
+	});
 
-		// Create progress bar for XP
-		const progressBar = createProgressBar(levelProgress.xpProgress, levelProgress.xpNeeded);
-
-		function getState() {
-			if (stats.coinsCount >= 1_000_000) {
-				return "Kryptobaron";
-			}
-			if (stats.coinsCount >= 70_000) {
-				return "Pracující";
-			}
-			if (stats.coinsCount >= 30_000) {
-				return "Brigádník";
-			}
-			if (stats.coinsCount >= 10_000) {
-				return "Student";
-			}
-			return "Na dávkách";
-		}
-
-		const embed = createCeskyStatistickyUradEmbed()
-			.addFields(
-				{
-					name: "🙎 Subjekt",
-					value: `${targetUser.displayName}`,
-					inline: true,
-				},
-				{
-					name: "⚕️ Stav",
-					value: getState(),
-					inline: true,
-				},
-				{
-					name: "",
-					value: "",
-					inline: false,
-				},
-			)
-			.addFields(
-				{
-					name: "💵 Mince",
-					value: `${stats.coinsCount.toLocaleString()}`,
-					inline: true,
-				},
-				{
-					name: "✨ XP",
-					value: `${stats.xpCount.toLocaleString()}`,
-					inline: true,
-				},
-				{ name: "⭐ Úroveň", value: `${levelProgress.currentLevel}`, inline: true },
-				{
-					name: "📊 Postup na další úroveň",
-					value: `${progressBar}\n${levelProgress.xpProgress}/${levelProgress.xpNeeded} XP`,
-					inline: false,
-				},
-			)
-			.setFooter({
-				text: `Přihlaš se každý den na úřad práce </daily:${getCommand("daily")?.instances[interaction.guildId as string]?.id}>\nA pracuj poctivě kažou hodinu </work:${getCommand("work")?.instances[interaction.guildId as string]?.id}>\nAbys mohl získat více mincí a XP`,
-			});
-
-		await interaction.reply({ embeds: [embed] });
-	} catch (error) {
+	if (error) {
 		if (error instanceof ORPCError && error.code === "NOT_FOUND") {
 			await interaction.reply({ embeds: [createNotFoundEmbed(interaction.guild as Guild, targetUser.displayName)] });
 		} else {
@@ -99,7 +38,71 @@ export const execute = async ({ interaction }: CommandContext) => {
 			await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 			console.error("Error fetching user points:", error);
 		}
+		return;
 	}
+
+	const { stats, levelProgress } = result;
+
+	// Create progress bar for XP
+	const progressBar = createProgressBar(levelProgress.xpProgress, levelProgress.xpNeeded);
+
+	function getState() {
+		if (stats.coinsCount >= 1_000_000) {
+			return "Kryptobaron";
+		}
+		if (stats.coinsCount >= 70_000) {
+			return "Pracující";
+		}
+		if (stats.coinsCount >= 30_000) {
+			return "Brigádník";
+		}
+		if (stats.coinsCount >= 10_000) {
+			return "Student";
+		}
+		return "Na dávkách";
+	}
+
+	const embed = createCeskyStatistickyUradEmbed()
+		.addFields(
+			{
+				name: "🙎 Subjekt",
+				value: `${targetUser.displayName}`,
+				inline: true,
+			},
+			{
+				name: "⚕️ Stav",
+				value: getState(),
+				inline: true,
+			},
+			{
+				name: "",
+				value: "",
+				inline: false,
+			},
+		)
+		.addFields(
+			{
+				name: "💵 Mince",
+				value: `${stats.coinsCount.toLocaleString()}`,
+				inline: true,
+			},
+			{
+				name: "✨ XP",
+				value: `${stats.xpCount.toLocaleString()}`,
+				inline: true,
+			},
+			{ name: "⭐ Úroveň", value: `${levelProgress.currentLevel}`, inline: true },
+			{
+				name: "📊 Postup na další úroveň",
+				value: `${progressBar}\n${levelProgress.xpProgress}/${levelProgress.xpNeeded} XP`,
+				inline: false,
+			},
+		)
+		.setFooter({
+			text: `Přihlaš se každý den na úřad práce /daily>\nA pracuj poctivě kažou hodinu /work\nAbys mohl získat více mincí a XP`,
+		});
+
+	await interaction.reply({ embeds: [embed] });
 };
 
 const createNotFoundEmbed = (guild: Guild, displayName: string) =>

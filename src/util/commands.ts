@@ -25,7 +25,7 @@ for await (const file of glob.scan(join(import.meta.dirname, "../commands"))) {
 
 export interface CommandContext {
 	interaction: ChatInputCommandInteraction;
-	dbUser: Awaited<ReturnType<(typeof orpc)["users"]["get"]>>;
+	dbUser: NonNullable<Awaited<ReturnType<(typeof orpc)["users"]["get"]>>[1]>;
 }
 
 export async function registerCommands(guild: Guild) {

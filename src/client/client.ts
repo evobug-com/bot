@@ -1,4 +1,4 @@
-import { createORPCClient, onError } from "@orpc/client";
+import { createORPCClient, createSafeClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import type { Guild, GuildMember, Interaction } from "discord.js";
@@ -6,27 +6,27 @@ import type { router } from "../../../api/src/contract/router.ts";
 import { reportError } from "../util";
 
 const link = new RPCLink({
-	url: "http://127.0.0.1:3001",
-	interceptors: [
-		onError((error) => {
-			console.error(error);
-		}),
-	],
+	url: "http://127.0.0.1:3001"
 });
 
-export const orpc: RouterClient<typeof router> = createORPCClient(link);
+const client: RouterClient<typeof router> = createORPCClient(link);
+export const orpc = createSafeClient(client);
 
-const dbUsers: Record<string, Awaited<ReturnType<(typeof orpc)["users"]["get"]>>> = {};
+const dbUsers: Record<string, Awaited<ReturnType<(typeof client)["users"]["get"]>>> = {};
 export const getDbUser = async (
 	guild: Guild,
 	discordIdOrMemberOrInteraction: string | GuildMember | Interaction,
 	_cache = true,
 ): Promise<NonNullable<(typeof dbUsers)[string]>> => {
 	// if(cache && dbUsers[discordId] != null) return dbUsers[discordId]
-	return setDbUser(guild, await orpc.users.get({ discordId: extractDiscordId(discordIdOrMemberOrInteraction) }));
+	const [error, user] = await orpc.users.get({ discordId: extractDiscordId(discordIdOrMemberOrInteraction) });
+	if (error) {
+		throw error;
+	}
+	return setDbUser(guild, user);
 };
 
-export const setDbUser = (guild: Guild, user: Awaited<ReturnType<(typeof orpc)["users"]["get"]>>) => {
+export const setDbUser = (guild: Guild, user: Awaited<ReturnType<(typeof client)["users"]["get"]>>) => {
 	if (user.discordId) {
 		dbUsers[user.discordId] = user;
 	} else {

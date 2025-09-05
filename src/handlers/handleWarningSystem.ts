@@ -114,22 +114,22 @@ export const handleWarningSystem = async (client: Client<true>) => {
 	// Load active violations from API and apply restrictions
 	await loadActiveViolations(client);
 
-	// Register event listeners for restriction enforcement
-	client.on(Events.MessageCreate, handleMessageRestrictions);
-	client.on(Events.VoiceStateUpdate, handleVoiceRestrictions);
-	client.on(Events.InteractionCreate, handleInteractionRestrictions);
-	client.on(Events.GuildMemberUpdate, handleNicknameRestrictions);
-
-	// Register button interaction handler
-	client.on(Events.InteractionCreate, handleButtonInteractions);
-
-	// Set up periodic expiration checks
-	setInterval(() => checkAndExpireViolations(client), config.enforcement.expirationCheckInterval * 60 * 1000);
-
-	// Initial expiration check
-	await checkAndExpireViolations(client);
-
-	log("info", "Warning system initialized");
+	// // Register event listeners for restriction enforcement
+	// client.on(Events.MessageCreate, handleMessageRestrictions);
+	// client.on(Events.VoiceStateUpdate, handleVoiceRestrictions);
+	// client.on(Events.InteractionCreate, handleInteractionRestrictions);
+	// client.on(Events.GuildMemberUpdate, handleNicknameRestrictions);
+    //
+	// // Register button interaction handler
+	// client.on(Events.InteractionCreate, handleButtonInteractions);
+    //
+	// // Set up periodic expiration checks
+	// setInterval(() => checkAndExpireViolations(client), config.enforcement.expirationCheckInterval * 60 * 1000);
+    //
+	// // Initial expiration check
+	// await checkAndExpireViolations(client);
+    //
+	// log("info", "Warning system initialized");
 };
 
 /**
@@ -216,7 +216,7 @@ export async function issueViolation(
 		}
 
 		// Call ORPC API to create violation
-		const response = await orpc.moderation.violations.issue({
+		const [issueError, response] = await orpc.moderation.violations.issue({
 			userId: violation.userId,
 			guildId: violation.guildId,
 			type: violation.type,
@@ -237,6 +237,10 @@ export async function issueViolation(
 				: undefined,
 		});
 
+		if (issueError) {
+			throw issueError;
+		}
+
 		const createdViolation = {
 			...response.violation,
 			type: response.violation.type as ViolationType,
@@ -250,8 +254,8 @@ export async function issueViolation(
 		violationCache.set(cacheKey, userViolations);
 
 		// Get Discord ID from database user for applying restrictions
-		const dbUser = await orpc.users.get({ id: violation.userId }).catch(() => null);
-		if (dbUser?.discordId) {
+		const [userError, dbUser] = await orpc.users.get({ id: violation.userId });
+		if (!userError && dbUser?.discordId) {
 			// Apply restrictions using Discord ID
 			const restrictionsArray = Array.isArray(violation.restrictions) ? violation.restrictions : [];
 			await applyRestrictions(client, dbUser.discordId, violation.guildId, restrictionsArray);
@@ -338,8 +342,8 @@ async function applyAutomaticActions(client: Client<true>, violation: Violation)
 		if (!guild) return;
 
 		// Get the Discord ID from the database user ID
-		const dbUser = await orpc.users.get({ id: violation.userId }).catch(() => null);
-		if (!dbUser || !dbUser.discordId) return;
+		const [dbUserError, dbUser] = await orpc.users.get({ id: violation.userId });
+		if (dbUserError || !dbUser || !dbUser.discordId) return;
 
 		const member = await guild.members.fetch(dbUser.discordId).catch(() => null);
 		if (!member) return;
@@ -549,12 +553,16 @@ async function handleSuspension(client: Client<true>, userId: string, guildId: s
 
 		// Create suspension record via API
 		// Note: This needs proper DB user ID lookup
-		await orpc.moderation.suspensions.create({
+		const [suspensionError] = await orpc.moderation.suspensions.create({
 			userId: parseInt(userId, 10), // Assuming this is already a DB user ID
 			guildId,
 			reason: "Automatic suspension - Account standing reached SUSPENDED",
 			issuedBy: 0, // System user
 		});
+
+		if (suspensionError) {
+			log("error", "Failed to create suspension record:", suspensionError);
+		}
 
 		log("info", `User ${userId} suspended from guild ${guildId}`);
 	} catch (error) {
@@ -575,11 +583,16 @@ async function getUserViolations(userId: string, guildId: string): Promise<Viola
 		// Get database user ID from Discord ID - assuming we have access to guild
 		// Note: This function needs to be refactored to accept Guild parameter
 		// For now, we'll fetch without caching
-		const response = await orpc.moderation.violations.list({
+		const [violationsError, response] = await orpc.moderation.violations.list({
 			userId: parseInt(userId, 10), // Assuming this is already a DB user ID
 			guildId,
 			includeExpired: true,
 		});
+
+		if (violationsError) {
+			log("error", "Failed to get user violations:", violationsError);
+			return [];
+		}
 
 		// Extract violations from response and convert types
 		const violations = (response.violations || []).map((v) => ({
@@ -616,17 +629,22 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
 			for (const violation of violations) {
 				if (!violation.expiredAt && violation.expiresAt && violation.expiresAt <= now) {
 					// Expire the violation
-					await orpc.moderation.violations.expire({
+					const [expireError] = await orpc.moderation.violations.expire({
 						violationId: violation.id,
 						expiredBy: 0, // System user
 					});
+
+					if (expireError) {
+						log("error", "Failed to expire violation:", expireError);
+						continue;
+					}
 
 					violation.expiredAt = now;
 					expiredCount++;
 
 					// Get Discord ID to remove restrictions
-					const dbUser = await orpc.users.get({ id: parseInt(userId, 10) }).catch(() => null);
-					if (dbUser?.discordId) {
+					const [userError, dbUser] = await orpc.users.get({ id: parseInt(userId, 10) });
+					if (!userError && dbUser?.discordId) {
 						// Remove associated restrictions using Discord ID
 						const userRestrictions = activeRestrictions.get(dbUser.discordId);
 						if (userRestrictions) {
@@ -945,10 +963,14 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 			const dbUser = await getDbUser(guild, interaction.user.id);
 
 			// Fetch standing from API
-			const standingResponse = await orpc.moderation.standing.get({
+			const [standingError, standingResponse] = await orpc.moderation.standing.get({
 				userId: dbUser.id,
 				guildId: guild.id,
 			});
+
+			if (standingError) {
+				throw standingError;
+			}
 
 			// Create a simple standing summary
 			const standingData: AccountStandingData = {
@@ -962,11 +984,15 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 			};
 
 			// Fetch violations for display
-			const violationsListResponse = await orpc.moderation.violations.list({
+			const [violationsError, violationsListResponse] = await orpc.moderation.violations.list({
 				userId: dbUser.id,
 				guildId: guild.id,
 				includeExpired: false,
 			});
+
+			if (violationsError) {
+				throw violationsError;
+			}
 
 			const violations: Violation[] = (violationsListResponse.violations || []).map((v) => ({
 				...v,
@@ -1009,12 +1035,16 @@ async function handleButtonInteractions(interaction: Interaction): Promise<void>
 			const dbUser = await getDbUser(interaction.guild, interaction.user.id);
 
 			// Fetch violations from API
-			const response = await orpc.moderation.violations.list({
+			const [violationsError, response] = await orpc.moderation.violations.list({
 				userId: dbUser.id,
 				guildId: interaction.guild.id,
 				includeExpired: false,
 				limit: 50,
 			});
+
+			if (violationsError) {
+				throw violationsError;
+			}
 
 			if (!response.violations || response.violations.length === 0) {
 				await interaction.editReply({
@@ -1134,18 +1164,19 @@ async function loadActiveViolations(client: Client<true>): Promise<void> {
 
 				try {
 					// Get database user
-					const dbUser = await orpc.users.get({ discordId: member.id }).catch(() => null);
-					if (!dbUser) continue;
+					const [dbUserError, dbUser] = await orpc.users.get({ discordId: member.id });
+					if (dbUserError || !dbUser) continue;
+
 
 					// Fetch violations for this user
-					const response = await orpc.moderation.violations.list({
+					const [violationsError, response] = await orpc.moderation.violations.list({
 						userId: dbUser.id,
 						guildId: guild.id,
 						includeExpired: false,
 						limit: 100,
 					});
 
-					if (response.violations && response.violations.length > 0) {
+					if (!violationsError && response.violations && response.violations.length > 0) {
 						// Convert and cache violations
 						const violations: Violation[] = response.violations.map((v) => ({
 							id: v.id,

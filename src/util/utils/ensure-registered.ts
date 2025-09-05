@@ -1,5 +1,7 @@
 import { ORPCError } from "@orpc/client";
+import type { RouterClient } from "@orpc/server";
 import type { Guild } from "discord.js";
+import type { router } from "../../../../api/src/contract/router.ts";
 import { getDbUser, orpc, setDbUser } from "../../client/client.ts";
 
 /** Ensures a Discord user is registered, auto-registering if needed
@@ -10,7 +12,10 @@ import { getDbUser, orpc, setDbUser } from "../../client/client.ts";
 export async function ensureUserRegistered(
 	guild: Guild,
 	discordId: string,
-): Promise<{ success: true; user: Awaited<ReturnType<typeof orpc.users.create>> } | { success: false; error: string }> {
+): Promise<
+	| { success: true; user: Awaited<ReturnType<RouterClient<typeof router>["users"]["create"]>> }
+	| { success: false; error: string }
+> {
 	try {
 		return {
 			success: true,
@@ -23,20 +28,17 @@ export async function ensureUserRegistered(
 		}
 	}
 
-	try {
+	const [createError, newUser] = await orpc.users.create({ discordId });
+
+	if (createError) {
 		return {
-			success: true,
-			user: setDbUser(guild, await orpc.users.create({ discordId })),
+			success: false,
+			error: createError.message || "Failed to create user",
 		};
-	} catch (e) {
-		// TODO: Is this the right way to handle this?
-		if (!(e instanceof ORPCError) || e.code !== "NOT_FOUND") {
-			throw e;
-		}
 	}
 
 	return {
-		success: false,
-		error: "Failed to create user",
+		success: true,
+		user: setDbUser(guild, newUser),
 	};
 }

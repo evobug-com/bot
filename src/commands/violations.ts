@@ -52,56 +52,63 @@ export const execute = async ({ interaction }: CommandContext) => {
 
 	await interaction.deferReply({ flags });
 
+	// Get database user ID from Discord ID
+	let targetDbUser: Awaited<ReturnType<typeof getDbUser>> | undefined;
 	try {
-		// Get database user ID from Discord ID
-		const targetDbUser = await getDbUser(interaction.guild, targetUser.id);
-
-		// Fetch violations from API using database user ID
-		const response = await orpc.moderation.violations.list({
-			userId: targetDbUser.id,
-			guildId: interaction.guild.id,
-			includeExpired: true, // We'll filter client-side based on showExpired
-		});
-
-		// Extract violations from response
-		const violations = response.violations || [];
-
-		// Convert API response to our Violation type
-		const typedViolations: Violation[] = violations.map((v) => ({
-			...v,
-			type: v.type as ViolationType,
-			severity: v.severity as ViolationSeverity,
-			issuedAt: new Date(v.issuedAt),
-			expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
-			reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
-			restrictions:
-				typeof v.restrictions === "string" ? (v.restrictions ? JSON.parse(v.restrictions) : []) : v.restrictions || [],
-		}));
-
-		// Create the display with appropriate header
-		const display = createViolationListDisplay(
-			typedViolations,
-			showExpired,
-			viewingOthers ? targetUser.tag : undefined,
-		);
-
-		await interaction.editReply({
-			components: [display],
-			flags: MessageFlags.IsComponentsV2 | (flags || 0),
-		});
+		targetDbUser = await getDbUser(interaction.guild, targetUser.id);
 	} catch (error) {
-		console.error("Error fetching violations:", error);
-
+		console.error("Error fetching user:", error);
 		if (error instanceof ORPCError && error.code === "NOT_FOUND") {
 			await interaction.editReply({
 				content: `❌ Uživatel ${targetUser.tag} není registrován v systému.`,
 			});
 		} else {
 			const embed = createErrorEmbed(
-				"Chyba při načítání porušení",
-				"Při načítání seznamu porušení došlo k chybě. Zkuste to prosím později.",
+				"Chyba při načítání uživatele",
+				"Při načítání uživatele došlo k chybě. Zkuste to prosím později.",
 			);
 			await interaction.editReply({ embeds: [embed] });
 		}
+		return;
 	}
+
+	// Fetch violations from API using database user ID
+	const [violationsError, response] = await orpc.moderation.violations.list({
+		userId: targetDbUser.id,
+		guildId: interaction.guild.id,
+		includeExpired: true, // We'll filter client-side based on showExpired
+	});
+
+	if (violationsError) {
+		console.error("Error fetching violations:", violationsError);
+		const embed = createErrorEmbed(
+			"Chyba při načítání porušení",
+			"Při načítání seznamu porušení došlo k chybě. Zkuste to prosím později.",
+		);
+		await interaction.editReply({ embeds: [embed] });
+		return;
+	}
+
+	// Extract violations from response
+	const violations = response.violations || [];
+
+	// Convert API response to our Violation type
+	const typedViolations: Violation[] = violations.map((v) => ({
+		...v,
+		type: v.type as ViolationType,
+		severity: v.severity as ViolationSeverity,
+		issuedAt: new Date(v.issuedAt),
+		expiresAt: v.expiresAt ? new Date(v.expiresAt) : null,
+		reviewedAt: v.reviewedAt ? new Date(v.reviewedAt) : null,
+		restrictions:
+			typeof v.restrictions === "string" ? (v.restrictions ? JSON.parse(v.restrictions) : []) : v.restrictions || [],
+	}));
+
+	// Create the display with appropriate header
+	const display = createViolationListDisplay(typedViolations, showExpired, viewingOthers ? targetUser.tag : undefined);
+
+	await interaction.editReply({
+		components: [display],
+		flags: MessageFlags.IsComponentsV2 | (flags || 0),
+	});
 };

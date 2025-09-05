@@ -42,7 +42,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleWarningSystem(readyClient);
 	void handleAntibotRooms(readyClient);
 	void handleMediaForum(readyClient);
-	// TODO: Not implemented yet? void handleMessageLogging(readyClient);
+	// // TODO: Not implemented yet? void handleMessageLogging(readyClient);
 	void handleAchievements(readyClient);
 	void handleSendingEmbedMessages(readyClient);
 	void handleNewsEmbeds(readyClient);

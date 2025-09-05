@@ -85,7 +85,7 @@ export function createLeaderboardEmbed(
 }
 
 // Progress bar generator
-export function createProgressBar(current: number, max: number, length = 10): string {
+export function createProgressBar(current: number, max: number, length = 20): string {
 	const percentage = Math.min(Math.max(current / max, 0), 1);
 	const filled = Math.round(percentage * length);
 	const empty = length - filled;

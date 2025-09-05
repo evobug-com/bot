@@ -13,14 +13,15 @@
 	"dependencies": {
 		"@orpc/client": "^1.8.6",
 		"discord.js": "dev",
-		"dotenv": "^17.2.1",
+		"dotenv": "^17.2.2",
 		"execa": "^9.6.0",
 		"glob": "^11.0.3"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.2",
+		"@biomejs/biome": "^2.2.3",
+		"@faker-js/faker": "^10.0.0",
 		"@types/bun": "^1.2.21",
-		"@types/node": "^24.3.0",
+		"@types/node": "^24.3.1",
 		"@typescript/native-preview": "latest"
 	},
 	"engines": {

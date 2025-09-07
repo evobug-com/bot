@@ -6,15 +6,15 @@
       "dependencies": {
         "@orpc/client": "^1.8.6",
         "discord.js": "dev",
-        "dotenv": "^17.2.1",
+        "dotenv": "^17.2.2",
         "execa": "^9.6.0",
         "glob": "^11.0.3",
       },
       "devDependencies": {
-        "@biomejs/biome": "^2.2.2",
+        "@biomejs/biome": "^2.2.3",
         "@faker-js/faker": "^10.0.0",
         "@types/bun": "^1.2.21",
-        "@types/node": "^24.3.0",
+        "@types/node": "^24.3.1",
         "@typescript/native-preview": "latest",
       },
     },
@@ -38,17 +38,17 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.2.3", "", { "os": "win32", "cpu": "x64" }, "sha512-gvCpewE7mBwBIpqk1YrUqNR4mCiyJm6UI3YWQQXkedSSEwzRdodRpaKhbdbHw1/hmTWOVXQ+Eih5Qctf4TCVOQ=="],
 
-    "@discordjs/builders": ["@discordjs/builders@2.0.0-dev.1757073695-ddf9f818e", "", { "dependencies": { "@discordjs/util": "^2.0.0-dev.1757073695-ddf9f818e", "discord-api-types": "^0.38.22", "ts-mixer": "^6.0.4", "tslib": "^2.8.1", "zod": "^4.0.17" } }, "sha512-Sw/eXqMndtAq7NzlqqO129jHgRS9eqbyZ5O+p6SDu90HkHCnGlcxkBckUvhJg1ftt5j3M8oPxq8LLyZUZYQ7zQ=="],
+    "@discordjs/builders": ["@discordjs/builders@2.0.0-dev.1757160090-352c9819b", "", { "dependencies": { "@discordjs/util": "^2.0.0-dev.1757160090-352c9819b", "discord-api-types": "^0.38.22", "ts-mixer": "^6.0.4", "tslib": "^2.8.1", "zod": "^4.0.17" } }, "sha512-fjPMTuqYsxGD8RCQBX2Wl4x7LB8WzomalUEU3sMdzNle1VTuxg7QZcC8OXaB8XS4gir7Q0nH35KzYIJeJMdPRw=="],
 
-    "@discordjs/collection": ["@discordjs/collection@3.0.0-dev.1757073695-ddf9f818e", "", {}, "sha512-tqmBEcgi21dP2U/WtvYSMd7RP8JYByYkTqhz7VmxntZlgxtTfuaCv0NFIEye0Z2nU3K1vkpw8FdL6DdhX5Xjog=="],
+    "@discordjs/collection": ["@discordjs/collection@3.0.0-dev.1757160090-352c9819b", "", {}, "sha512-jlgu6NEm230+9lQMKC9TMLIx60tHmMxXAmseia8iCkFXCD6zQU/ShvCbMO09++C9mKFidMje15IT6QmYP7wc3w=="],
 
-    "@discordjs/formatters": ["@discordjs/formatters@1.0.0-dev.1757073695-ddf9f818e", "", { "dependencies": { "discord-api-types": "^0.38.22" } }, "sha512-U56lqBdb+2HMt3pbbv7ESvzXGqDo/jHkIdXtVze3gNP6+o1ivvWTj6k24n7c4VoUPgBWTVRXh7GMRUgrFfaJ5g=="],
+    "@discordjs/formatters": ["@discordjs/formatters@1.0.0-dev.1757160090-352c9819b", "", { "dependencies": { "discord-api-types": "^0.38.22" } }, "sha512-cTl2AJx8oW+mFVEdHbDKfAd/knDW6Y9IVFKfX9OE0DSAQ4HR9M8ANGgXueuNZHNcbU2QX4eQ5MEFalXbF3EeCw=="],
 
-    "@discordjs/rest": ["@discordjs/rest@3.0.0-dev.1757073695-ddf9f818e", "", { "dependencies": { "@discordjs/collection": "^3.0.0-dev.1757073695-ddf9f818e", "@discordjs/util": "^2.0.0-dev.1757073695-ddf9f818e", "@sapphire/async-queue": "^1.5.5", "@sapphire/snowflake": "^3.5.5", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "magic-bytes.js": "^1.12.1", "tslib": "^2.8.1", "undici": "7.11.0", "uuid": "^11.1.0" } }, "sha512-XRTE774gwWDMOIY6m7acOngNUiqCUwwgLgDxFkuLFuLqkW+5lRdxY0xvi8eVFunl/yUsb+srhNXYEsAgDGRC/A=="],
+    "@discordjs/rest": ["@discordjs/rest@3.0.0-dev.1757160090-352c9819b", "", { "dependencies": { "@discordjs/collection": "^3.0.0-dev.1757160090-352c9819b", "@discordjs/util": "^2.0.0-dev.1757160090-352c9819b", "@sapphire/async-queue": "^1.5.5", "@sapphire/snowflake": "^3.5.5", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "magic-bytes.js": "^1.12.1", "tslib": "^2.8.1", "undici": "7.11.0", "uuid": "^11.1.0" } }, "sha512-zRLcp/PJJZa3Hy6m535fuviEoEMrVIIijgntvRa805gVRgiGNXmHZBrzvvs91vesTgk/rWImRTWIfeYprUM3tA=="],
 
-    "@discordjs/util": ["@discordjs/util@2.0.0-dev.1757073695-ddf9f818e", "", {}, "sha512-is9DDJh+L1XK1PiPeMYq4sU//mQ6e9RBSjyZgDemBEcid4LXf6tUbBq/KXNwtKLVyiIWDYZypPkhmLzLDm7ajQ=="],
+    "@discordjs/util": ["@discordjs/util@2.0.0-dev.1757160090-352c9819b", "", {}, "sha512-4MC3sHMxADndY8Rwhta/c78AEoMxHSEPL5SFPiyn3oUqxM3mwWYJYRVr8ksAlN/TFgTQOrH5KJyLRENWLZlV+w=="],
 
-    "@discordjs/ws": ["@discordjs/ws@3.0.0-dev.1757073695-ddf9f818e", "", { "dependencies": { "@discordjs/collection": "^3.0.0-dev.1757073695-ddf9f818e", "@discordjs/util": "^2.0.0-dev.1757073695-ddf9f818e", "@sapphire/async-queue": "^1.5.5", "@types/ws": "^8.18.1", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "tslib": "^2.8.1", "ws": "^8.18.3" } }, "sha512-jsYKXF+RslEodLptbpHJrZtZRVIZ0Gfu1C20v+LzUA8MXv59/0oi3h+TWpVPxZd6Cn0GsrbTei7dBzCzFX17XQ=="],
+    "@discordjs/ws": ["@discordjs/ws@3.0.0-dev.1757160090-352c9819b", "", { "dependencies": { "@discordjs/collection": "^3.0.0-dev.1757160090-352c9819b", "@discordjs/util": "^2.0.0-dev.1757160090-352c9819b", "@sapphire/async-queue": "^1.5.5", "@types/ws": "^8.18.1", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "tslib": "^2.8.1", "ws": "^8.18.3" } }, "sha512-v5hXonw2gKItaWsQwLAt8Ha4nflQ9oYo7airDxtbuyPP7BKZ5gSK+aGYjJiJsnM8u2sKb2CYscfgkpMP4Tbf4A=="],
 
     "@faker-js/faker": ["@faker-js/faker@10.0.0", "", {}, "sha512-UollFEUkVXutsaP+Vndjxar40Gs5JL2HeLcl8xO1QAjJgOdhc3OmBFWyEylS+RddWaaBiAzH+5/17PLQJwDiLw=="],
 
@@ -84,21 +84,21 @@
 
     "@types/ws": ["@types/ws@8.18.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg=="],
 
-    "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20250904.1", "", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20250904.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20250904.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20250904.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20250904.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20250904.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20250904.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20250904.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-IzPzhumNsWsIg4Kmt0y+0b2BBtsvD17rDmKj78yNeU3AsuA6xignQ5eDkFtRmLdGPVZwa8Yg5zPcJRFln98Ocw=="],
+    "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20250907.1", "", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20250907.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20250907.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20250907.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20250907.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20250907.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20250907.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20250907.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-2GtjIqg+ZKNqIcVTWr1eAYdnaVB9bcqmMumh17xBTrs61ZWNldBDb2z/qiZjpSk+NVsasVrAaRdf3PFaIwhYFg=="],
 
-    "@typescript/native-preview-darwin-arm64": ["@typescript/native-preview-darwin-arm64@7.0.0-dev.20250904.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-1rt4DhERW1VM4OwWYVIrCp1k1S4kpZAxzbCnprNinVJInhHexY2K0FFD9IGXKWSRANHg/OmJRQYTEoDKM6pqNw=="],
+    "@typescript/native-preview-darwin-arm64": ["@typescript/native-preview-darwin-arm64@7.0.0-dev.20250907.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-mY8878mDFbzYPAurg4neLQe0o4AzEYsPOzXRFcMktY0s5o6KW2t/QrSi0h0RbKDBnnUhDYI/rKBtF/Nyb4JyLA=="],
 
-    "@typescript/native-preview-darwin-x64": ["@typescript/native-preview-darwin-x64@7.0.0-dev.20250904.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-d2DMQnsXAkZDDk9bU/FhY/D74tbMAkboIGb+hq7kIIgOVcxOswhwLFZ/ajW/9NTesktz8Z14t40Ber+/Pny25A=="],
+    "@typescript/native-preview-darwin-x64": ["@typescript/native-preview-darwin-x64@7.0.0-dev.20250907.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-XiKWEK5rS4BtRrYgo55W34KEmliumc3icnokl8oKwP2MFajrHyFLQjOh6Osbn6t4LirF4Fly3TSuZV0+WSrwpw=="],
 
-    "@typescript/native-preview-linux-arm": ["@typescript/native-preview-linux-arm@7.0.0-dev.20250904.1", "", { "os": "linux", "cpu": "arm" }, "sha512-YyfTK1SGmfeDJv6G3vSmVxjM914Xio7O57NzRKOyEQnmBT5tdXTzeWgkjrUh1jE8wCUu0f0ZZ+xDTwgys+E2ug=="],
+    "@typescript/native-preview-linux-arm": ["@typescript/native-preview-linux-arm@7.0.0-dev.20250907.1", "", { "os": "linux", "cpu": "arm" }, "sha512-qV8WOTvbW6TJkCtJtvd9quq/1/XntHijw2AC9T6QgiLQ+HBAVwRCrGNbMSOvBWNR/vRfxUIoLYFTQQ4AGgL8uQ=="],
 
-    "@typescript/native-preview-linux-arm64": ["@typescript/native-preview-linux-arm64@7.0.0-dev.20250904.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-+fv13RDSk+7wFYY846q5ig7X6G07JT7wbajk6p4rELXTIfS1c6gRHGhODETCfFVaPziP4IlvqyinNP8F8wc9uQ=="],
+    "@typescript/native-preview-linux-arm64": ["@typescript/native-preview-linux-arm64@7.0.0-dev.20250907.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-zXGtoLgyCEOID5w6J1d58/G9baJvI2m49iVKTcJMzRVQV/i8JK9qksEsys+8qtbZKlURjnTIGZ1kWPd9AabPsA=="],
 
-    "@typescript/native-preview-linux-x64": ["@typescript/native-preview-linux-x64@7.0.0-dev.20250904.1", "", { "os": "linux", "cpu": "x64" }, "sha512-BjWJI42cUUilIyQHZpQQeSjC/Ifj/UaIf4oj6lRHDcg5qgLHWe5bAUxuNjE6i7wi+TTN9YxUvBDkMAcm/hI8wg=="],
+    "@typescript/native-preview-linux-x64": ["@typescript/native-preview-linux-x64@7.0.0-dev.20250907.1", "", { "os": "linux", "cpu": "x64" }, "sha512-Pf+6xJwgOfXWcLC5Zb8wq7P5HHsoC3FYpXFwDY7xypHxAB+oBJ5bT2aPvbKJLs8SYIrA6aw/D7ibTMnNrW/Tmw=="],
 
-    "@typescript/native-preview-win32-arm64": ["@typescript/native-preview-win32-arm64@7.0.0-dev.20250904.1", "", { "os": "win32", "cpu": "arm64" }, "sha512-rPv/mVaneZTuFESk/zDg3dFiZjpdipVMcLaF10Ns1fIyWdZ0ja79Ufm1eCFbk8KFNEX2dEx+vFEvD9n4bhEneg=="],
+    "@typescript/native-preview-win32-arm64": ["@typescript/native-preview-win32-arm64@7.0.0-dev.20250907.1", "", { "os": "win32", "cpu": "arm64" }, "sha512-wq+Gku7SFQpocaOd0BV0lZu092XMG4SdFOq5Bm7vfqo8cIIrDWtX71EvZc7taiEQjtMHCJAKl84StT2G7RGM+w=="],
 
-    "@typescript/native-preview-win32-x64": ["@typescript/native-preview-win32-x64@7.0.0-dev.20250904.1", "", { "os": "win32", "cpu": "x64" }, "sha512-+twwqKYEv5UdZX5FRaBo0bDQgw/uPQjU3hqaqaO0Dhp1Ou8Ce4oi5hgwauB1j29JwBbvOi9/yoEcjsjT2Wsaxw=="],
+    "@typescript/native-preview-win32-x64": ["@typescript/native-preview-win32-x64@7.0.0-dev.20250907.1", "", { "os": "win32", "cpu": "x64" }, "sha512-/QWz2hYfvT7qEL5TAlz4J54eQeuyRYEXahkESh6rMGN52BMS1KAMZq+hO4mOetMmNw/rVJ0L1YAEfmSm5Zdm5g=="],
 
     "@vladfrangu/async_event_emitter": ["@vladfrangu/async_event_emitter@2.4.6", "", {}, "sha512-RaI5qZo6D2CVS6sTHFKg1v5Ohq/+Bo2LZ5gzUEwZ/WkHhwtGTCB/sVLw8ijOkAUxasZ+WshN/Rzj4ywsABJ5ZA=="],
 
@@ -118,7 +118,7 @@
 
     "discord-api-types": ["discord-api-types@0.38.22", "", {}, "sha512-2gnYrgXN3yTlv2cKBISI/A8btZwsSZLwKpIQXeI1cS8a7W7wP3sFVQOm3mPuuinTD8jJCKGPGNH399zE7Un1kA=="],
 
-    "discord.js": ["discord.js@15.0.0-dev.1757073695-ddf9f818e", "", { "dependencies": { "@discordjs/builders": "^2.0.0-dev.1757073695-ddf9f818e", "@discordjs/collection": "^3.0.0-dev.1757073695-ddf9f818e", "@discordjs/formatters": "^1.0.0-dev.1757073695-ddf9f818e", "@discordjs/rest": "^3.0.0-dev.1757073695-ddf9f818e", "@discordjs/util": "^2.0.0-dev.1757073695-ddf9f818e", "@discordjs/ws": "^3.0.0-dev.1757073695-ddf9f818e", "@sapphire/snowflake": "3.5.5", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "fast-deep-equal": "3.1.3", "lodash.snakecase": "4.1.1", "magic-bytes.js": "^1.12.1", "tslib": "^2.8.1", "undici": "7.11.0" } }, "sha512-YqfSr4NotU9CgfkYedSDH77Xt037IU6Usa7qewEXlVnkYFFKhg7qbLwL/McseYoukJNbe/xkbdBAvZvNFItoTg=="],
+    "discord.js": ["discord.js@15.0.0-dev.1757160090-352c9819b", "", { "dependencies": { "@discordjs/builders": "^2.0.0-dev.1757160090-352c9819b", "@discordjs/collection": "^3.0.0-dev.1757160090-352c9819b", "@discordjs/formatters": "^1.0.0-dev.1757160090-352c9819b", "@discordjs/rest": "^3.0.0-dev.1757160090-352c9819b", "@discordjs/util": "^2.0.0-dev.1757160090-352c9819b", "@discordjs/ws": "^3.0.0-dev.1757160090-352c9819b", "@sapphire/snowflake": "3.5.5", "@vladfrangu/async_event_emitter": "^2.4.6", "discord-api-types": "^0.38.22", "fast-deep-equal": "3.1.3", "lodash.snakecase": "4.1.1", "magic-bytes.js": "^1.12.1", "tslib": "^2.8.1", "undici": "7.11.0" } }, "sha512-GL6kh/x21MS4RWgFPbfoR4nMq9+WjE99nlsmkom06kcYnKkPnqbnQeSEdi7aYyIXysGASdguwc+cxxsYlwXE9Q=="],
 
     "dotenv": ["dotenv@17.2.2", "", {}, "sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q=="],
 

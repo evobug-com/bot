@@ -100,7 +100,7 @@ export async function reportError(guild: Guild, errorType: string, message: stri
 		const channel = guild.channels.cache.get(DISCORD_CHANNELS.BOT_INFO.id);
 
 		if (!channel || !channel.isTextBased()) {
-			console.error("Bot info channel not found or not text-based");
+			console.error(`Bot info channel not found or not text-based in guild ${guild.id} (${guild.name}) Error: ${errorType} - ${message} Details: ${details ? JSON.stringify(details) : "N/A"}`);
 			return;
 		}
 

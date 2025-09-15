@@ -91,7 +91,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		await interaction.editReply({ embeds: [levelUpEmbed] });
 
 		// Wait a bit before showing the main reward
-		await new Promise((resolve) => setTimeout(resolve, 2000));
+		// await new Promise((resolve) => setTimeout(resolve, 2000));
 	}
 
 	const {

@@ -7,21 +7,21 @@
 	"main": "src/bot.ts",
 	"scripts": {
 		"dev": "bun --watch src/bot.ts",
-		"test": "bun test",
+		"test": "USE_TEMP_DATABASE=true bun test",
 		"test:watch": "bun test --watch"
 	},
 	"dependencies": {
-		"@orpc/client": "^1.8.6",
+		"@orpc/client": "^1.8.9",
 		"discord.js": "dev",
 		"dotenv": "^17.2.2",
 		"execa": "^9.6.0",
 		"glob": "^11.0.3"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.3",
+		"@biomejs/biome": "^2.2.4",
 		"@faker-js/faker": "^10.0.0",
-		"@types/bun": "^1.2.21",
-		"@types/node": "^24.3.1",
+		"@types/bun": "^1.2.22",
+		"@types/node": "^24.5.0",
 		"@typescript/native-preview": "latest"
 	},
 	"engines": {

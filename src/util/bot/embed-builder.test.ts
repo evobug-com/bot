@@ -17,18 +17,18 @@ describe("embed-builder utilities", () => {
 		it("creates embed with correct color", () => {
 			const embed = createEmbed("success");
 			expect(embed).toBeInstanceOf(EmbedBuilder);
-			expect(embed.toJSON().color).toBe(EMBED_COLORS.success);
+			expect(embed.toJSON(false).color).toBe(EMBED_COLORS.success);
 		});
 
 		it("uses custom color when provided", () => {
 			const customColor = 0x123456;
 			const embed = createEmbed("info", customColor);
-			expect(embed.toJSON().color).toBe(customColor);
+			expect(embed.toJSON(false).color).toBe(customColor);
 		});
 
 		it("includes timestamp", () => {
 			const embed = createEmbed();
-			expect(embed.toJSON().timestamp).toBeDefined();
+			expect(embed.toJSON(false).timestamp).toBeDefined();
 		});
 	});
 
@@ -100,17 +100,17 @@ describe("embed-builder utilities", () => {
 	describe("createProgressBar", () => {
 		it("creates empty bar for 0%", () => {
 			const bar = createProgressBar(0, 100);
-			expect(bar).toBe("[░░░░░░░░░░] 0%");
+			expect(bar).toBe("[░░░░░░░░░░░░░░░░░░░░] 0%");
 		});
 
 		it("creates full bar for 100%", () => {
 			const bar = createProgressBar(100, 100);
-			expect(bar).toBe("[██████████] 100%");
+			expect(bar).toBe("[████████████████████] 100%");
 		});
 
 		it("creates partial bar for 50%", () => {
 			const bar = createProgressBar(50, 100);
-			expect(bar).toBe("[█████░░░░░] 50%");
+			expect(bar).toBe("[██████████░░░░░░░░░░] 50%");
 		});
 
 		it("handles custom length", () => {
@@ -120,12 +120,12 @@ describe("embed-builder utilities", () => {
 
 		it("clamps values above 100%", () => {
 			const bar = createProgressBar(150, 100);
-			expect(bar).toBe("[██████████] 100%");
+			expect(bar).toBe("[████████████████████] 100%");
 		});
 
 		it("clamps negative values to 0%", () => {
 			const bar = createProgressBar(-10, 100);
-			expect(bar).toBe("[░░░░░░░░░░] 0%");
+			expect(bar).toBe("[░░░░░░░░░░░░░░░░░░░░] 0%");
 		});
 	});
 });

@@ -19,3 +19,10 @@ export const createCeskyTelekomunikacniUradEmbed = () => {
 		icon_url: "https://ctu.gov.cz/profiles/nautilus/themes/nautilus/img/logo-mobile.png",
 	});
 };
+
+export const createKancelarPrezidentaRepubliky = () => {
+    return new EmbedBuilder().setColor(0x194166).setAuthor({
+        name: "Kancelář prezidenta republiky",
+        icon_url: "https://www.hrad.cz/img/prezident/cs/logo.png",
+    })
+}

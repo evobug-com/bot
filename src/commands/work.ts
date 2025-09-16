@@ -268,4 +268,24 @@ const workActivities = [
 		title: ":fire: :ocean: Herní podvodník",
 		activity: "Použili jste wemod a dostali jste achievement ohnivé vody",
 	},
+    {
+        id: "is-it-a-trap",
+        title: "Životní praxe",
+        activity: "Učili jste svého kamaráda programovat, aby Vám naopládku pomáhal.",
+    },
+    {
+        id: "dual-pc-stream",
+        title: "🎥 Streamer",
+        activity: "Nastavili jste si dual-PC stream a streamovali na Twitchi. [(patří to do modré dírky!)](https://www.twitch.tv/poloaf)",
+    },
+    {
+        id: "too-much-maggi",
+        title: "👨‍🍳 Maggi Profesionál",
+        activity: "Snědli jste příliš mnoho Maggi. (Nyní jste [skutečný Sensei](https://www.twitch.tv/sensei_ladik)!)",
+    },
+    {
+        id: "really-trap",
+        title: "Zvěd",
+        activity: "Klikli jste na [tento odkaz](https://www.youtube.com/watch?v=dQw4w9WgXcQ).",
+    }
 ];

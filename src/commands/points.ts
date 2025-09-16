@@ -99,7 +99,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 			},
 		)
 		.setFooter({
-			text: `Přihlaš se každý den na úřad práce /daily>\nA pracuj poctivě kažou hodinu /work\nAbys mohl získat více mincí a XP`,
+			text: `Přihlaš se každý den na úřad práce /daily\nA pracuj poctivě kažou hodinu /work\nAbys mohl získat více mincí a XP`,
 		});
 
 	await interaction.reply({ embeds: [embed] });

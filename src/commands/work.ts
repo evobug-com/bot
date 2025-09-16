@@ -1,6 +1,12 @@
 import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
 import { orpc } from "../client/client.ts";
-import { ChannelManager, createErrorEmbed, createLevelUpEmbed, createProgressBar, formatTimeRemaining } from "../util";
+import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
+import {
+	addLevelProgressField,
+	createEconomyFooter,
+	handleRewardResponse,
+	type RewardResponse,
+} from "../util/bot/rewards.ts";
 import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 export const data = new ChatInputCommandBuilder()
@@ -86,24 +92,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
-	const { earnedTotalCoins, earnedTotalXp, boostCoinsBonus, boostXpBonus } = work.claimStats;
-
-	// Calculate display values (without boost)
-	const displayCoins = earnedTotalCoins - boostCoinsBonus;
-	const displayXp = earnedTotalXp - boostXpBonus;
-
-	// Check for level up
-	if (work.levelUp) {
-		const levelUpEmbed = createLevelUpEmbed(
-			`Level ${work.levelUp.newLevel}!`,
-			`Gratulujeme! Dosáhli jste úrovně ${work.levelUp.newLevel} a získáváte bonus ${work.levelUp.bonusCoins} mincí!`,
-		);
-		await interaction.editReply({ embeds: [levelUpEmbed] });
-
-		// Wait a bit before showing the main reward
-		// await new Promise((resolve) => setTimeout(resolve, 2000));
-	}
-
+	// Select work activity
 	const activity = workActivities[Math.floor(Math.random() * workActivities.length)];
 	if (!activity) {
 		await interaction.editReply({
@@ -112,84 +101,73 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
-	const embed = createUradPraceEmbed().addFields(
-		{
-			name: activity.title,
-			value: activity.activity,
+	// Use the shared handler to display rewards
+	await handleRewardResponse(work as RewardResponse, {
+		interaction,
+		createMainEmbed: () => {
+			const { earnedTotalCoins, earnedTotalXp, boostCoinsBonus, boostXpBonus } = work.claimStats;
+
+			// Calculate display values (without boost)
+			const displayCoins = earnedTotalCoins - boostCoinsBonus;
+			const displayXp = earnedTotalXp - boostXpBonus;
+
+			const embed = createUradPraceEmbed().addFields(
+				{
+					name: activity.title,
+					value: activity.activity,
+				},
+				{
+					name: "🪙 Získané mince",
+					value: `+${displayCoins}`,
+					inline: true,
+				},
+				{
+					name: "⭐ Získané XP",
+					value: `+${displayXp}`,
+					inline: true,
+				},
+			);
+
+			// Add boost bonus fields if user is a booster
+			if (work.claimStats.boostCoinsBonus > 0 || work.claimStats.boostXpBonus > 0) {
+				const boostPercentage = Math.round((work.claimStats.boostMultiplier - 1) * 100);
+				embed.addFields(
+					{
+						name: "\u200B", // Empty field to force new row
+						value: "\u200B",
+						inline: true,
+					},
+					{
+						name: "💜 Boost mincí",
+						value: `+${work.claimStats.boostCoinsBonus} (${boostPercentage}%)`,
+						inline: true,
+					},
+					{
+						name: "💜 Boost XP",
+						value: `+${work.claimStats.boostXpBonus} (${boostPercentage}%)`,
+						inline: true,
+					},
+					{
+						name: "\u200B", // Empty field to force new row
+						value: "\u200B",
+						inline: true,
+					},
+				);
+			}
+
+			// Add level progress if available
+			if (work.levelProgress) {
+				addLevelProgressField(embed, work.levelProgress);
+			}
+
+			// Set footer with economy info
+			embed.setFooter(
+				createEconomyFooter(work.updatedStats.coinsCount, work.levelProgress.currentLevel, work.updatedStats.workCount),
+			);
+
+			return embed;
 		},
-		{
-			name: "🪙 Získané mince",
-			value: `+${displayCoins}`,
-			inline: true,
-		},
-		{
-			name: "⭐ Získané XP",
-			value: `+${displayXp}`,
-			inline: true,
-		},
-	);
-
-	// Add boost bonus fields if user is a booster
-	if (work.claimStats.boostCoinsBonus > 0 || work.claimStats.boostXpBonus > 0) {
-		const boostPercentage = Math.round((work.claimStats.boostMultiplier - 1) * 100);
-		embed.addFields(
-			{
-				name: "\u200B", // Empty field to force new row
-				value: "\u200B",
-				inline: true,
-			},
-			{
-				name: "💜 Boost mincí",
-				value: `+${work.claimStats.boostCoinsBonus} (${boostPercentage}%)`,
-				inline: true,
-			},
-			{
-				name: "💜 Boost XP",
-				value: `+${work.claimStats.boostXpBonus} (${boostPercentage}%)`,
-				inline: true,
-			},
-			{
-				name: "\u200B", // Empty field to force new row
-				value: "\u200B",
-				inline: true,
-			},
-		);
-	}
-
-	// Add level progress if available
-	if (work.levelProgress) {
-        // Fix progress calculation if user has more XP than needed
-        let actualProgress = work.levelProgress.xpProgress;
-        let actualNeeded = work.levelProgress.xpNeeded;
-
-        // If progress is greater than needed, it means they leveled up
-        // but the API might not be returning correct post-level-up values
-        if (actualProgress >= actualNeeded) {
-            // Calculate overflow XP for next level
-            actualProgress = actualProgress - actualNeeded;
-            // For now, assume next level needs 100 more XP than current
-            actualNeeded = actualNeeded + 100;
-        }
-
-		const progress = work.levelProgress;
-		const progressBar = createProgressBar(progress.xpProgress, progress.xpNeeded);
-		embed.addFields({
-			name: "📊 Postup na další úroveň",
-            value: `${progressBar}\n${actualProgress}/${actualNeeded} XP`,
-            inline: false,
-		});
-	}
-
-	embed.setFooter({
-		text: `💰 Celkem: ${work.updatedStats.coinsCount} mincí • ⭐ Úroveň ${work.levelProgress.currentLevel} • 💼 Práce #${work.updatedStats.workCount}`,
 	});
-
-	// Update or send the embed
-	if (work.levelUp) {
-		await interaction.followUp({ embeds: [embed] });
-	} else {
-		await interaction.editReply({ embeds: [embed] });
-	}
 };
 
 const workActivities = [

@@ -9,7 +9,7 @@ export interface ChannelConfig {
 export const DISCORD_CHANNELS = {
 	// System channels
 	BOT_INFO: {
-		id: "1381322985754988544",
+		id: process.env.NODE_ENV === "development" ? "1380666049992720555" /** TEST ROOM **/ : "1381322985754988544",
 		name: "✍︱071︱bot-info",
 		description: "Bot information and error reporting channel",
 	},

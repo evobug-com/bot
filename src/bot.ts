@@ -11,6 +11,7 @@ import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannel
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
 import { ensureUserRegistered } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
+import { handleMessageLogging } from "./handlers/handleMessageLogging.ts";
 
 // Create a new client instance
 const client = new Client({
@@ -42,7 +43,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleWarningSystem(readyClient);
 	void handleAntibotRooms(readyClient);
 	void handleMediaForum(readyClient);
-	// // TODO: Not implemented yet? void handleMessageLogging(readyClient);
+	void handleMessageLogging(readyClient);
 	void handleAchievements(readyClient);
 	void handleSendingEmbedMessages(readyClient);
 	void handleNewsEmbeds(readyClient);

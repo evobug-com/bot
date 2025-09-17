@@ -9,6 +9,14 @@ import {
 } from "../util/bot/rewards.ts";
 import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
+import {
+	generateCaptcha,
+	getCaptchaDifficulty,
+	isSuspiciousResponseTime,
+	presentCaptcha,
+	shouldShowCaptcha,
+} from "../util/captcha.ts";
+import { captchaTracker } from "../util/captcha-tracker.ts";
 export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
@@ -34,6 +42,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		}
 	}
 
+	// Defer publicly to keep the command visible
 	await interaction.deferReply();
 
 	// Check cooldown first
@@ -78,6 +87,64 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			// We'll count 5 boost per premium subscriber for simplicity
 			boostCount = 3;
 		}
+	}
+
+	// Check if we should show a captcha
+	const [statsError, userStatsData] = await orpc.users.stats.user({ id: dbUser.id });
+	if (statsError) {
+		console.error("Error fetching user stats for captcha:", statsError);
+	}
+
+	const workCount = userStatsData?.stats.workCount || 0;
+	const suspiciousScore = userStatsData?.stats.suspiciousBehaviorScore || 0;
+
+	// Determine if captcha is needed (pass user ID for failure tracking)
+	if (shouldShowCaptcha(workCount, suspiciousScore, interaction.user.id)) {
+		const difficulty = getCaptchaDifficulty(suspiciousScore);
+		const captcha = generateCaptcha(difficulty);
+		const captchaResult = await presentCaptcha(interaction, captcha);
+
+		// Log captcha attempt
+		const [logError] = await orpc.users.stats.captcha.log({
+			userId: dbUser.id,
+			captchaType: captcha.type,
+			success: captchaResult.success,
+			responseTime: captchaResult.responseTime,
+			command: "work"
+		});
+
+		if (logError) {
+			console.error("Error logging captcha attempt:", logError);
+		}
+
+		// Check for suspicious response time
+		if (captchaResult.success && isSuspiciousResponseTime(captchaResult.responseTime, captcha.type)) {
+			// Flag as suspicious but still allow for now
+			await orpc.users.stats.suspiciousScore.update({
+				userId: dbUser.id,
+				increment: 20
+			});
+		}
+
+		if (!captchaResult.success) {
+			// Record failure in memory for immediate retry requirement
+			captchaTracker.recordFailure(interaction.user.id);
+
+			// Update failed captcha count in database
+			await orpc.users.stats.captcha.failedCount.update({ userId: dbUser.id });
+
+			const errorEmbed = createErrorEmbed(
+				"Ověření selhalo",
+				captchaResult.timedOut
+					? "Nestihl jsi odpovědět včas. Zkus to znovu později."
+					: "Nesprávná odpověď. Zkus to znovu později."
+			);
+			await interaction.editReply({ embeds: [errorEmbed], components: [] });
+			return;
+		}
+
+		// Captcha passed - clear failure tracking and proceed
+		captchaTracker.clearFailure(interaction.user.id);
 	}
 
 	const [workError, work] = await orpc.users.stats.work.claim({

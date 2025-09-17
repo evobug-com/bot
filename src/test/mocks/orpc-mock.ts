@@ -89,6 +89,7 @@ export class MockORPCClient {
 			"users.stats.daily.claim": "stats.claimDailyOutput",
 			"users.stats.work.cooldown": "stats.workCooldownOutput",
 			"users.stats.work.claim": "stats.claimWorkOutput",
+			"users.stats.captcha.log": "stats.captchaLogOutput",
 			"users.stats.serverTag.check": "stats.serverTagStreakOutput",
 			"users.stats.serverTag.get": "stats.getServerTagStreakOutput",
 			"users.stats.top": "stats.leaderboardOutput",
@@ -116,7 +117,8 @@ export class MockORPCClient {
 		const schemaPath = schemaMap[endpoint];
 		if (!schemaPath) {
 			console.warn(`No schema found for endpoint: ${endpoint}`);
-			return {};
+			// Return a default success response for unknown endpoints
+			return { success: true };
 		}
 
 		const parts = schemaPath.split(".");
@@ -133,6 +135,16 @@ export class MockORPCClient {
 
 		if (!schema) {
 			console.warn(`Schema not found: ${schemaPath}`);
+			// Return default responses for specific endpoints
+			if (endpoint === "users.stats.captcha.log") {
+				return { logged: true, isSuspicious: false };
+			}
+			if (endpoint === "users.stats.captcha.failedCount.update") {
+				return { updated: true, newCount: 1 };
+			}
+			if (endpoint === "users.stats.suspiciousScore.update") {
+				return { updated: true, newScore: 20 };
+			}
 			return {};
 		}
 
@@ -194,6 +206,9 @@ export class MockORPCClient {
 			"users.stats.daily.claim",
 			"users.stats.work.cooldown",
 			"users.stats.work.claim",
+			"users.stats.captcha.log",
+			"users.stats.captcha.failedCount.update",
+			"users.stats.suspiciousScore.update",
 			"users.stats.serverTag.check",
 			"users.stats.serverTag.get",
 			"users.stats.top",
@@ -248,6 +263,10 @@ export class MockORPCClient {
 	getLastCall(endpoint?: string): { endpoint: string; input: any; timestamp: Date } | undefined {
 		const calls = endpoint ? this.callHistory.filter((call) => call.endpoint === endpoint) : this.callHistory;
 		return calls[calls.length - 1];
+	}
+
+	hasBeenCalledWith(endpoint: string): boolean {
+		return this.callHistory.some((call) => call.endpoint === endpoint);
 	}
 
 	reset(): void {

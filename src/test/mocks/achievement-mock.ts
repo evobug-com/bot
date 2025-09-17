@@ -75,14 +75,25 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 		name: "Test Guild",
 	});
 
-	const mockChannel = createMockChannel(mockGuild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
+	// Create COMMANDS channel (used by serverTagStreak)
+	const mockChannel = createMockChannel(mockGuild, DISCORD_CHANNELS.COMMANDS.id, "commands");
 	mockChannel.isTextBased = () => true;
 	mockChannel.send = mock().mockResolvedValue({
 		id: "message-id",
 		components: [],
 	});
 
-	mockGuild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, mockChannel);
+	mockGuild.channels.cache.set(DISCORD_CHANNELS.COMMANDS.id, mockChannel);
+
+	// Also create BOT_INFO channel (may be used by other achievements)
+	const mockBotInfoChannel = createMockChannel(mockGuild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
+	mockBotInfoChannel.isTextBased = () => true;
+	mockBotInfoChannel.send = mock().mockResolvedValue({
+		id: "message-id",
+		components: [],
+	});
+
+	mockGuild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, mockBotInfoChannel);
 
 	// Create test member
 	const testMember = createMockMember(mockGuild, {

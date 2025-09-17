@@ -327,7 +327,7 @@ const workActivities = [
 	{
 		id: "is-it-a-trap",
 		title: "Životní praxe",
-		activity: "Učili jste svého kamaráda programovat, aby Vám naopládku pomáhal.",
+		activity: "Učili jste svého kamaráda programovat, aby Vám na oplátku pomáhal.",
 	},
 	{
 		id: "dual-pc-stream",

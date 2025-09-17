@@ -334,4 +334,19 @@ const workActivities = [
 		title: "Zvěd",
 		activity: "Klikli jste na [tento odkaz](https://www.youtube.com/watch?v=dQw4w9WgXcQ).",
 	},
+	{
+		id: "reveal-cheating",
+		title: "🕵️ Detektiv",
+		activity: "Odhalili jste podvádění na Discord příkazech!",
+	},
+	{
+		id: "bug-hunter",
+		title: "🐛 Bug Hunter",
+		activity: "Nahlásili jste chybu vývojářům bota.",
+	},
+	{
+		id: "feature-suggester",
+		title: "💡 Nápadník",
+		activity: "Navrhli jste novou funkci pro bota.",
+	},
 ];

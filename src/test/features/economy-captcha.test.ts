@@ -133,7 +133,7 @@ describe("Economy Commands with Captcha", () => {
 			});
 
 			// Verify captcha was shown
-			expect(captchaMocks.shouldShowCaptcha).toHaveBeenCalledWith(6, 0);
+			expect(captchaMocks.shouldShowCaptcha).toHaveBeenCalledWith(6, 0, "123456789");
 			expect(captchaMocks.presentCaptcha).toHaveBeenCalled();
 
 			// Verify reward was claimed after successful captcha
@@ -416,7 +416,7 @@ describe("Economy Commands with Captcha", () => {
 			});
 
 			// Verify captcha frequency check was called with doubled value
-			expect(captchaMocks.shouldShowCaptcha).toHaveBeenCalledWith(10, 0); // dailyStreak * 2
+			expect(captchaMocks.shouldShowCaptcha).toHaveBeenCalledWith(10, 0, "123456789"); // dailyStreak * 2
 
 			// Verify daily was claimed without captcha
 			const response = interaction.getLastResponse();

@@ -122,7 +122,10 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			console.error("Error logging captcha attempt:", logError);
 		} else if (logResult?.suspiciousReasons && logResult.suspiciousReasons.length > 0) {
 			// Log any suspicious patterns detected
-			console.warn(`[CAPTCHA WARNING] User ${interaction.user.tag} (${dbUser.id}):`, logResult.suspiciousReasons.join(", "));
+			console.warn(
+				`[CAPTCHA WARNING] User ${interaction.user.tag} (${dbUser.id}):`,
+				logResult.suspiciousReasons.join(", "),
+			);
 		}
 
 		// Check for suspicious response time

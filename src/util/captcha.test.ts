@@ -15,6 +15,7 @@ import {
 	presentCaptcha,
 	shouldShowCaptcha,
 } from "./captcha.ts";
+import { captchaTracker } from "./captcha-tracker.ts";
 
 describe("Captcha Generation", () => {
 	describe("generateCaptcha", () => {
@@ -156,6 +157,13 @@ describe("Captcha Generation", () => {
 	});
 
 	describe("shouldShowCaptcha", () => {
+		beforeEach(() => {
+			// Clear the captchaTracker state before each test
+			// We can't directly clear the tracker's internal state from outside,
+			// but we can ensure tests use unique user IDs to avoid conflicts
+			// Each test should use its own unique userId
+		});
+
 		it("should always show captcha for suspicious users", () => {
 			// Suspicious score > 50 should always trigger captcha
 			expect(shouldShowCaptcha(1, 60).showCaptcha).toBe(true);
@@ -165,45 +173,49 @@ describe("Captcha Generation", () => {
 			expect(shouldShowCaptcha(1, 60).triggerReason).toBe("suspicious_score_60");
 		});
 
-		it("should show captcha periodically for normal users", () => {
-			// Mock Math.random to control randomness
+		it("should show captcha periodically with consistent intervals per user", () => {
+			const userId = "testuser_periodic_" + Date.now(); // Unique user ID for this test
 			const originalRandom = Math.random;
 
-			// Test periodic check (every 3-5 claims)
-			// When Math.random returns 0: interval = 3, and randomValue (0) < 0.2 is true
-			Math.random = () => 0; // Will make it every 3 claims, BUT also triggers 20% chance
-			expect(shouldShowCaptcha(3, 0).showCaptcha).toBe(true); // 3 % 3 = 0, periodic check triggers
-			expect(shouldShowCaptcha(6, 10).showCaptcha).toBe(true); // 6 % 3 = 0, periodic check triggers
-			expect(shouldShowCaptcha(9, 20).showCaptcha).toBe(true); // 9 % 3 = 0, periodic check triggers
+			// Mock to get a specific interval (e.g., 4)
+			Math.random = () => 0.5; // This will give interval = 3 + floor(0.5 * 3) = 3 + 1 = 4
 
-			// Non-multiples of 3 will still return true because random (0) < 0.2
-			expect(shouldShowCaptcha(4, 0).showCaptcha).toBe(true); // 4 % 3 != 0, but random chance triggers
-			expect(shouldShowCaptcha(5, 10).showCaptcha).toBe(true); // 5 % 3 != 0, but random chance triggers
+			// First claim - no captcha (initializes user state)
+			expect(shouldShowCaptcha(1, 0, userId).showCaptcha).toBe(false);
 
-			// Test with random value above 0.2 threshold
-			Math.random = () => 0.25; // interval = 3, but random 0.25 > 0.2
-			expect(shouldShowCaptcha(4, 0).showCaptcha).toBe(false); // 4 % 3 != 0, random chance doesn't trigger
-			expect(shouldShowCaptcha(5, 10).showCaptcha).toBe(false); // 5 % 3 != 0, random chance doesn't trigger
+			// Claims 2-3: no captcha (not enough claims since start)
+			expect(shouldShowCaptcha(2, 0, userId).showCaptcha).toBe(false);
+			expect(shouldShowCaptcha(3, 0, userId).showCaptcha).toBe(false);
 
-			// Check trigger reasons
-			Math.random = () => 0;
-			const result = shouldShowCaptcha(3, 0);
-			expect(result.triggerReason).toBe("periodic_check_interval_3");
+			// Claim 4: should show captcha (4 claims since start, interval is 4)
+			const result4 = shouldShowCaptcha(4, 0, userId);
+			expect(result4.showCaptcha).toBe(true);
+			expect(result4.triggerReason).toContain("periodic_check_interval_");
+
+			// Claims 5-7: no captcha (not enough claims since last captcha)
+			expect(shouldShowCaptcha(5, 0, userId).showCaptcha).toBe(false);
+			expect(shouldShowCaptcha(6, 0, userId).showCaptcha).toBe(false);
+			expect(shouldShowCaptcha(7, 0, userId).showCaptcha).toBe(false);
+
+			// Claim 8: should show captcha again (4 claims after last one at claim 4)
+			const result8 = shouldShowCaptcha(8, 0, userId);
+			expect(result8.showCaptcha).toBe(true);
 
 			Math.random = originalRandom;
 		});
 
-		it("should have 20% random chance for normal users", () => {
+		it("should have 10% random chance for normal users", () => {
 			const originalRandom = Math.random;
+			const userId = "randomuser_" + Date.now(); // Unique user ID for this test
 
 			// Mock to trigger random chance
-			Math.random = () => 0.15; // Below 0.2 threshold
-			const result1 = shouldShowCaptcha(1, 0);
+			Math.random = () => 0.05; // Below 0.1 threshold
+			const result1 = shouldShowCaptcha(1, 0, userId);
 			expect(result1.showCaptcha).toBe(true);
 			expect(result1.triggerReason).toBe("random_check");
 
-			Math.random = () => 0.25; // Above 0.2 threshold
-			const result2 = shouldShowCaptcha(1, 0);
+			Math.random = () => 0.15; // Above 0.1 threshold
+			const result2 = shouldShowCaptcha(2, 0, userId);
 			expect(result2.showCaptcha).toBe(false);
 			expect(result2.triggerReason).toBeUndefined();
 

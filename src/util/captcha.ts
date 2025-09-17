@@ -384,7 +384,11 @@ export interface CaptchaCheckResult {
  * Determine if a user should be shown a captcha based on their history
  * Returns both the decision and the reason for showing captcha
  */
-export function shouldShowCaptcha(claimCount: number, suspiciousScore: number, discordUserId?: string): CaptchaCheckResult {
+export function shouldShowCaptcha(
+	claimCount: number,
+	suspiciousScore: number,
+	discordUserId?: string,
+): CaptchaCheckResult {
 	// Check if user has recent captcha failure (in-memory)
 	if (discordUserId && captchaTracker.hasRecentFailure(discordUserId)) {
 		return { showCaptcha: true, triggerReason: "recent_failure" };
@@ -395,18 +399,25 @@ export function shouldShowCaptcha(claimCount: number, suspiciousScore: number, d
 		return { showCaptcha: true, triggerReason: `suspicious_score_${suspiciousScore}` };
 	}
 
-	// For periodic checks, use a fixed interval based on first random call
-	// When Math.random() returns 0, interval will be 3
-	const randomValue = Math.random();
-	const interval = 3 + Math.floor(randomValue * 3);
+	// Check for periodic captcha based on user's consistent interval
+	if (discordUserId && claimCount > 0) {
+		// Get the user's consistent interval (3-5, assigned once)
+		const interval = captchaTracker.getUserInterval(discordUserId);
 
-	// Show every 3-5 claims for normal users
-	if (claimCount > 0 && claimCount % interval === 0) {
-		return { showCaptcha: true, triggerReason: `periodic_check_interval_${interval}` };
+		// Check if it's time for their periodic captcha
+		if (captchaTracker.shouldShowPeriodicCaptcha(discordUserId, claimCount)) {
+			// Record that we're showing a captcha now
+			captchaTracker.recordCaptchaShown(discordUserId, claimCount);
+			return { showCaptcha: true, triggerReason: `periodic_check_interval_${interval}` };
+		}
 	}
 
-	// 20% random chance (use the same random value for consistency in tests)
-	if (randomValue < 0.2) {
+	// 10% random chance for additional security (reduced from 20%)
+	if (Math.random() < 0.1) {
+		if (discordUserId) {
+			// Record this random captcha as well
+			captchaTracker.recordCaptchaShown(discordUserId, claimCount);
+		}
 		return { showCaptcha: true, triggerReason: "random_check" };
 	}
 

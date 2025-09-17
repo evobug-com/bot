@@ -532,7 +532,10 @@ describe("Economy Commands with Captcha", () => {
 				const stats = UserStatsFactory.createReadyToClaim(1);
 				stats.suspiciousBehaviorScore = testCase.score;
 
-				captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: `suspicious_score_${testCase.score}` }));
+				captchaMocks.shouldShowCaptcha = mock(() => ({
+					showCaptcha: true,
+					triggerReason: `suspicious_score_${testCase.score}`,
+				}));
 				captchaMocks.getCaptchaDifficulty = mock(() => testCase.expectedDifficulty);
 				captchaMocks.generateCaptcha = mock(() => ({
 					type: "math",

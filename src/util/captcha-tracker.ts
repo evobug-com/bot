@@ -9,9 +9,18 @@ interface FailedAttempt {
 	attempts: number;
 }
 
-class CaptchaFailureTracker {
+interface UserCaptchaState {
+	userId: string;
+	interval: number; // The consistent interval for this user (3-5)
+	lastCaptchaAtClaim: number; // The claim count when last captcha was shown
+	assignedAt: Date; // When the interval was assigned
+}
+
+class CaptchaTracker {
 	private failures = new Map<string, FailedAttempt>();
+	private userStates = new Map<string, UserCaptchaState>();
 	private readonly FAILURE_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
+	private readonly STATE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 	private readonly MAX_CLEANUP_SIZE = 1000; // Cleanup when map gets too large
 
 	/**
@@ -89,14 +98,74 @@ class CaptchaFailureTracker {
 	}
 
 	/**
+	 * Get or create a consistent interval for a user
+	 */
+	getUserInterval(userId: string): number {
+		let state = this.userStates.get(userId);
+
+		if (!state) {
+			// Assign a new interval (3-5) that will stay consistent for this user
+			const interval = 3 + Math.floor(Math.random() * 3);
+			state = {
+				userId,
+				interval,
+				lastCaptchaAtClaim: 0,
+				assignedAt: new Date(),
+			};
+			this.userStates.set(userId, state);
+		}
+
+		return state.interval;
+	}
+
+	/**
+	 * Check if user should get a periodic captcha based on their interval
+	 */
+	shouldShowPeriodicCaptcha(userId: string, claimCount: number): boolean {
+		const state = this.userStates.get(userId);
+
+		if (!state) {
+			// First time user, initialize their state
+			this.getUserInterval(userId);
+			return false; // Don't show on first claim
+		}
+
+		// Check if enough claims have passed since last captcha
+		const claimsSinceLastCaptcha = claimCount - state.lastCaptchaAtClaim;
+		return claimsSinceLastCaptcha >= state.interval;
+	}
+
+	/**
+	 * Record that a captcha was shown to a user
+	 */
+	recordCaptchaShown(userId: string, claimCount: number): void {
+		let state = this.userStates.get(userId);
+
+		if (!state) {
+			const interval = this.getUserInterval(userId);
+			state = this.userStates.get(userId)!;
+		}
+
+		state.lastCaptchaAtClaim = claimCount;
+	}
+
+	/**
 	 * Clean up expired entries
 	 */
 	private cleanup(): void {
 		const now = Date.now();
 
+		// Clean up failures
 		for (const [userId, failure] of this.failures.entries()) {
 			if (now - failure.failedAt.getTime() > this.FAILURE_EXPIRY_MS) {
 				this.failures.delete(userId);
+			}
+		}
+
+		// Clean up old user states
+		for (const [userId, state] of this.userStates.entries()) {
+			if (now - state.assignedAt.getTime() > this.STATE_EXPIRY_MS) {
+				this.userStates.delete(userId);
 			}
 		}
 	}
@@ -111,4 +180,4 @@ class CaptchaFailureTracker {
 }
 
 // Export singleton instance
-export const captchaTracker = new CaptchaFailureTracker();
+export const captchaTracker = new CaptchaTracker();

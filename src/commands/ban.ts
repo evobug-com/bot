@@ -1,12 +1,13 @@
 import {
-    ChatInputCommandBuilder,
-    type ChatInputCommandInteraction,
-    ContainerBuilder,
-    MessageFlags,
-    ModalBuilder,
-    PermissionFlagsBits,
-    SeparatorSpacingSize,
-    TextInputStyle, type User,
+	ChatInputCommandBuilder,
+	type ChatInputCommandInteraction,
+	ContainerBuilder,
+	MessageFlags,
+	ModalBuilder,
+	PermissionFlagsBits,
+	SeparatorSpacingSize,
+	TextInputStyle,
+	type User,
 } from "discord.js";
 import { getDbUser } from "../client/client.ts";
 import { PolicyType, ViolationSeverity, ViolationType } from "../data/violationData.ts";

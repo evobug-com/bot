@@ -170,8 +170,9 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
-	// Select work activity
-	const activity = workActivities[Math.floor(Math.random() * workActivities.length)];
+	// Select work activity using crypto for better randomness
+	const [randomByte] = crypto.getRandomValues(new Uint32Array(1));
+	const activity = workActivities[(randomByte as number) % workActivities.length];
 	if (!activity) {
 		await interaction.editReply({
 			content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",

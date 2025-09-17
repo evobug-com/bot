@@ -9,24 +9,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout bot repository
+        uses: actions/checkout@v4
+        with:
+          path: bot
+
+      - name: Checkout API repository
+        uses: actions/checkout@v4
+        with:
+          repository: evobug-com/api
+          path: api
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Install dependencies
+      - name: Install API dependencies
+        working-directory: api
+        run: bun install
+
+      - name: Install bot dependencies
+        working-directory: bot
         run: bun install
 
       - name: Type check
+        working-directory: bot
         run: bunx tsgo --noEmit
 
       - name: Lint and format check
+        working-directory: bot
         run: bunx biome check .
 
       - name: Run tests
+        working-directory: bot
         run: bun test
 
       - name: Build check
-        run: bun run build || bun build src/server.ts --outdir dist --target bun
+        working-directory: bot
+        run: bun run build || bun build src/bot.ts --outdir dist --target bun

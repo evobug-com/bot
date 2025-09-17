@@ -7,6 +7,9 @@ export const handleCommandsForRoom = async (client: Client<true>) => {
 
 async function handleMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
 	if (!message.guild) return;
+	// Ignore bot messages - bots can send reward notifications to commands channel
+	if (message.author.bot) return;
+
 	const commandsChannel = ChannelManager.getChannel(message.guild, "COMMANDS");
 	if (!commandsChannel) return;
 	if (message.channelId !== commandsChannel.id) return;

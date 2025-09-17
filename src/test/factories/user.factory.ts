@@ -23,6 +23,9 @@ export interface UserStatsFactoryOptions {
 	boostCount?: number;
 	lastDailyAt?: Date;
 	lastWorkAt?: Date;
+	voiceTimeMinutes?: number;
+	lastVoiceCheck?: Date | null;
+	lastVoiceJoinedAt?: Date | null;
 }
 
 export class UserFactory {
@@ -82,6 +85,9 @@ export class UserStatsFactory {
 			maxServerTagStreak: faker.number.int({ min: 0, max: 100 }),
 			lastServerTagCheck: faker.date.recent({ days: 1 }),
 			serverTagBadge: faker.helpers.arrayElement(["🏆", "⭐", "🎯", null]),
+			voiceTimeMinutes: options.voiceTimeMinutes ?? faker.number.int({ min: 0, max: 10000 }),
+			lastVoiceCheck: options.lastVoiceCheck ?? null,
+			lastVoiceJoinedAt: options.lastVoiceJoinedAt ?? null,
 			coinsCount: options.coinsCount ?? faker.number.int({ min: 0, max: 100000 }),
 			xpCount: options.xpCount ?? faker.number.int({ min: 0, max: 50000 }),
 			boostCount: options.boostCount ?? faker.number.int({ min: 0, max: 10 }),
@@ -108,6 +114,9 @@ export class UserStatsFactory {
 			boostCount: 0,
 			lastDailyAt: undefined,
 			lastWorkAt: undefined,
+			voiceTimeMinutes: 0,
+			lastVoiceCheck: null,
+			lastVoiceJoinedAt: null,
 		});
 	}
 

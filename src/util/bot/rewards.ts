@@ -50,7 +50,7 @@ export interface LevelUpInfo {
 export function formatCoinBreakdown(
 	stats: RewardStats,
 	streak?: number,
-	activityType: "daily" | "work" | "serverTag" = "daily",
+	activityType: "daily" | "work" | "serverTag" | "voiceTime" = "daily",
 ): string[] {
 	const breakdown = ["💰 **Mince:**", `├ 💎 Základ: ${stats.baseCoins}`];
 
@@ -85,7 +85,7 @@ export function formatCoinBreakdown(
 export function formatXpBreakdown(
 	stats: RewardStats,
 	streak?: number,
-	activityType: "daily" | "work" | "serverTag" = "daily",
+	activityType: "daily" | "work" | "serverTag" | "voiceTime" = "daily",
 ): string[] {
 	const breakdown = ["⭐ **XP:**", `├ 💎 Základ: ${stats.baseXp}`];
 
@@ -192,7 +192,7 @@ export function createLevelUpMessage(levelUp: LevelUpInfo): EmbedBuilder {
 export function buildRewardCalculation(
 	stats: RewardStats,
 	streak?: number,
-	activityType: "daily" | "work" | "serverTag" = "daily",
+	activityType: "daily" | "work" | "serverTag" | "voiceTime" = "daily",
 ): string {
 	const coinsBreakdown = formatCoinBreakdown(stats, streak, activityType);
 	const xpBreakdown = formatXpBreakdown(stats, streak, activityType);

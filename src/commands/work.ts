@@ -252,7 +252,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 const workActivities = [
 	{
 		id: "wolt-delivery",
-		title: "<:SIOVINA:1385697830718673076> Doručovatel",
+		title: "<:SIOVINA:1385697830718673076> Kurýr",
 		activity: "Dovezli jste sionzeemu Wolt",
 	},
 	{
@@ -358,7 +358,7 @@ const workActivities = [
 	},
 	{
 		id: "feature-suggester",
-		title: "💡 Nápadník",
+		title: "💡 Inovátor",
 		activity: "Navrhli jste novou funkci pro bota.",
 	},
 ];

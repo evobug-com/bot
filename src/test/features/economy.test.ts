@@ -28,7 +28,7 @@ describe("Economy System Tests", () => {
 
 		// Mock captcha functions to always skip captcha in tests
 		mock.module("../../util/captcha.ts", () => ({
-			shouldShowCaptcha: () => false,
+			shouldShowCaptcha: () => ({ showCaptcha: false }),
 			generateCaptcha: () => ({}),
 			presentCaptcha: async () => ({ success: true, responseTime: 3000 }),
 			getCaptchaDifficulty: () => "easy",

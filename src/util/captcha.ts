@@ -373,17 +373,26 @@ export async function presentCaptcha(
 }
 
 /**
- * Determine if a user should be shown a captcha based on their history
+ * Result from captcha check including the trigger reason
  */
-export function shouldShowCaptcha(claimCount: number, suspiciousScore: number, discordUserId?: string): boolean {
+export interface CaptchaCheckResult {
+	showCaptcha: boolean;
+	triggerReason?: string;
+}
+
+/**
+ * Determine if a user should be shown a captcha based on their history
+ * Returns both the decision and the reason for showing captcha
+ */
+export function shouldShowCaptcha(claimCount: number, suspiciousScore: number, discordUserId?: string): CaptchaCheckResult {
 	// Check if user has recent captcha failure (in-memory)
 	if (discordUserId && captchaTracker.hasRecentFailure(discordUserId)) {
-		return true;
+		return { showCaptcha: true, triggerReason: "recent_failure" };
 	}
 
 	// Always show for suspicious users
 	if (suspiciousScore > 50) {
-		return true;
+		return { showCaptcha: true, triggerReason: `suspicious_score_${suspiciousScore}` };
 	}
 
 	// For periodic checks, use a fixed interval based on first random call
@@ -393,11 +402,15 @@ export function shouldShowCaptcha(claimCount: number, suspiciousScore: number, d
 
 	// Show every 3-5 claims for normal users
 	if (claimCount > 0 && claimCount % interval === 0) {
-		return true;
+		return { showCaptcha: true, triggerReason: `periodic_check_interval_${interval}` };
 	}
 
 	// 20% random chance (use the same random value for consistency in tests)
-	return randomValue < 0.2;
+	if (randomValue < 0.2) {
+		return { showCaptcha: true, triggerReason: "random_check" };
+	}
+
+	return { showCaptcha: false };
 }
 
 /**

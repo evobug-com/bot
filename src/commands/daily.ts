@@ -97,22 +97,30 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	const suspiciousScore = userStatsData?.stats.suspiciousBehaviorScore || 0;
 
 	// Determine if captcha is needed (less frequent for daily than work, pass user ID for failure tracking)
-	if (shouldShowCaptcha(dailyStreak * 2, suspiciousScore, interaction.user.id)) {
+	const captchaCheck = shouldShowCaptcha(dailyStreak * 2, suspiciousScore, interaction.user.id);
+	if (captchaCheck.showCaptcha) {
 		const difficulty = getCaptchaDifficulty(suspiciousScore);
 		const captcha = generateCaptcha(difficulty);
 		const captchaResult = await presentCaptcha(interaction, captcha);
 
-		// Log captcha attempt
-		const [logError] = await orpc.users.stats.captcha.log({
+		// Log captcha attempt with detailed context
+		const [logError, logResult] = await orpc.users.stats.captcha.log({
 			userId: dbUser.id,
 			captchaType: captcha.type,
 			success: captchaResult.success,
 			responseTime: captchaResult.responseTime,
 			command: "daily",
+			triggerReason: captchaCheck.triggerReason,
+			suspiciousScore: suspiciousScore,
+			claimCount: dailyStreak * 2, // Using adjusted count for daily
+			difficulty: difficulty,
 		});
 
 		if (logError) {
 			console.error("Error logging captcha attempt:", logError);
+		} else if (logResult?.suspiciousReasons && logResult.suspiciousReasons.length > 0) {
+			// Log any suspicious patterns detected
+			console.warn(`[CAPTCHA WARNING] User ${interaction.user.tag} (${dbUser.id}):`, logResult.suspiciousReasons.join(", "));
 		}
 
 		// Check for suspicious response time

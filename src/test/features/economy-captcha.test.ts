@@ -59,7 +59,7 @@ describe("Economy Commands with Captcha", () => {
 			stats.suspiciousBehaviorScore = 0;
 
 			// Mock captcha flow
-			captchaMocks.shouldShowCaptcha = mock(() => true);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: "periodic_check_interval_3" }));
 			captchaMocks.getCaptchaDifficulty = mock(() => "easy");
 			captchaMocks.generateCaptcha = mock(() => ({
 				type: "math",
@@ -149,7 +149,7 @@ describe("Economy Commands with Captcha", () => {
 			stats.suspiciousBehaviorScore = 0;
 
 			// Mock captcha failure
-			captchaMocks.shouldShowCaptcha = mock(() => true);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: "periodic_check_interval_3" }));
 			captchaMocks.getCaptchaDifficulty = mock(() => "easy");
 			captchaMocks.generateCaptcha = mock(() => ({
 				type: "math",
@@ -212,7 +212,7 @@ describe("Economy Commands with Captcha", () => {
 			stats.suspiciousBehaviorScore = 40; // Moderate suspicion
 
 			// Mock very fast correct response
-			captchaMocks.shouldShowCaptcha = mock(() => true);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: "suspicious_score_40" }));
 			captchaMocks.getCaptchaDifficulty = mock(() => "medium");
 			captchaMocks.generateCaptcha = mock(() => ({
 				type: "math",
@@ -303,7 +303,7 @@ describe("Economy Commands with Captcha", () => {
 			const stats = UserStatsFactory.createReadyToClaim(1);
 
 			// Mock timeout
-			captchaMocks.shouldShowCaptcha = mock(() => true);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: "random_check" }));
 			captchaMocks.getCaptchaDifficulty = mock(() => "easy");
 			captchaMocks.generateCaptcha = mock(() => ({
 				type: "emoji",
@@ -364,7 +364,7 @@ describe("Economy Commands with Captcha", () => {
 			stats.dailyStreak = 5; // Will be multiplied by 2 for daily frequency
 
 			// Mock captcha not shown (frequency check)
-			captchaMocks.shouldShowCaptcha = mock(() => false);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: false }));
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
 
@@ -430,7 +430,7 @@ describe("Economy Commands with Captcha", () => {
 			stats.dailyStreak = 10; // Existing streak
 
 			// Mock successful captcha
-			captchaMocks.shouldShowCaptcha = mock(() => true);
+			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: "periodic_check_interval_5" }));
 			captchaMocks.getCaptchaDifficulty = mock(() => "easy");
 			captchaMocks.generateCaptcha = mock(() => ({
 				type: "word",
@@ -532,7 +532,7 @@ describe("Economy Commands with Captcha", () => {
 				const stats = UserStatsFactory.createReadyToClaim(1);
 				stats.suspiciousBehaviorScore = testCase.score;
 
-				captchaMocks.shouldShowCaptcha = mock(() => true);
+				captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: true, triggerReason: `suspicious_score_${testCase.score}` }));
 				captchaMocks.getCaptchaDifficulty = mock(() => testCase.expectedDifficulty);
 				captchaMocks.generateCaptcha = mock(() => ({
 					type: "math",

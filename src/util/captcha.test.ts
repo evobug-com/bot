@@ -158,9 +158,11 @@ describe("Captcha Generation", () => {
 	describe("shouldShowCaptcha", () => {
 		it("should always show captcha for suspicious users", () => {
 			// Suspicious score > 50 should always trigger captcha
-			expect(shouldShowCaptcha(1, 60)).toBe(true);
-			expect(shouldShowCaptcha(100, 80)).toBe(true);
-			expect(shouldShowCaptcha(5, 100)).toBe(true);
+			expect(shouldShowCaptcha(1, 60).showCaptcha).toBe(true);
+			expect(shouldShowCaptcha(100, 80).showCaptcha).toBe(true);
+			expect(shouldShowCaptcha(5, 100).showCaptcha).toBe(true);
+			// Check trigger reason for suspicious score
+			expect(shouldShowCaptcha(1, 60).triggerReason).toBe("suspicious_score_60");
 		});
 
 		it("should show captcha periodically for normal users", () => {
@@ -170,18 +172,23 @@ describe("Captcha Generation", () => {
 			// Test periodic check (every 3-5 claims)
 			// When Math.random returns 0: interval = 3, and randomValue (0) < 0.2 is true
 			Math.random = () => 0; // Will make it every 3 claims, BUT also triggers 20% chance
-			expect(shouldShowCaptcha(3, 0)).toBe(true); // 3 % 3 = 0, periodic check triggers
-			expect(shouldShowCaptcha(6, 10)).toBe(true); // 6 % 3 = 0, periodic check triggers
-			expect(shouldShowCaptcha(9, 20)).toBe(true); // 9 % 3 = 0, periodic check triggers
+			expect(shouldShowCaptcha(3, 0).showCaptcha).toBe(true); // 3 % 3 = 0, periodic check triggers
+			expect(shouldShowCaptcha(6, 10).showCaptcha).toBe(true); // 6 % 3 = 0, periodic check triggers
+			expect(shouldShowCaptcha(9, 20).showCaptcha).toBe(true); // 9 % 3 = 0, periodic check triggers
 
 			// Non-multiples of 3 will still return true because random (0) < 0.2
-			expect(shouldShowCaptcha(4, 0)).toBe(true); // 4 % 3 != 0, but random chance triggers
-			expect(shouldShowCaptcha(5, 10)).toBe(true); // 5 % 3 != 0, but random chance triggers
+			expect(shouldShowCaptcha(4, 0).showCaptcha).toBe(true); // 4 % 3 != 0, but random chance triggers
+			expect(shouldShowCaptcha(5, 10).showCaptcha).toBe(true); // 5 % 3 != 0, but random chance triggers
 
 			// Test with random value above 0.2 threshold
 			Math.random = () => 0.25; // interval = 3, but random 0.25 > 0.2
-			expect(shouldShowCaptcha(4, 0)).toBe(false); // 4 % 3 != 0, random chance doesn't trigger
-			expect(shouldShowCaptcha(5, 10)).toBe(false); // 5 % 3 != 0, random chance doesn't trigger
+			expect(shouldShowCaptcha(4, 0).showCaptcha).toBe(false); // 4 % 3 != 0, random chance doesn't trigger
+			expect(shouldShowCaptcha(5, 10).showCaptcha).toBe(false); // 5 % 3 != 0, random chance doesn't trigger
+
+			// Check trigger reasons
+			Math.random = () => 0;
+			const result = shouldShowCaptcha(3, 0);
+			expect(result.triggerReason).toBe("periodic_check_interval_3");
 
 			Math.random = originalRandom;
 		});
@@ -191,10 +198,14 @@ describe("Captcha Generation", () => {
 
 			// Mock to trigger random chance
 			Math.random = () => 0.15; // Below 0.2 threshold
-			expect(shouldShowCaptcha(1, 0)).toBe(true);
+			const result1 = shouldShowCaptcha(1, 0);
+			expect(result1.showCaptcha).toBe(true);
+			expect(result1.triggerReason).toBe("random_check");
 
 			Math.random = () => 0.25; // Above 0.2 threshold
-			expect(shouldShowCaptcha(1, 0)).toBe(false);
+			const result2 = shouldShowCaptcha(1, 0);
+			expect(result2.showCaptcha).toBe(false);
+			expect(result2.triggerReason).toBeUndefined();
 
 			Math.random = originalRandom;
 		});

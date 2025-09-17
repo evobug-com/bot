@@ -30,8 +30,8 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 	const mockMkdir = mock();
 
 	// Replace global functions
-	global.setTimeout = mockSetTimeout;
-	global.setInterval = mockSetInterval;
+	global.setTimeout = mockSetTimeout as any;
+	global.setInterval = mockSetInterval as any;
 	console.log = mockConsoleLog;
 	console.error = mockConsoleError;
 
@@ -109,14 +109,14 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 	};
 
 	const guildsCache = new Map([["test-guild-id", mockGuild]]);
-	guildsCache.first = () => mockGuild;
+	(guildsCache as any).first = () => mockGuild;
 
 	const mockClient = {
 		guilds: {
 			cache: guildsCache,
 			first: () => mockGuild,
 		},
-	} as Client<true>;
+	} as unknown as Client<true>;
 
 	// Set up default file operations
 	mockMkdir.mockResolvedValue(undefined);
@@ -125,10 +125,10 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 
 	return {
 		mockClient,
-		mockGuild,
+		mockGuild: mockGuild as any,
 		mockChannel,
 		orpcMock,
-		testMember,
+		testMember: testMember as any,
 		mockSetTimeout,
 		mockSetInterval,
 		mockConsoleLog,

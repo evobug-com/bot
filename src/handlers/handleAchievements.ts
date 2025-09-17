@@ -8,7 +8,7 @@ const achievements: Array<IAchievement> = [];
 
 // Scans the current working directory and each of its sub-directories recursively
 for await (const file of glob.scan(join(import.meta.dirname, "../achievements/bot-achievements"))) {
-    if(file.includes(".test.") || file.includes(".spec.")) continue; // Skip interface file
+	if (file.includes(".test.") || file.includes(".spec.")) continue; // Skip interface file
 	const module = (await import(join(import.meta.dirname, "../achievements/bot-achievements", file)))
 		.default as IAchievement;
 	achievements.push(module);

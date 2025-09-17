@@ -27,7 +27,7 @@ class CaptchaFailureTracker {
 			this.failures.set(userId, {
 				userId,
 				failedAt: new Date(),
-				attempts: 1
+				attempts: 1,
 			});
 		}
 

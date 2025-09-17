@@ -36,7 +36,7 @@ const CAPTCHA_EMOJIS = ["🎮", "🎯", "🎲", "🎪", "🎨", "🎭", "🎫", 
 function scramble(word: string): string {
 	const letters = word.split("");
 	// Ensure we actually scramble it (not the same as original)
-	let scrambled = [...letters];
+	const scrambled = [...letters];
 	let attempts = 0;
 
 	do {
@@ -66,7 +66,8 @@ const CAPTCHA_WORDS = [
  * Generate a random captcha challenge
  */
 export function generateCaptcha(difficulty: "easy" | "medium" | "hard" = "easy"): CaptchaChallenge {
-	const types: CaptchaType[] = difficulty === "easy" ? ["math"] : difficulty === "medium" ? ["math", "emoji"] : ["math", "emoji", "word"];
+	const types: CaptchaType[] =
+		difficulty === "easy" ? ["math"] : difficulty === "medium" ? ["math", "emoji"] : ["math", "emoji", "word"];
 	const type = types[Math.floor(Math.random() * types.length)];
 
 	switch (type) {
@@ -219,11 +220,17 @@ function generateWordCaptcha(): CaptchaChallenge {
 	// Create plausible wrong answers by swapping letters
 	const wrongAnswers = [
 		// Swap first two letters
-		word.correct.length > 1 ? word.correct[1] + word.correct[0] + word.correct.slice(2) : word.correct + "A",
+		word.correct.length > 1
+			? (word.correct[1] ?? "") + (word.correct[0] ?? "") + word.correct.slice(2)
+			: word.correct + "A",
 		// Swap last two letters
-		word.correct.length > 1 ? word.correct.slice(0, -2) + word.correct.slice(-1) + word.correct.slice(-2, -1) : word.correct + "B",
+		word.correct.length > 1
+			? word.correct.slice(0, -2) + word.correct.slice(-1) + word.correct.slice(-2, -1)
+			: word.correct + "B",
 		// Remove middle letter and add at end
-		word.correct.length > 2 ? word.correct[0] + word.correct.slice(2) + word.correct[Math.floor(word.correct.length / 2)] : word.correct + "C",
+		word.correct.length > 2
+			? word.correct[0] + word.correct.slice(2) + word.correct[Math.floor(word.correct.length / 2)]
+			: word.correct + "C",
 	];
 
 	for (const wrong of wrongAnswers) {
@@ -284,11 +291,7 @@ export async function presentCaptcha(
 		const label = challenge.options[i];
 		if (!label) continue;
 
-        row.addComponents(
-            new SecondaryButtonBuilder()
-                .setCustomId(`captcha_${i}`)
-                .setLabel(label)
-        );
+		row.addComponents(new SecondaryButtonBuilder().setCustomId(`captcha_${i}`).setLabel(label));
 	}
 
 	// Send captcha
@@ -307,7 +310,7 @@ export async function presentCaptcha(
 				if (i.user.id !== interaction.user.id && i.customId.startsWith("captcha_")) {
 					i.reply({
 						content: `❌ Hej <@${i.user.id}>, toto ověření není pro tebe! Je určeno pro ${interaction.user.username}.`,
-                        flags: MessageFlags.Ephemeral
+						flags: MessageFlags.Ephemeral,
 					}).catch(() => {});
 					return false;
 				}
@@ -332,9 +335,11 @@ export async function presentCaptcha(
 		const resultEmbed = new EmbedBuilder()
 			.setColor(isCorrect ? 0x00ff00 : 0xff0000)
 			.setTitle(isCorrect ? "✅ Správně!" : "❌ Špatně")
-			.setDescription(isCorrect
-				? `<@${interaction.user.id}> - Ověření bylo úspěšné.`
-				: `<@${interaction.user.id}> - Nesprávná odpověď. Správná odpověď byla: **${challenge.correctAnswer}**`);
+			.setDescription(
+				isCorrect
+					? `<@${interaction.user.id}> - Ověření bylo úspěšné.`
+					: `<@${interaction.user.id}> - Nesprávná odpověď. Správná odpověď byla: **${challenge.correctAnswer}**`,
+			);
 
 		await buttonInteraction.update({
 			embeds: [resultEmbed],

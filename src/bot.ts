@@ -3,6 +3,7 @@ import { handleAchievements } from "./handlers/handleAchievements.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
 import { handleMediaForum } from "./handlers/handleMediaForum.ts";
+import { handleMessageLogging } from "./handlers/handleMessageLogging.ts";
 import { handleNewsEmbeds } from "./handlers/handleNewsEmbeds.ts";
 import { handleRulesVerification } from "./handlers/handleRulesVerification.ts";
 import { handleSendingEmbedMessages } from "./handlers/handleSendingEmbedMessages.ts";
@@ -11,7 +12,6 @@ import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannel
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
 import { ensureUserRegistered } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
-import { handleMessageLogging } from "./handlers/handleMessageLogging.ts";
 
 // Create a new client instance
 const client = new Client({

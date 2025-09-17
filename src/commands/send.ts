@@ -1,6 +1,7 @@
 import {
 	ActionRowBuilder,
 	ChatInputCommandBuilder,
+	type ModalActionRowComponentBuilder,
 	ModalBuilder,
 	PermissionFlagsBits,
 	TextInputBuilder,
@@ -17,18 +18,19 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 	// Create the modal
 	const modal = new ModalBuilder().setCustomId("sendEmbedModal").setTitle("Embed Message");
 
-	// Create the text input components
-	const embedJson = new TextInputBuilder()
-		.setCustomId("embedContent")
-		.setLabel("Embed Message (JSON)")
-		.setStyle(TextInputStyle.Paragraph)
-		.setRequired(true)
-		.setMaxLength(4000);
-
-	const row = new ActionRowBuilder().addComponents(embedJson);
-
 	// Add inputs to the modal
-	modal.setActionRows(row);
+	modal.addLabelComponents((labelBuilder) =>
+		labelBuilder
+			.setLabel("Embed JSON")
+			.setTextInputComponent((inputBuilder) =>
+				inputBuilder
+					.setCustomId("embedContent")
+					.setPlaceholder("Enter the embed JSON here")
+					.setStyle(TextInputStyle.Paragraph)
+					.setRequired(true)
+					.setMaxLength(4000),
+			),
+	);
 
 	// Show the modal to the user
 	await interaction.showModal(modal);

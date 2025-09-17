@@ -202,11 +202,7 @@ export function buildRewardCalculation(
 /**
  * Common footer text for economy embeds
  */
-export function createEconomyFooter(
-	coinsCount: number,
-	currentLevel: number,
-	workCount?: number,
-): { text: string } {
+export function createEconomyFooter(coinsCount: number, currentLevel: number, workCount?: number): { text: string } {
 	let text = `💰 Nový zůstatek: ${coinsCount} mincí • ⭐ Úroveň ${currentLevel}`;
 	if (workCount !== undefined) {
 		text += ` • 💼 Práce #${workCount}`;
@@ -254,10 +250,7 @@ export interface HandleRewardOptions {
  * Universal handler for reward responses
  * Handles level up notifications, main reward embed, and proper message flow
  */
-export async function handleRewardResponse(
-	response: RewardResponse,
-	options: HandleRewardOptions,
-): Promise<void> {
+export async function handleRewardResponse(response: RewardResponse, options: HandleRewardOptions): Promise<void> {
 	const { interaction, channel, userId, createMainEmbed, separateLevelUp = false } = options;
 
 	// Validate we have either interaction or channel
@@ -274,11 +267,13 @@ export async function handleRewardResponse(
 			await interaction.editReply({ embeds: [levelUpEmbed] });
 		} else if (channel) {
 			// For achievements, send as separate message
-			await channel.send({
-				content: userId ? `<@${userId}>` : undefined,
-				embeds: [levelUpEmbed],
-				allowedMentions: userId ? { users: [userId] } : undefined,
-			});
+			if ("send" in channel) {
+				await channel.send({
+					content: userId ? `<@${userId}>` : undefined,
+					embeds: [levelUpEmbed],
+					allowedMentions: userId ? { users: [userId] } : undefined,
+				});
+			}
 		}
 	}
 
@@ -294,9 +289,11 @@ export async function handleRewardResponse(
 		}
 	} else if (channel) {
 		// For achievements: always send as new message
-		await channel.send({
-			embeds: [mainEmbed],
-			allowedMentions: userId ? { users: [userId] } : undefined,
-		});
+		if ("send" in channel) {
+			await channel.send({
+				embeds: [mainEmbed],
+				allowedMentions: userId ? { users: [userId] } : undefined,
+			});
+		}
 	}
 }

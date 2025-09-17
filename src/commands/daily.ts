@@ -10,8 +10,6 @@ import {
 	handleRewardResponse,
 	type RewardResponse,
 } from "../util/bot/rewards.ts";
-import type { CommandContext } from "../util/commands.ts";
-import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 import {
 	generateCaptcha,
 	getCaptchaDifficulty,
@@ -20,6 +18,8 @@ import {
 	shouldShowCaptcha,
 } from "../util/captcha.ts";
 import { captchaTracker } from "../util/captcha-tracker.ts";
+import type { CommandContext } from "../util/commands.ts";
+import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 
 export const data = new ChatInputCommandBuilder()
 	.setName("daily")
@@ -108,7 +108,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			captchaType: captcha.type,
 			success: captchaResult.success,
 			responseTime: captchaResult.responseTime,
-			command: "daily"
+			command: "daily",
 		});
 
 		if (logError) {
@@ -120,7 +120,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			// Flag as suspicious but still allow for now
 			await orpc.users.stats.suspiciousScore.update({
 				userId: dbUser.id,
-				increment: 20
+				increment: 20,
 			});
 		}
 
@@ -135,7 +135,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				"Ověření selhalo",
 				captchaResult.timedOut
 					? "Nestihl jsi odpovědět včas. Zkus to znovu později."
-					: "Nesprávná odpověď. Zkus to znovu později."
+					: "Nesprávná odpověď. Zkus to znovu později.",
 			);
 			await interaction.editReply({ embeds: [errorEmbed], components: [] });
 			return;

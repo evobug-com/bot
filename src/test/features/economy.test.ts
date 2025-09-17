@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { MessageFlags } from "discord.js";
 import { execute as executeDaily } from "../../commands/daily.ts";
 import { execute as executeWork } from "../../commands/work.ts";
+import { DISCORD_CHANNELS } from "../../util";
 import { createUserScenarios, UserFactory, UserStatsFactory } from "../factories/user.factory.ts";
 import {
 	createMockChannel,
@@ -11,7 +12,6 @@ import {
 import { createTestORPCClient, MockORPCClient } from "../mocks/orpc-mock.ts";
 import { schemas } from "../utils/schema-extractor.ts";
 import { generateAllVariations } from "../utils/zod-generator.ts";
-import {DISCORD_CHANNELS} from "../../util";
 
 describe("Economy System Tests", () => {
 	let mockClient: MockORPCClient;
@@ -42,22 +42,22 @@ describe("Economy System Tests", () => {
 				hasRecentFailure: () => false,
 				clearFailure: () => {},
 				getFailureCount: () => 0,
-			}
+			},
 		}));
 
 		interaction = createMockInteraction({
 			commandName: "work",
 			user: { id: "123456789", username: "TestUser" },
 			channelId: DISCORD_CHANNELS.COMMANDS.id,
-            guildId: "guild-1",
+			guildId: "guild-1",
 		});
 
 		if (interaction.guild) {
 			const commandsChannel = createMockChannel(interaction.guild, DISCORD_CHANNELS.COMMANDS.id, "commands");
 			interaction.guild.channels.cache.set(DISCORD_CHANNELS.COMMANDS.id, commandsChannel);
-            
-            const botsInfo = createMockChannel(interaction.guild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
-            interaction.guild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, botsInfo);
+
+			const botsInfo = createMockChannel(interaction.guild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
+			interaction.guild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, botsInfo);
 		}
 	});
 
@@ -146,7 +146,7 @@ describe("Economy System Tests", () => {
 				user: { id: "123456789", username: "BoostUser" },
 				member: { premiumSince: new Date() },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (boostInteraction.guild) {
@@ -183,7 +183,10 @@ describe("Economy System Tests", () => {
 		it("should test all possible work activities", async () => {
 			// Mock setTimeout to avoid delays
 			const originalSetTimeout = global.setTimeout;
-			global.setTimeout = ((fn: any) => { fn(); return 0; }) as any;
+			global.setTimeout = ((fn: any) => {
+				fn();
+				return 0;
+			}) as any;
 
 			const activities = ["wolt-delivery", "employment-office", "geoguessr-boss", "twitter-post", "expense-receipts"];
 
@@ -193,7 +196,7 @@ describe("Economy System Tests", () => {
 					commandName: "work",
 					user: { id: user.discordId!, username: user.username! },
 					channelId: DISCORD_CHANNELS.COMMANDS.id,
-                    guildId: "guild-1",
+					guildId: "guild-1",
 				});
 
 				if (testInteraction.guild) {
@@ -228,7 +231,7 @@ describe("Economy System Tests", () => {
 				commandName: "daily",
 				user: { id: "123456789", username: "TestUser" },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (dailyInteraction.guild) {
@@ -260,7 +263,7 @@ describe("Economy System Tests", () => {
 				commandName: "daily",
 				user: { id: "123456789", username: "TestUser" },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (dailyInteraction.guild) {
@@ -292,7 +295,7 @@ describe("Economy System Tests", () => {
 				commandName: "daily",
 				user: { id: user.discordId!, username: user.username! },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (dailyInteraction.guild) {
@@ -335,7 +338,7 @@ describe("Economy System Tests", () => {
 				commandName: "daily",
 				user: { id: "123456789", username: "TestUser" },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (dailyInteraction.guild) {
@@ -372,7 +375,7 @@ describe("Economy System Tests", () => {
 				commandName: "work",
 				user: { id: "123456789", username: "TestUser" },
 				channelId: "general-channel",
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			await executeWork({
@@ -400,7 +403,7 @@ describe("Economy System Tests", () => {
 				commandName: "work",
 				user: { id: "123456789", username: "TestUser" },
 				channelId: DISCORD_CHANNELS.COMMANDS.id,
-                guildId: "guild-1",
+				guildId: "guild-1",
 			});
 
 			if (errorInteraction.guild) {
@@ -421,7 +424,10 @@ describe("Economy System Tests", () => {
 		it("should handle all possible reward variations", async () => {
 			// Mock setTimeout to avoid delays
 			const originalSetTimeout = global.setTimeout;
-			global.setTimeout = ((fn: any) => { fn(); return 0; }) as any;
+			global.setTimeout = ((fn: any) => {
+				fn();
+				return 0;
+			}) as any;
 
 			const allClaimVariations = generateAllVariations(schemas.stats.claimWorkOutput);
 
@@ -431,7 +437,7 @@ describe("Economy System Tests", () => {
 					commandName: "work",
 					user: { id: user.discordId!, username: user.username! },
 					channelId: DISCORD_CHANNELS.COMMANDS.id,
-                    guildId: "guild-1",
+					guildId: "guild-1",
 				});
 
 				if (testInteraction.guild) {

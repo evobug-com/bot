@@ -21,8 +21,8 @@ export const createCeskyTelekomunikacniUradEmbed = () => {
 };
 
 export const createKancelarPrezidentaRepubliky = () => {
-    return new EmbedBuilder().setColor(0x194166).setAuthor({
-        name: "Kancelář prezidenta republiky",
-        icon_url: "https://www.hrad.cz/img/prezident/cs/logo.png",
-    })
-}
+	return new EmbedBuilder().setColor(0x194166).setAuthor({
+		name: "Kancelář prezidenta republiky",
+		icon_url: "https://www.hrad.cz/img/prezident/cs/logo.png",
+	});
+};

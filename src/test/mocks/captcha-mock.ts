@@ -145,12 +145,7 @@ export class MockTimingSimulator {
 	/**
 	 * Generate sophisticated bot timings with small variations
 	 */
-	static generateSmartBotTimings(
-		count: number,
-		baseIntervalMs: number,
-		deviationMs: number,
-		startTime?: Date,
-	): Date[] {
+	static generateSmartBotTimings(count: number, baseIntervalMs: number, deviationMs: number, startTime?: Date): Date[] {
 		const start = startTime || new Date(Date.now() - count * baseIntervalMs);
 		const timings: Date[] = [];
 

@@ -102,6 +102,8 @@ export class MockTextChannel {
 	type = ChannelType.GuildText;
 	guild: MockGuild;
 
+	declare isTextBased: () => boolean;
+
 	constructor(guild: MockGuild, id: string, name: string) {
 		this.id = id;
 		this.name = name;
@@ -229,9 +231,9 @@ export class MockChatInputCommandInteraction {
 	async deferReply(options?: { ephemeral?: boolean; fetchReply?: boolean; flags?: number }): Promise<any> {
 		this.deferred = true;
 		this.ephemeral = options?.ephemeral ?? false;
-        if(options?.flags && (options.flags & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
-            this.ephemeral = true;
-        }
+		if (options?.flags && (options.flags & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
+			this.ephemeral = true;
+		}
 		return Promise.resolve({
 			id: this.id,
 			interaction: this,
@@ -241,9 +243,9 @@ export class MockChatInputCommandInteraction {
 	async reply(options: InteractionReplyOptions | string): Promise<any> {
 		this.replied = true;
 		const response = typeof options === "string" ? { content: options } : options;
-        if((response.flags & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
-            this.ephemeral = true;
-        }
+		if (response.flags && ((response.flags as number) & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
+			this.ephemeral = true;
+		}
 		this.responses.push(response);
 		return Promise.resolve({
 			id: Math.random().toString(36).substring(2, 15),
@@ -256,9 +258,9 @@ export class MockChatInputCommandInteraction {
 			throw new Error("Interaction has not been deferred or replied to");
 		}
 		const response = typeof options === "string" ? { content: options } : options;
-        if((response.flags & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
-            this.ephemeral = true;
-        }
+		if (response.flags && ((response.flags as number) & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
+			this.ephemeral = true;
+		}
 		this.responses.push(response);
 		return Promise.resolve({
 			id: this.id,
@@ -267,13 +269,13 @@ export class MockChatInputCommandInteraction {
 	}
 
 	async followUp(options: any): Promise<any> {
-        if (!this.replied && !this.deferred) {
+		if (!this.replied && !this.deferred) {
 			throw new Error("Interaction has not been replied to");
 		}
 		const response = typeof options === "string" ? { content: options } : options;
-        if((response.flags & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
-            this.ephemeral = true;
-        }
+		if (response.flags && ((response.flags as number) & MessageFlags.Ephemeral) === MessageFlags.Ephemeral) {
+			this.ephemeral = true;
+		}
 		this.responses.push(response);
 		return Promise.resolve({
 			id: Math.random().toString(36).substring(2, 15),

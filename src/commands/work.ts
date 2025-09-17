@@ -7,8 +7,6 @@ import {
 	handleRewardResponse,
 	type RewardResponse,
 } from "../util/bot/rewards.ts";
-import type { CommandContext } from "../util/commands.ts";
-import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 import {
 	generateCaptcha,
 	getCaptchaDifficulty,
@@ -17,6 +15,8 @@ import {
 	shouldShowCaptcha,
 } from "../util/captcha.ts";
 import { captchaTracker } from "../util/captcha-tracker.ts";
+import type { CommandContext } from "../util/commands.ts";
+import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
@@ -110,7 +110,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			captchaType: captcha.type,
 			success: captchaResult.success,
 			responseTime: captchaResult.responseTime,
-			command: "work"
+			command: "work",
 		});
 
 		if (logError) {
@@ -122,7 +122,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			// Flag as suspicious but still allow for now
 			await orpc.users.stats.suspiciousScore.update({
 				userId: dbUser.id,
-				increment: 20
+				increment: 20,
 			});
 		}
 
@@ -137,7 +137,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				"Ověření selhalo",
 				captchaResult.timedOut
 					? "Nestihl jsi odpovědět včas. Zkus to znovu později."
-					: "Nesprávná odpověď. Zkus to znovu později."
+					: "Nesprávná odpověď. Zkus to znovu později.",
 			);
 			await interaction.editReply({ embeds: [errorEmbed], components: [] });
 			return;
@@ -313,24 +313,25 @@ const workActivities = [
 		title: ":fire: :ocean: Herní podvodník",
 		activity: "Použili jste wemod a dostali jste achievement ohnivé vody",
 	},
-    {
-        id: "is-it-a-trap",
-        title: "Životní praxe",
-        activity: "Učili jste svého kamaráda programovat, aby Vám naopládku pomáhal.",
-    },
-    {
-        id: "dual-pc-stream",
-        title: "🎥 Streamer",
-        activity: "Nastavili jste si dual-PC stream a streamovali na Twitchi. [(patří to do modré dírky!)](https://www.twitch.tv/poloaf)",
-    },
-    {
-        id: "too-much-maggi",
-        title: "👨‍🍳 Maggi Profesionál",
-        activity: "Snědli jste příliš mnoho Maggi. (Nyní jste [skutečný Sensei](https://www.twitch.tv/sensei_ladik)!)",
-    },
-    {
-        id: "really-trap",
-        title: "Zvěd",
-        activity: "Klikli jste na [tento odkaz](https://www.youtube.com/watch?v=dQw4w9WgXcQ).",
-    }
+	{
+		id: "is-it-a-trap",
+		title: "Životní praxe",
+		activity: "Učili jste svého kamaráda programovat, aby Vám naopládku pomáhal.",
+	},
+	{
+		id: "dual-pc-stream",
+		title: "🎥 Streamer",
+		activity:
+			"Nastavili jste si dual-PC stream a streamovali na Twitchi. [(patří to do modré dírky!)](https://www.twitch.tv/poloaf)",
+	},
+	{
+		id: "too-much-maggi",
+		title: "👨‍🍳 Maggi Profesionál",
+		activity: "Snědli jste příliš mnoho Maggi. (Nyní jste [skutečný Sensei](https://www.twitch.tv/sensei_ladik)!)",
+	},
+	{
+		id: "really-trap",
+		title: "Zvěd",
+		activity: "Klikli jste na [tento odkaz](https://www.youtube.com/watch?v=dQw4w9WgXcQ).",
+	},
 ];

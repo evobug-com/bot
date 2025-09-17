@@ -86,6 +86,11 @@ export class UserStatsFactory {
 			xpCount: options.xpCount ?? faker.number.int({ min: 0, max: 50000 }),
 			boostCount: options.boostCount ?? faker.number.int({ min: 0, max: 10 }),
 			boostExpires: options.boostCount && options.boostCount > 0 ? faker.date.future() : null,
+			failedCaptchaCount: 0,
+			lastCaptchaFailedAt: null,
+			suspiciousBehaviorScore: 0,
+			lastSuspiciousActivityAt: null,
+			economyBannedUntil: null,
 			updatedAt: now,
 		};
 	}

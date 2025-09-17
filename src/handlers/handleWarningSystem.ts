@@ -119,16 +119,16 @@ export const handleWarningSystem = async (client: Client<true>) => {
 	// client.on(Events.VoiceStateUpdate, handleVoiceRestrictions);
 	// client.on(Events.InteractionCreate, handleInteractionRestrictions);
 	// client.on(Events.GuildMemberUpdate, handleNicknameRestrictions);
-    //
+	//
 	// // Register button interaction handler
 	// client.on(Events.InteractionCreate, handleButtonInteractions);
-    //
+	//
 	// // Set up periodic expiration checks
 	// setInterval(() => checkAndExpireViolations(client), config.enforcement.expirationCheckInterval * 60 * 1000);
-    //
+	//
 	// // Initial expiration check
 	// await checkAndExpireViolations(client);
-    //
+	//
 	// log("info", "Warning system initialized");
 };
 
@@ -1166,7 +1166,6 @@ async function loadActiveViolations(client: Client<true>): Promise<void> {
 					// Get database user
 					const [dbUserError, dbUser] = await orpc.users.get({ discordId: member.id });
 					if (dbUserError || !dbUser) continue;
-
 
 					// Fetch violations for this user
 					const [violationsError, response] = await orpc.moderation.violations.list({

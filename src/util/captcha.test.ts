@@ -1,13 +1,19 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
-import type { ButtonInteraction, ChatInputCommandInteraction, InteractionCollector, Message, TextBasedChannel } from "discord.js";
+import type {
+	ButtonInteraction,
+	ChatInputCommandInteraction,
+	InteractionCollector,
+	Message,
+	TextBasedChannel,
+} from "discord.js";
 import {
+	type CaptchaChallenge,
+	type CaptchaResult,
 	generateCaptcha,
 	getCaptchaDifficulty,
 	isSuspiciousResponseTime,
 	presentCaptcha,
 	shouldShowCaptcha,
-	type CaptchaChallenge,
-	type CaptchaResult,
 } from "./captcha.ts";
 
 describe("Captcha Generation", () => {
@@ -287,15 +293,11 @@ describe("Captcha Generation", () => {
 
 			// Add a small delay to simulate actual response time
 			mockChannel.awaitMessageComponent = mock(async () => {
-				await new Promise(resolve => setTimeout(resolve, 10));
+				await new Promise((resolve) => setTimeout(resolve, 10));
 				return mockButtonInteraction;
 			});
 
-			const result = await presentCaptcha(
-				mockInteraction as unknown as ChatInputCommandInteraction,
-				challenge,
-				5000
-			);
+			const result = await presentCaptcha(mockInteraction as unknown as ChatInputCommandInteraction, challenge, 5000);
 
 			expect(result.success).toBe(true);
 			expect(result.attemptedAnswer).toBe("8");
@@ -315,11 +317,7 @@ describe("Captcha Generation", () => {
 
 			mockButtonInteraction.customId = "captcha_1"; // Second option is wrong
 
-			const result = await presentCaptcha(
-				mockInteraction as unknown as ChatInputCommandInteraction,
-				challenge,
-				5000
-			);
+			const result = await presentCaptcha(mockInteraction as unknown as ChatInputCommandInteraction, challenge, 5000);
 
 			expect(result.success).toBe(false);
 			expect(result.attemptedAnswer).toBe("7");
@@ -338,15 +336,9 @@ describe("Captcha Generation", () => {
 			};
 
 			// Simulate timeout by rejecting the promise
-			mockChannel.awaitMessageComponent = mock(() =>
-				Promise.reject(new Error("Collector time ended"))
-			);
+			mockChannel.awaitMessageComponent = mock(() => Promise.reject(new Error("Collector time ended")));
 
-			const result = await presentCaptcha(
-				mockInteraction as unknown as ChatInputCommandInteraction,
-				challenge,
-				1000
-			);
+			const result = await presentCaptcha(mockInteraction as unknown as ChatInputCommandInteraction, challenge, 1000);
 
 			expect(result.success).toBe(false);
 			expect(result.timedOut).toBe(true);
@@ -365,15 +357,11 @@ describe("Captcha Generation", () => {
 
 			// Add artificial delay in mock
 			mockChannel.awaitMessageComponent = mock(async () => {
-				await new Promise(resolve => setTimeout(resolve, 100));
+				await new Promise((resolve) => setTimeout(resolve, 100));
 				return mockButtonInteraction;
 			});
 
-			const result = await presentCaptcha(
-				mockInteraction as unknown as ChatInputCommandInteraction,
-				challenge,
-				5000
-			);
+			const result = await presentCaptcha(mockInteraction as unknown as ChatInputCommandInteraction, challenge, 5000);
 
 			expect(result.responseTime).toBeGreaterThanOrEqual(100);
 			expect(result.responseTime).toBeLessThan(200);

@@ -10,7 +10,7 @@ import {
 	createMockInteraction,
 	type MockChatInputCommandInteraction,
 } from "../mocks/discord-mock.ts";
-import { createTestORPCClient, MockORPCClient } from "../mocks/orpc-mock.ts";
+import { createTestORPCClient, type MockORPCClient } from "../mocks/orpc-mock.ts";
 
 describe("Economy Commands with Captcha", () => {
 	let mockClient: MockORPCClient;
@@ -69,11 +69,13 @@ describe("Economy Commands with Captcha", () => {
 				embedTitle: "🔐 Ověření - Matematika",
 				embedDescription: "Vyřeš tento jednoduchý matematický příklad:",
 			}));
-			captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-				success: true,
-				responseTime: 3500,
-				attemptedAnswer: "7",
-			}));
+			captchaMocks.presentCaptcha = mock(() =>
+				Promise.resolve({
+					success: true,
+					responseTime: 3500,
+					attemptedAnswer: "7",
+				}),
+			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => false);
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
@@ -157,12 +159,14 @@ describe("Economy Commands with Captcha", () => {
 				embedTitle: "🔐 Ověření - Matematika",
 				embedDescription: "Vyřeš tento jednoduchý matematický příklad:",
 			}));
-			captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-				success: false,
-				responseTime: 2500,
-				attemptedAnswer: "7",
-				timedOut: false,
-			}));
+			captchaMocks.presentCaptcha = mock(() =>
+				Promise.resolve({
+					success: false,
+					responseTime: 2500,
+					attemptedAnswer: "7",
+					timedOut: false,
+				}),
+			);
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
 
@@ -218,11 +222,13 @@ describe("Economy Commands with Captcha", () => {
 				embedTitle: "🔐 Ověření - Matematika",
 				embedDescription: "Vyřeš tento jednoduchý matematický příklad:",
 			}));
-			captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-				success: true,
-				responseTime: 500, // Suspiciously fast
-				attemptedAnswer: "20",
-			}));
+			captchaMocks.presentCaptcha = mock(() =>
+				Promise.resolve({
+					success: true,
+					responseTime: 500, // Suspiciously fast
+					attemptedAnswer: "20",
+				}),
+			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => true);
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
@@ -307,11 +313,13 @@ describe("Economy Commands with Captcha", () => {
 				embedTitle: "🔐 Ověření - Emoji",
 				embedDescription: "Klikni na tlačítko s tímto emoji: 🎮",
 			}));
-			captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-				success: false,
-				responseTime: 30000,
-				timedOut: true,
-			}));
+			captchaMocks.presentCaptcha = mock(() =>
+				Promise.resolve({
+					success: false,
+					responseTime: 30000,
+					timedOut: true,
+				}),
+			);
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
 
@@ -432,11 +440,13 @@ describe("Economy Commands with Captcha", () => {
 				embedTitle: "🔐 Ověření - Slova",
 				embedDescription: "Přeházené písmena: **RKOW**\nNápověda: Co děláš každý den",
 			}));
-			captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-				success: true,
-				responseTime: 4500,
-				attemptedAnswer: "WORK",
-			}));
+			captchaMocks.presentCaptcha = mock(() =>
+				Promise.resolve({
+					success: true,
+					responseTime: 4500,
+					attemptedAnswer: "WORK",
+				}),
+			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => false);
 
 			mock.module("../../util/captcha.ts", () => captchaMocks);
@@ -507,7 +517,10 @@ describe("Economy Commands with Captcha", () => {
 		it("should increase difficulty based on suspicious score", async () => {
 			// Mock setTimeout to avoid delays
 			const originalSetTimeout = global.setTimeout;
-			global.setTimeout = ((fn: any) => { fn(); return 0; }) as any;
+			global.setTimeout = ((fn: any) => {
+				fn();
+				return 0;
+			}) as any;
 			const testCases = [
 				{ score: 10, expectedDifficulty: "easy" },
 				{ score: 45, expectedDifficulty: "medium" },
@@ -529,11 +542,13 @@ describe("Economy Commands with Captcha", () => {
 					embedTitle: "🔐 Ověření",
 					embedDescription: "Test",
 				}));
-				captchaMocks.presentCaptcha = mock(() => Promise.resolve({
-					success: true,
-					responseTime: 3000,
-					attemptedAnswer: "2",
-				}));
+				captchaMocks.presentCaptcha = mock(() =>
+					Promise.resolve({
+						success: true,
+						responseTime: 3000,
+						attemptedAnswer: "2",
+					}),
+				);
 
 				mock.module("../../util/captcha.ts", () => captchaMocks);
 

@@ -8,7 +8,6 @@ achievements/TODO.MD
 !tsconfig.json
 !biome.json
 .claude
-.github
 
 # Temporary files
 temp_channels.json

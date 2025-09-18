@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import {rulesText} from "../data/rulesData.ts";
 
 const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 
@@ -11,7 +12,8 @@ export const openrouter = openrouterApiKey
 			apiKey: openrouterApiKey,
 			baseURL: "https://openrouter.ai/api/v1",
 			defaultHeaders: {
-				"X-Title": "EvoBug Discord Bot",
+                "HTTP-Referer": "https://allcom.zone/",
+				"X-Title": "Allcom Discord Bot",
 			},
 		})
 	: null;
@@ -28,34 +30,30 @@ export async function moderateMessage(content: string): Promise<ModerationResult
 	}
 
 	try {
+		const systemPrompt = `Task: Check if there is unsafe content in 'User' messages in conversations according to our safety policy with the below categories.
+
+<UNSAFE_CONTENT_CATEGORIES>
+${rulesText}
+</UNSAFE_CONTENT_CATEGORIES>
+
+<CONVERSATION>
+User: ${content}
+</CONVERSATION>
+
+Provide your safety assessment for ONLY THE ONLY CZECH/SLOVAK USER LAST MESSAGE in CONVERSATION:
+- First line must read 'safe' or 'unsafe'.
+- If unsafe, a second line must include a comma-separated list of violated categories using only numbers.`;
+
+        console.log("[OpenRouter] Sending moderation request...", systemPrompt);
 		const response = await openrouter.chat.completions.create({
-			model: "meta-llama/llama-guard-4-12b",
+			model: "openai/gpt-5-nano",
 			messages: [
 				{
 					role: "system",
-					content: `You are a content moderation assistant for a Discord server. Review the following message in Czech or Slovak language and determine if it violates Discord's community guidelines.
-
-Discord prohibits:
-- Hate speech, harassment, or bullying
-- Threats of violence or self-harm
-- Sexually explicit content involving minors
-- Spam, scams, or phishing
-- Sharing personal information without consent
-- Illegal activities
-
-Respond with a JSON object containing:
-- "flagged": boolean (true if content violates rules)
-- "categories": array of violated categories (if any)
-- "reason": brief explanation in Czech/Slovak (if flagged)`,
-				},
-				{
-					role: "user",
-					content: `Please review this message: "${content}"`,
+					content: systemPrompt,
 				},
 			],
 			temperature: 0,
-			max_tokens: 200,
-			response_format: { type: "json_object" },
 		});
 
 		const result = response.choices[0]?.message?.content;
@@ -63,12 +61,37 @@ Respond with a JSON object containing:
 			return null;
 		}
 
-		const parsed = JSON.parse(result);
-		return {
-			isFlagged: parsed.flagged === true,
-			categories: parsed.categories || [],
-			reason: parsed.reason,
-		};
+		// Llama Guard returns plain text response
+		const lines = result.trim().toLowerCase().split("\n");
+		const status = lines[0];
+
+		if (status === "safe") {
+			return {
+				isFlagged: false,
+				categories: [],
+			};
+		} else if (status === "unsafe") {
+			// Parse categories from second line (e.g., "101,404,1001")
+			const categoriesLine = lines[1] || "";
+			const categories = categoriesLine
+				.split(",")
+				.map((c) => c.trim())
+
+			const categoryNames = categories.map((c) => {
+                // Find line with number in rulesText
+                return rulesText.split("\n").find((line) => line.trim().startsWith(c))?.trim() || c;
+            });
+
+			return {
+				isFlagged: true,
+				categories,
+				reason: `Porušení:\n${categoryNames.join("\n")}`,
+			};
+		}
+
+		// If we can't parse the response, assume safe
+		console.warn("[OpenRouter] Unexpected response format:", result);
+		return null;
 	} catch (error) {
 		console.error("OpenRouter moderation error:", error);
 		return null;

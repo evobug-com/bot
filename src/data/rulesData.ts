@@ -69,46 +69,8 @@ function createInfoContainer() {
 	);
 }
 
-/**
- * Main rules message using Components V2
- */
-export const rulesData: MessageCreateOptions = {
-	components: [
-		createRulesContainer(),
-		new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large),
-		createVerificationContainer(),
-		new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small),
-		// Action row with verification buttons
-		new ActionRowBuilder().addComponents(
-			new PrimaryButtonBuilder()
-				.setCustomId("start_full_quiz")
-				.setLabel("Plný kvíz - Kompletní přístup")
-				.setEmoji({ name: "📝" }),
-			new SecondaryButtonBuilder()
-				.setCustomId("accept_partial_rules")
-				.setLabel("Rychlý přístup - Hlasové místnosti")
-				.setEmoji({ name: "🎤" }),
-		),
-	],
-	flags: MessageFlags.IsComponentsV2,
-};
 
-export const infoData: MessageCreateOptions = {
-	components: [
-		createInfoContainer(),
-		new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small),
-		createExplanationContainer(),
-	],
-	flags: MessageFlags.IsComponentsV2,
-};
-
-/**
- * Create ultra-condensed rules container with all rules in single TextDisplay
- */
-function createRulesContainer() {
-	return new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
-		textDisplay.setContent(
-			`# \uD83D\uDCDC PRAVIDLA SERVERU ALLCOM
+export const rulesText = `# \uD83D\uDCDC PRAVIDLA SERVERU ALLCOM
 **Vítej na serveru allcom** *(all - všeobecná, com - komunita)*
 
 **TL;DR:** Text držíme PG-13 (žádný sexual/gore, žádné útoky na lidi). Voice může být slovně "slanější", ale bez šikany, slurů a výhrůžek. Žádný dvojí metr – platí pro všechny. Pinguj s rozumem. Moderace jedná rychle.
@@ -155,10 +117,49 @@ function createRulesContainer() {
 1001. Postihy. Varování → timeout → kick/ban. Těžké prohřešky (hrozby, doxx, slury, malware, raid) = okamžitý ban.
 1002. Odstranění obsahu. Moderátoři můžou mazat/přesouvat obsah, který porušuje pravidla nebo rozbíjí konverzaci.
 1003. Odvolání. Piš do #modmail; posuzujeme podle důkazů.
-1004. [Zásady Discordu](https://allcom.zone/discord/guidelines). Platí vždy a mají přednost.`,
-		),
-	);
+1004. [Zásady Discordu](https://allcom.zone/discord/guidelines). Platí vždy a mají přednost.`
+
+/**
+ * Create ultra-condensed rules container with all rules in single TextDisplay
+ */
+export const createRulesContainer = () => {
+    return new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(rulesText),
+    );
 }
+
+/**
+ * Main rules message using Components V2
+ */
+export const rulesData: MessageCreateOptions = {
+	components: [
+		createRulesContainer(),
+		new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Large),
+		createVerificationContainer(),
+		new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small),
+		// Action row with verification buttons
+		new ActionRowBuilder().addComponents(
+			new PrimaryButtonBuilder()
+				.setCustomId("start_full_quiz")
+				.setLabel("Plný kvíz - Kompletní přístup")
+				.setEmoji({ name: "📝" }),
+			new SecondaryButtonBuilder()
+				.setCustomId("accept_partial_rules")
+				.setLabel("Rychlý přístup - Hlasové místnosti")
+				.setEmoji({ name: "🎤" }),
+		),
+	],
+	flags: MessageFlags.IsComponentsV2,
+};
+
+export const infoData: MessageCreateOptions = {
+	components: [
+		createInfoContainer(),
+		new SeparatorBuilder().setDivider(false).setSpacing(SeparatorSpacingSize.Small),
+		createExplanationContainer(),
+	],
+	flags: MessageFlags.IsComponentsV2,
+};
 
 /**
  * Create explanation container for why rules are structured this way

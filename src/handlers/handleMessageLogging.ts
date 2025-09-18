@@ -19,6 +19,15 @@ async function handleMessageCreate(message: OmitPartialGroupDMChannel<Message<bo
 		return;
 	}
 
+    if (message.partial) {
+        try {
+            message = await message.fetch();
+        } catch (error) {
+            console.error("[Message Moderation] Error fetching full message:", error);
+            return;
+        }
+    }
+
 	const user = await getDbUser(message.guild, message.member);
 
 	const [error, success] = await orpc.messageLogs.create({
@@ -52,6 +61,15 @@ async function handleMessageUpdate(
 	if (!(await dbUserExists(newMessage.guild, newMessage.member))) {
 		return;
 	}
+
+    if (newMessage.partial) {
+        try {
+            newMessage = await newMessage.fetch();
+        } catch (error) {
+            console.error("[Message Moderation] Error fetching full message:", error);
+            return;
+        }
+    }
 
 	const [error, message] = await orpc.messageLogs.update({
 		messageId: newMessage.id,

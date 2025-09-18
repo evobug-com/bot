@@ -44,7 +44,6 @@ Provide your safety assessment for ONLY THE ONLY CZECH/SLOVAK USER LAST MESSAGE 
 - First line must read 'safe' or 'unsafe'.
 - If unsafe, a second line must include a comma-separated list of violated categories using only numbers.`;
 
-        console.log("[OpenRouter] Sending moderation request...", systemPrompt);
 		const response = await openrouter.chat.completions.create({
 			model: "openai/gpt-5-nano",
 			messages: [

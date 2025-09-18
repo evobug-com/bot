@@ -69,7 +69,6 @@ function createInfoContainer() {
 	);
 }
 
-
 export const rulesText = `# \uD83D\uDCDC PRAVIDLA SERVERU ALLCOM
 **Vítej na serveru allcom** *(all - všeobecná, com - komunita)*
 
@@ -117,16 +116,14 @@ export const rulesText = `# \uD83D\uDCDC PRAVIDLA SERVERU ALLCOM
 1001. Postihy. Varování → timeout → kick/ban. Těžké prohřešky (hrozby, doxx, slury, malware, raid) = okamžitý ban.
 1002. Odstranění obsahu. Moderátoři můžou mazat/přesouvat obsah, který porušuje pravidla nebo rozbíjí konverzaci.
 1003. Odvolání. Piš do #modmail; posuzujeme podle důkazů.
-1004. [Zásady Discordu](https://allcom.zone/discord/guidelines). Platí vždy a mají přednost.`
+1004. [Zásady Discordu](https://allcom.zone/discord/guidelines). Platí vždy a mají přednost.`;
 
 /**
  * Create ultra-condensed rules container with all rules in single TextDisplay
  */
 export const createRulesContainer = () => {
-    return new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(rulesText),
-    );
-}
+	return new ContainerBuilder().addTextDisplayComponents((textDisplay) => textDisplay.setContent(rulesText));
+};
 
 /**
  * Main rules message using Components V2

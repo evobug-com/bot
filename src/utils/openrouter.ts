@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import {rulesText} from "../data/rulesData.ts";
+import { rulesText } from "../data/rulesData.ts";
 
 const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 
@@ -12,7 +12,7 @@ export const openrouter = openrouterApiKey
 			apiKey: openrouterApiKey,
 			baseURL: "https://openrouter.ai/api/v1",
 			defaultHeaders: {
-                "HTTP-Referer": "https://allcom.zone/",
+				"HTTP-Referer": "https://allcom.zone/",
 				"X-Title": "Allcom Discord Bot",
 			},
 		})
@@ -72,14 +72,17 @@ Provide your safety assessment for ONLY THE ONLY CZECH/SLOVAK USER LAST MESSAGE 
 		} else if (status === "unsafe") {
 			// Parse categories from second line (e.g., "101,404,1001")
 			const categoriesLine = lines[1] || "";
-			const categories = categoriesLine
-				.split(",")
-				.map((c) => c.trim())
+			const categories = categoriesLine.split(",").map((c) => c.trim());
 
 			const categoryNames = categories.map((c) => {
-                // Find line with number in rulesText
-                return rulesText.split("\n").find((line) => line.trim().startsWith(c))?.trim() || c;
-            });
+				// Find line with number in rulesText
+				return (
+					rulesText
+						.split("\n")
+						.find((line) => line.trim().startsWith(c))
+						?.trim() || c
+				);
+			});
 
 			return {
 				isFlagged: true,

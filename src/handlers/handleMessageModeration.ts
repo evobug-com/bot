@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noMisleadingCharacterClass: <explanation> */
 import { type Client, Events, type Message, type TextChannel, userMention } from "discord.js";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../util/config/channels.ts";
 import { DISCORD_ROLES } from "../util/config/roles.ts";

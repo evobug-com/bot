@@ -30,19 +30,31 @@ export async function moderateMessage(content: string): Promise<ModerationResult
 	}
 
 	try {
-		const systemPrompt = `Task: Check if there is unsafe content in 'User' messages in conversations according to our safety policy with the below categories.
+		const systemPrompt = `# Role and Objective
+- Assess if the last 'User' message in a conversation contains unsafe content according to our safety policy categories.
 
+# Instructions
+- Review only the last 'User' message provided in the conversation.
+- All messages are in Czech or Slovak.
+- Evaluate the content strictly against the listed <UNSAFE_CONTENT_CATEGORIES>.
+
+## Category Reference
 <UNSAFE_CONTENT_CATEGORIES>
 ${rulesText}
 </UNSAFE_CONTENT_CATEGORIES>
 
-<CONVERSATION>
-User: ${content}
-</CONVERSATION>
+# Output Format
+- Line 1: Output 'safe' or 'unsafe'.
+- Line 2 (ONLY if 'unsafe'): List only the numbers (comma-separated, ascending order) for violated categories (e.g., '1,2,5'), with no additional text.
+- If the message is 'safe', output only 'safe' on a single line.
+- Output must be plain text only, never use extra formatting like JSON, XML, or Markdown.
 
-Provide your safety assessment for ONLY THE ONLY CZECH/SLOVAK USER LAST MESSAGE in CONVERSATION:
-- First line must read 'safe' or 'unsafe'.
-- If unsafe, a second line must include a comma-separated list of violated categories using only numbers.`;
+# Output Checklist
+- if the message does not violate categories, output only 'safe'.
+- If unsafe content is detected, output 'unsafe' and list violated category numbers on the next line.
+
+# Reasoning Effort
+- Set reasoning_effort to minimal; strictly follow category rules without additional interpretation or verbosity.`;
 
 		const response = await openrouter.chat.completions.create({
 			model: "openai/gpt-5-nano",
@@ -51,6 +63,10 @@ Provide your safety assessment for ONLY THE ONLY CZECH/SLOVAK USER LAST MESSAGE 
 					role: "system",
 					content: systemPrompt,
 				},
+                {
+                    role: "user",
+                    content: content,
+                }
 			],
 			temperature: 0,
 		});

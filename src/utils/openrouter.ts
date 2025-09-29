@@ -63,10 +63,10 @@ ${rulesText}
 					role: "system",
 					content: systemPrompt,
 				},
-                {
-                    role: "user",
-                    content: content,
-                }
+				{
+					role: "user",
+					content: content,
+				},
 			],
 			temperature: 0,
 		});

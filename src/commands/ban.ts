@@ -234,10 +234,10 @@ export const execute = async ({ interaction }: CommandContext) => {
 
 		await modalSubmit.deferReply();
 
-		const ruleNumber = modalSubmit.fields.getTextInputValue("rule_number");
-		const reason = modalSubmit.fields.getTextInputValue("reason");
-		const isPermanentStr = modalSubmit.fields.getTextInputValue("is_permanent").toLowerCase();
-		const additionalNotes = modalSubmit.fields.getTextInputValue("additional_notes") || "";
+		const ruleNumber = modalSubmit.components.getTextInputValue("rule_number");
+		const reason = modalSubmit.components.getTextInputValue("reason");
+		const isPermanentStr = modalSubmit.components.getTextInputValue("is_permanent").toLowerCase();
+		const additionalNotes = modalSubmit.components.getTextInputValue("additional_notes") || "";
 
 		const isPermanent = isPermanentStr === "ano" || isPermanentStr === "yes" || isPermanentStr === "y";
 

@@ -217,9 +217,9 @@ export const execute = async ({ interaction }: CommandContext) => {
 
 		await modalSubmit.deferReply();
 
-		const ruleNumber = modalSubmit.fields.getTextInputValue("rule_number");
-		const reason = modalSubmit.fields.getTextInputValue("reason");
-		const additionalNotes = modalSubmit.fields.getTextInputValue("additional_notes") || "";
+		const ruleNumber = modalSubmit.components.getTextInputValue("rule_number");
+		const reason = modalSubmit.components.getTextInputValue("reason");
+		const additionalNotes = modalSubmit.components.getTextInputValue("additional_notes") || "";
 
 		await performKick(modalSubmit, targetUser, ruleNumber, reason, additionalNotes);
 	} catch (error) {

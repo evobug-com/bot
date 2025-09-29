@@ -59,7 +59,7 @@ const handleInteractionCreate = async (interaction: Interaction) => {
  * Handle news modal submission
  */
 async function handleNewsModalSubmit(interaction: ModalSubmitInteraction) {
-	const newsContent = interaction.fields.getTextInputValue("newsContent");
+	const newsContent = interaction.components.getTextInputValue("newsContent");
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
 	try {

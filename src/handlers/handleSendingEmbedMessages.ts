@@ -68,7 +68,7 @@ const handleInteractionCreate = async (interaction: Interaction) => {
 		if (!channel) return;
 		if (!channel.isSendable()) return;
 
-		const json = interaction.fields.getTextInputValue("embedContent");
+		const json = interaction.components.getTextInputValue("embedContent");
 
 		try {
 			await channel.send(parseJsonData(json));

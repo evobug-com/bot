@@ -10,6 +10,7 @@ import { handleRulesVerification } from "./handlers/handleRulesVerification.ts";
 import { handleSendingEmbedMessages } from "./handlers/handleSendingEmbedMessages.ts";
 import { handleStreamingNotifications } from "./handlers/handleStreamingNotifications.ts";
 import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannels.ts";
+import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
 import { ensureUserRegistered } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
@@ -51,6 +52,7 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleNewsEmbeds(readyClient);
 	void handleStreamingNotifications(readyClient);
 	void handleCommandsForRoom(readyClient);
+	void handleVoiceConnections(readyClient);
 });
 
 // Register commands per each guild and when bot is added to a guild

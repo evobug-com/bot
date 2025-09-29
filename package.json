@@ -11,16 +11,19 @@
 		"test:watch": "bun test --watch"
 	},
 	"dependencies": {
+		"@discordjs/voice": "^0.19.0",
 		"@orpc/client": "^1.9.2",
 		"@orpc/server": "^1.9.2",
 		"discord.js": "dev",
 		"dotenv": "^17.2.2",
 		"execa": "^9.6.0",
+		"ffmpeg-static": "^5.2.0",
 		"glob": "^11.0.3",
 		"openai": "^5.23.1"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^10.0.0",
+		"@snazzah/davey": "^0.1.7",
 		"@types/bun": "^1.2.23",
 		"@types/node": "^24.5.2",
 		"@typescript/native-preview": "latest",

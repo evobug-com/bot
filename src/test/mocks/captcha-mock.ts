@@ -270,7 +270,7 @@ export class MockCaptchaChannel {
 	private timeout = false;
 	awaitComponentMock: any;
 
-	constructor(userId: string) {
+	constructor() {
 		this.awaitComponentMock = mock();
 	}
 

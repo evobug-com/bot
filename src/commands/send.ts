@@ -1,10 +1,7 @@
 import {
-	ActionRowBuilder,
 	ChatInputCommandBuilder,
-	type ModalActionRowComponentBuilder,
 	ModalBuilder,
 	PermissionFlagsBits,
-	TextInputBuilder,
 	TextInputStyle,
 } from "discord.js";
 import type { CommandContext } from "../util/commands.ts";

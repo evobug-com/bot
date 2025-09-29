@@ -20,11 +20,12 @@
 		"openai": "^5.23.1"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.2.4",
 		"@faker-js/faker": "^10.0.0",
 		"@types/bun": "^1.2.23",
 		"@types/node": "^24.5.2",
-		"@typescript/native-preview": "latest"
+		"@typescript/native-preview": "latest",
+		"oxlint": "^1.19.0",
+		"oxlint-tsgolint": "^0.2.0"
 	},
 	"engines": {
 		"node": ">=18.0.0"

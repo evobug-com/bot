@@ -139,8 +139,7 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 
 	const embed = createCeskyStatistickyUradEmbed()
 		.addFields(
-			...[
-				{
+            {
 					name: "📊 Metrika",
 					value: METRICS[metric]?.label as string,
 					inline: true,
@@ -155,7 +154,6 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 					value: "",
 					inline: false,
 				},
-			],
 		)
 		.addFields(fields);
 

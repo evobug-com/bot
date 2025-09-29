@@ -785,7 +785,7 @@ async function loadVerificationData() {
 		}
 
 		log("info", "Loaded verification data from persistence");
-	} catch (_error) {
+	} catch {
 		// File doesn't exist or is invalid, start fresh
 		log("info", "No existing verification data found, starting fresh");
 	}

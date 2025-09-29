@@ -48,7 +48,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 	let targetDbUser: Awaited<ReturnType<typeof getDbUser>> | undefined;
 	try {
 		targetDbUser = await getDbUser(interaction.guild, targetUser.id);
-	} catch (_error) {
+	} catch {
 		// User not registered in database - show clean standing
 		const cleanStanding: AccountStandingData = {
 			standing: AccountStanding.ALL_GOOD,

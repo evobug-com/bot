@@ -9,7 +9,6 @@ import type {
 import { DISCORD_CHANNELS, getChannelByConfig } from "../config/channels.js";
 import { reportError } from "../config/roles.js";
 
-// biome-ignore lint/complexity/noStaticOnlyClass: This is a manager class with static methods
 export class ChannelManager {
 	private static channelCache = new Map<string, string>(); // channelKey -> actualChannelId
 
@@ -140,7 +139,7 @@ export class ChannelManager {
 	 * Check if a channel exists in the guild
 	 */
 	static async exists(guild: Guild, channelKey: keyof typeof DISCORD_CHANNELS): Promise<boolean> {
-		const channel = await ChannelManager.getChannel(guild, channelKey);
+		const channel = ChannelManager.getChannel(guild, channelKey);
 		return channel !== null;
 	}
 

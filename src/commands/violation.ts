@@ -219,7 +219,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 			.addTextDisplayComponents((display) =>
 				display.setContent(
 					`# ✅ Porušení úspěšně vydáno\n\n` +
-						`**Uživatel:** ${targetUser} (${targetUser.tag})\n` +
+						`**Uživatel:** ${targetUser.displayName} (${targetUser.tag})\n` +
 						`**ID porušení:** #${violation.id}`,
 				),
 			)

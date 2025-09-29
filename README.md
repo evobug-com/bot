@@ -158,8 +158,7 @@ bunx tsgo --noEmit       # Check TypeScript errors
 
 ### Linting & Formatting
 ```bash
-bunx biome check --write .  # Lint and format code
-bunx biome lint            # Check for lint errors only
+bunx oxlint --type-aware
 ```
 
 ### Development Mode
@@ -250,7 +249,7 @@ bun run src/bot.ts
 
 ### Code Style
 - Use TypeScript strict mode
-- Follow Biome linting rules
+- Follow Oxlint linting rules
 - Maintain test coverage for new features
 - Document complex logic with comments
 

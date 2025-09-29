@@ -126,13 +126,13 @@ describe("RoleManager Core Logic", () => {
 		it("should handle add failures", async () => {
 			mockMember.roles.add = mock(() => Promise.reject(new Error("Missing permissions")));
 
-			await expect(mockMember.roles.add(mockRole)).rejects.toThrow("Missing permissions");
+            expect(mockMember.roles.add(mockRole)).rejects.toThrow("Missing permissions");
 		});
 
 		it("should handle remove failures", async () => {
 			mockMember.roles.remove = mock(() => Promise.reject(new Error("Missing permissions")));
 
-			await expect(mockMember.roles.remove(mockRole)).rejects.toThrow("Missing permissions");
+			expect(mockMember.roles.remove(mockRole)).rejects.toThrow("Missing permissions");
 		});
 	});
 });

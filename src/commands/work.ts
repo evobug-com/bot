@@ -59,8 +59,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		const timeRemaining = formatTimeRemaining(cooldown.cooldownRemaining || 0);
 		const embed = createUradPraceEmbed()
 			.addFields(
-				...[
-					{
+				{
 						name: "Tvůj stav",
 						value: "Šlofííčkuješ",
 					},
@@ -68,7 +67,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 						name: "Odpočatý budeš za",
 						value: timeRemaining,
 					},
-				],
 			)
 			.setFooter({ text: "Za flákání se neplatí! Zkus to znovu později.\nTip: Pracovat můžeš jednou za 60 minut" })
 			.setThumbnail("https://cdn.discordapp.com/emojis/1326286362760187944.png");

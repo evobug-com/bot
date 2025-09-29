@@ -204,10 +204,10 @@ describe("Simple Bot Test Example", () => {
 		expect(interaction.guild).toBeDefined();
 
 		// Test defer and reply
-		interaction.deferReply();
+		void interaction.deferReply();
 		expect(interaction.deferred).toBe(true);
 
-		interaction.editReply({
+		void interaction.editReply({
 			content: "Processing your work request...",
 		});
 

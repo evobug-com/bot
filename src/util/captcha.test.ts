@@ -1,21 +1,15 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type {
-	ButtonInteraction,
 	ChatInputCommandInteraction,
-	InteractionCollector,
-	Message,
-	TextBasedChannel,
 } from "discord.js";
 import {
 	type CaptchaChallenge,
-	type CaptchaResult,
 	generateCaptcha,
 	getCaptchaDifficulty,
 	isSuspiciousResponseTime,
 	presentCaptcha,
 	shouldShowCaptcha,
 } from "./captcha.ts";
-import { captchaTracker } from "./captcha-tracker.ts";
 
 describe("Captcha Generation", () => {
 	describe("generateCaptcha", () => {

@@ -1,12 +1,12 @@
 import {
-	ChatInputCommandBuilder,
-	type ChatInputCommandInteraction,
-	ContainerBuilder,
-	MessageFlags,
-	ModalBuilder,
-	PermissionFlagsBits,
-	SeparatorSpacingSize,
-	TextInputStyle,
+    ChatInputCommandBuilder,
+    type ChatInputCommandInteraction,
+    ContainerBuilder,
+    MessageFlags,
+    ModalBuilder, type ModalSubmitInteraction,
+    PermissionFlagsBits,
+    SeparatorSpacingSize,
+    TextInputStyle,
 } from "discord.js";
 import { getDbUser } from "../client/client.ts";
 import { PolicyType, ViolationSeverity, ViolationType } from "../data/violationData.ts";
@@ -228,7 +228,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 };
 
 async function performKick(
-	interaction: ChatInputCommandInteraction | any,
+	interaction: ChatInputCommandInteraction | ModalSubmitInteraction,
 	targetUser: any,
 	ruleNumber: string,
 	reason: string,

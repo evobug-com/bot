@@ -1,16 +1,12 @@
 import {
 	ChannelType,
-	type ChatInputCommandInteraction,
-	type Guild,
 	type GuildMember,
 	type InteractionReplyOptions,
-	type Message,
 	MessageFlags,
 	PermissionsBitField,
 	type Role,
 	type Snowflake,
 	type TextChannel,
-	type User,
 } from "discord.js";
 
 export interface MockUserOptions {

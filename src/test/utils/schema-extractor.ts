@@ -1,38 +1,8 @@
 import { z } from "zod";
 import {
-	calculateStanding,
-	getBulkStandings,
-	getStanding,
-	getUserRestrictions,
-} from "../../../../api/src/contract/standing/index.ts";
-import {
-	checkServerTagStreak,
-	claimDaily,
-	claimWork,
-	getServerTagStreak,
-	leaderboard,
 	levelProgressSchema,
-	userDailyCooldown,
-	userStats,
-	userWorkCooldown,
 } from "../../../../api/src/contract/stats/index.ts";
-import {
-	autoExpireSuspensions,
-	checkSuspension,
-	createSuspension,
-	getSuspensionHistory,
-	liftSuspension,
-	listSuspensions,
-} from "../../../../api/src/contract/suspensions/index.ts";
-import { createUser, getUser, updateUser } from "../../../../api/src/contract/users/index.ts";
-import {
-	bulkExpireViolations,
-	expireViolation,
-	getViolation,
-	issueViolation,
-	listViolations,
-	updateViolationReview,
-} from "../../../../api/src/contract/violations/index.ts";
+
 import {
 	suspensionsSchema,
 	userSchema,
@@ -271,38 +241,3 @@ export const schemas = {
 		}),
 	},
 };
-
-export type ExtractedSchemas = typeof schemas;
-
-export function getSchemaForEndpoint(endpoint: string): z.ZodType | undefined {
-	const parts = endpoint.split(".");
-	let current: any = schemas;
-
-	for (const part of parts) {
-		if (current && typeof current === "object" && part in current) {
-			current = current[part];
-		} else {
-			return undefined;
-		}
-	}
-
-	return current instanceof z.ZodType ? current : undefined;
-}
-
-export function getAllEndpointSchemas(): Record<string, z.ZodType> {
-	const result: Record<string, z.ZodType> = {};
-
-	function traverse(obj: any, path: string[] = []) {
-		for (const [key, value] of Object.entries(obj)) {
-			const currentPath = [...path, key];
-			if (value instanceof z.ZodType) {
-				result[currentPath.join(".")] = value;
-			} else if (typeof value === "object" && value !== null) {
-				traverse(value, currentPath);
-			}
-		}
-	}
-
-	traverse(schemas);
-	return result;
-}

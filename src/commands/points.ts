@@ -108,8 +108,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 const createNotFoundEmbed = (guild: Guild, displayName: string) =>
 	createCeskyStatistickyUradEmbed()
 		.setFields(
-			...[
-				{
+			    {
 					name: "🙎 Subjekt",
 					value: `${displayName}`,
 					inline: true,
@@ -119,7 +118,6 @@ const createNotFoundEmbed = (guild: Guild, displayName: string) =>
 					value: "Nenalezen",
 					inline: true,
 				},
-			],
 		)
 		.setFooter({
 			text: `Sděl uživateli, ať se přihlásí na úřad práce pomocí </daily:${getCommand("daily")?.instances[guild.id]?.id}> nebo </work:${getCommand("work")?.instances[guild.id]?.id}>`,

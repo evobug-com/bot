@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { MessageFlags } from "discord.js";
 import { execute as executeDaily } from "../../commands/daily.ts";
 import { execute as executeWork } from "../../commands/work.ts";
 import { DISCORD_CHANNELS } from "../../util";
 import * as captchaModule from "../../util/captcha.ts";
-import { createUserScenarios, UserFactory, UserStatsFactory } from "../factories/user.factory.ts";
+import { UserFactory, UserStatsFactory } from "../factories/user.factory.ts";
 import {
 	createMockChannel,
 	createMockInteraction,
@@ -21,7 +20,7 @@ describe("Economy Commands with Captcha", () => {
 		const testClient = createTestORPCClient({ seed: 123 });
 		mockClient = testClient.mock;
 
-		mock.module("../../client/client.ts", () => ({
+		void mock.module("../../client/client.ts", () => ({
 			orpc: testClient.client,
 			getDbUser: async () => UserFactory.create({ id: 1, discordId: "123456789" }),
 		}));
@@ -78,7 +77,7 @@ describe("Economy Commands with Captcha", () => {
 			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => false);
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -168,7 +167,7 @@ describe("Economy Commands with Captcha", () => {
 				}),
 			);
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -231,7 +230,7 @@ describe("Economy Commands with Captcha", () => {
 			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => true);
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -321,7 +320,7 @@ describe("Economy Commands with Captcha", () => {
 				}),
 			);
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -366,7 +365,7 @@ describe("Economy Commands with Captcha", () => {
 			// Mock captcha not shown (frequency check)
 			captchaMocks.shouldShowCaptcha = mock(() => ({ showCaptcha: false }));
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -449,7 +448,7 @@ describe("Economy Commands with Captcha", () => {
 			);
 			captchaMocks.isSuspiciousResponseTime = mock(() => false);
 
-			mock.module("../../util/captcha.ts", () => captchaMocks);
+			void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 			// Mock API responses
 			mockClient.setCustomResponse("users.stats.user", {
@@ -553,7 +552,7 @@ describe("Economy Commands with Captcha", () => {
 					}),
 				);
 
-				mock.module("../../util/captcha.ts", () => captchaMocks);
+				void mock.module("../../util/captcha.ts", () => captchaMocks);
 
 				// Mock API responses
 				mockClient.setCustomResponse("users.stats.user", {

@@ -44,7 +44,7 @@ export async function generateAiResponse(
 			const text = data.toString();
 			console.log(text);
 			output += text;
-			outputStream.write(data);
+			void outputStream.write(data);
 		});
 
 		// Handle timeout
@@ -81,7 +81,7 @@ export async function generateAiResponse(
 					try {
 						const parsed = JSON.parse(line);
 						messages.push(parsed);
-					} catch (_e) {
+					} catch {
 						// Skip non-JSON lines
 					}
 				}
@@ -128,7 +128,7 @@ function extractJsonFromResponse(response: string) {
 	// First, try to parse as-is (best case scenario)
 	try {
 		return JSON.parse(response);
-	} catch (_e) {
+	} catch {
 		// Continue with extraction methods
 	}
 
@@ -152,7 +152,7 @@ function extractJsonFromResponse(response: string) {
 		try {
 			const extracted = cleaned.substring(firstBrace, lastBrace + 1);
 			return JSON.parse(extracted);
-		} catch (_e) {
+		} catch {
 			// Continue trying
 		}
 	}
@@ -164,7 +164,7 @@ function extractJsonFromResponse(response: string) {
 		try {
 			const extracted = cleaned.substring(firstBracket, lastBracket + 1);
 			return JSON.parse(extracted);
-		} catch (_e) {
+		} catch {
 			// Continue trying
 		}
 	}

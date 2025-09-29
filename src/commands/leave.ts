@@ -1,6 +1,5 @@
 import {
 	ActionRowBuilder,
-	ButtonStyle,
 	ChatInputCommandBuilder,
 	ComponentType,
 	DangerButtonBuilder,

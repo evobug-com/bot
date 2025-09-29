@@ -181,24 +181,6 @@ export class MockORPCClient {
 		return mockData;
 	}
 
-	private generateError(endpoint: string): Error {
-		const errors = [
-			{ code: "NOT_FOUND", message: "Resource not found" },
-			{ code: "NOT_ACCEPTABLE", message: "Request not acceptable" },
-			{ code: "CONFLICT", message: "Resource conflict" },
-			{ code: "DATABASE_ERROR", message: "Database error occurred" },
-			{ code: "FORBIDDEN", message: "Access forbidden" },
-		];
-
-		const errorInfo = errors[Math.floor(Math.random() * errors.length)];
-		if (!errorInfo) {
-			return new Error("Unknown error");
-		}
-		const err = new Error(errorInfo.message);
-		(err as any).code = errorInfo.code;
-		return err;
-	}
-
 	private isKnownEndpoint(path: string): boolean {
 		const knownEndpoints = [
 			"users.stats.user",

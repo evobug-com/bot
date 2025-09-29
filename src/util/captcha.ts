@@ -1,6 +1,5 @@
 import {
 	ActionRowBuilder,
-	ButtonStyle,
 	type ChatInputCommandInteraction,
 	ComponentType,
 	EmbedBuilder,
@@ -352,7 +351,7 @@ export async function presentCaptcha(
 			attemptedAnswer: selectedAnswer,
 			timedOut: false,
 		};
-	} catch (error) {
+	} catch {
 		// Timeout
 		const timeoutEmbed = new EmbedBuilder()
 			.setColor(0xff0000)

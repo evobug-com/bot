@@ -50,7 +50,7 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 		const botMember = interaction.guild?.members.me;
 		if (!botMember || !targetChannel.permissionsFor(botMember)?.has(PermissionFlagsBits.SendMessages)) {
 			await interaction.editReply({
-				content: `❌ I don't have permission to send messages in ${targetChannel}.`,
+				content: `❌ I don't have permission to send messages in ${targetChannel.name}.`,
 			});
 			return;
 		}

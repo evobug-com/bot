@@ -242,8 +242,6 @@ export interface HandleRewardOptions {
 	userId?: string;
 	/** Function to create the main embed */
 	createMainEmbed: () => EmbedBuilder;
-	/** Whether to send level up as a separate message */
-	separateLevelUp?: boolean;
 }
 
 /**
@@ -251,7 +249,7 @@ export interface HandleRewardOptions {
  * Handles level up notifications, main reward embed, and proper message flow
  */
 export async function handleRewardResponse(response: RewardResponse, options: HandleRewardOptions): Promise<void> {
-	const { interaction, channel, userId, createMainEmbed, separateLevelUp = false } = options;
+	const { interaction, channel, userId, createMainEmbed } = options;
 
 	// Validate we have either interaction or channel
 	if (!interaction && !channel) {

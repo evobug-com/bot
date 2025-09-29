@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/client";
 import {
 	ActionRowBuilder,
 	ChatInputCommandBuilder,
@@ -17,7 +16,7 @@ import {
 	type ViolationType,
 	ViolationTypeLabels,
 } from "../data/violationData.ts";
-import { ChannelManager, createErrorEmbed } from "../util";
+import { ChannelManager } from "../util";
 import type { CommandContext } from "../util/commands.ts";
 
 export const data = new ChatInputCommandBuilder()

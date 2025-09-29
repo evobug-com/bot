@@ -142,7 +142,7 @@ class CaptchaTracker {
 		let state = this.userStates.get(userId);
 
 		if (!state) {
-			const interval = this.getUserInterval(userId);
+			void this.getUserInterval(userId); // Initialize state if missing
 			state = this.userStates.get(userId)!;
 		}
 

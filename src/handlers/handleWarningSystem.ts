@@ -22,7 +22,6 @@ import {
 	ActionRowBuilder,
 	type Client,
 	ContainerBuilder,
-	Events,
 	type GuildMember,
 	type Interaction,
 	type Message,
@@ -421,7 +420,7 @@ async function logViolationToAudit(client: Client<true>, violation: Violation): 
 		const guild = client.guilds.cache.get(violation.guildId);
 		if (!guild) return;
 
-		const auditChannel = await ChannelManager.getTextChannel(guild, "BOT_INFO"); // Use BOT_INFO until AUDIT_LOG is added
+		const auditChannel = ChannelManager.getTextChannel(guild, "BOT_INFO"); // Use BOT_INFO until AUDIT_LOG is added
 		if (!auditChannel) return;
 
 		const user = await client.users.fetch(String(violation.userId)).catch(() => null);
@@ -855,7 +854,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 					components: [container, actionRow],
 					flags: MessageFlags.IsComponentsV2,
 				});
-			} catch (_dmError) {
+			} catch {
 				// User has DMs disabled, log it
 				log("warn", `Could not send restriction DM to user ${message.author.id} - DMs disabled`);
 			}
@@ -1137,7 +1136,7 @@ async function loadWarningData(): Promise<void> {
 		}
 
 		log("info", "Loaded warning system data from persistence");
-	} catch (_error) {
+	} catch {
 		// File doesn't exist or is invalid, start fresh
 		log("info", "No existing warning data found, starting fresh");
 	}
@@ -1226,7 +1225,7 @@ async function loadActiveViolations(client: Client<true>): Promise<void> {
 							log("info", `Applied ${allRestrictions.size} restrictions to user ${member.user.tag} (${member.id})`);
 						}
 					}
-				} catch (_error) {}
+				} catch {}
 			}
 		}
 

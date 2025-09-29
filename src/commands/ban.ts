@@ -1,13 +1,13 @@
 import {
-	ChatInputCommandBuilder,
-	type ChatInputCommandInteraction,
-	ContainerBuilder,
-	MessageFlags,
-	ModalBuilder,
-	PermissionFlagsBits,
-	SeparatorSpacingSize,
-	TextInputStyle,
-	type User,
+    ChatInputCommandBuilder,
+    type ChatInputCommandInteraction,
+    ContainerBuilder,
+    MessageFlags,
+    ModalBuilder, type ModalSubmitInteraction,
+    PermissionFlagsBits,
+    SeparatorSpacingSize,
+    TextInputStyle,
+    type User,
 } from "discord.js";
 import { getDbUser } from "../client/client.ts";
 import { PolicyType, ViolationSeverity, ViolationType } from "../data/violationData.ts";
@@ -248,7 +248,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 };
 
 async function performBan(
-	interaction: ChatInputCommandInteraction | any,
+	interaction: ChatInputCommandInteraction | ModalSubmitInteraction,
 	targetUser: User,
 	ruleNumber: string,
 	reason: string,

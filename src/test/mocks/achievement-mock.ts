@@ -52,18 +52,18 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 		return Promise.resolve({ id: 123, discordId: "test-user-id" });
 	});
 
-	mock.module("../../client/client.ts", () => ({
+	void mock.module("../../client/client.ts", () => ({
 		dbUserExists: mockDbUserExists,
 		getDbUser: mockGetDbUser,
 		orpc: testClient.client,
 	}));
 
-	mock.module("../../util", () => ({
+	void mock.module("../../util", () => ({
 		DISCORD_CHANNELS,
 		reportError: mock(),
 	}));
 
-	mock.module("node:fs/promises", () => ({
+	void mock.module("node:fs/promises", () => ({
 		readFile: mockReadFile,
 		writeFile: mockWriteFile,
 		mkdir: mockMkdir,

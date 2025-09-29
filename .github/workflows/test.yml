@@ -39,7 +39,7 @@ jobs:
 
       - name: Lint and format check
         working-directory: bot
-        run: bunx biome check .
+        run: bunx oxlint --type-aware
 
       - name: Run tests
         working-directory: bot

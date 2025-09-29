@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { MessageFlags } from "discord.js";
 import { execute as executeDaily } from "../../commands/daily.ts";
 import { execute as executeWork } from "../../commands/work.ts";
 import { DISCORD_CHANNELS } from "../../util";
@@ -21,13 +20,13 @@ describe("Economy System Tests", () => {
 		const testClient = createTestORPCClient({ seed: 123 });
 		mockClient = testClient.mock;
 
-		mock.module("../../client/client.ts", () => ({
+		void mock.module("../../client/client.ts", () => ({
 			orpc: testClient.client,
 			getDbUser: async () => UserFactory.create({ id: 1, discordId: "123456789" }),
 		}));
 
 		// Mock captcha functions to always skip captcha in tests
-		mock.module("../../util/captcha.ts", () => ({
+		void mock.module("../../util/captcha.ts", () => ({
 			shouldShowCaptcha: () => ({ showCaptcha: false }),
 			generateCaptcha: () => ({}),
 			presentCaptcha: async () => ({ success: true, responseTime: 3000 }),
@@ -36,7 +35,7 @@ describe("Economy System Tests", () => {
 		}));
 
 		// Mock captcha tracker to prevent failures
-		mock.module("../../util/captcha-tracker.ts", () => ({
+		void mock.module("../../util/captcha-tracker.ts", () => ({
 			captchaTracker: {
 				recordFailure: () => {},
 				hasRecentFailure: () => false,
@@ -182,7 +181,6 @@ describe("Economy System Tests", () => {
 
 		it("should test all possible work activities", async () => {
 			// Mock setTimeout to avoid delays
-			const originalSetTimeout = global.setTimeout;
 			global.setTimeout = ((fn: any) => {
 				fn();
 				return 0;
@@ -394,7 +392,7 @@ describe("Economy System Tests", () => {
 			const user = UserFactory.create({ id: 1, discordId: "123456789" });
 			const errorClient = new MockORPCClient({ errorRate: 1 });
 
-			mock.module("../../client/client.ts", () => ({
+			void mock.module("../../client/client.ts", () => ({
 				orpc: errorClient.createClient(),
 				getDbUser: async () => user,
 			}));

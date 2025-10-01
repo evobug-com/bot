@@ -43,8 +43,8 @@ const log = createLogger("VoiceConnections");
  * Configuration for voice connections
  */
 const config = {
-	/** Interval between voice channel checks (3 hours in milliseconds) */
-	checkInterval: 3 * 60 * 60 * 1000, // 3 hours
+	/** Interval between voice channel checks (8 hours in milliseconds) */
+	checkInterval: 8 * 60 * 60 * 1000, // 8 hours
 
 	/** Directory containing sound files */
 	soundsDirectory: join(process.cwd(), "sounds"),

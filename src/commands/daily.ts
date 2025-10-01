@@ -13,7 +13,6 @@ import {
 import {
 	generateCaptcha,
 	getCaptchaDifficulty,
-	isSuspiciousResponseTime,
 	presentCaptcha,
 	shouldShowCaptcha,
 } from "../util/captcha.ts";
@@ -124,15 +123,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				`[CAPTCHA WARNING] User ${interaction.user.tag} (${dbUser.id}):`,
 				logResult.suspiciousReasons.join(", "),
 			);
-		}
-
-		// Check for suspicious response time
-		if (captchaResult.success && isSuspiciousResponseTime(captchaResult.responseTime, captcha.type)) {
-			// Flag as suspicious but still allow for now
-			await orpc.users.stats.suspiciousScore.update({
-				userId: dbUser.id,
-				increment: 20,
-			});
 		}
 
 		if (!captchaResult.success) {

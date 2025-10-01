@@ -10,7 +10,6 @@ import {
 import {
 	generateCaptcha,
 	getCaptchaDifficulty,
-	isSuspiciousResponseTime,
 	presentCaptcha,
 	shouldShowCaptcha,
 } from "../util/captcha.ts";
@@ -126,15 +125,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			);
 		}
 
-		// Check for suspicious response time
-		if (captchaResult.success && isSuspiciousResponseTime(captchaResult.responseTime, captcha.type)) {
-			// Flag as suspicious but still allow for now
-			await orpc.users.stats.suspiciousScore.update({
-				userId: dbUser.id,
-				increment: 20,
-			});
-		}
-
 		if (!captchaResult.success) {
 			// Record failure in memory for immediate retry requirement
 			captchaTracker.recordFailure(interaction.user.id);
@@ -165,7 +155,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		console.error("Error executing work command:", workError);
 
 		// Check for economy ban
-		if (workError.code === "ECONOMY_BANNED") {
+		if ("code" in workError && workError.code === "ECONOMY_BANNED") {
 			const errorEmbed = createErrorEmbed(
 				"Přístup k ekonomice pozastaven",
 				"Tvůj přístup k ekonomickým příkazům byl dočasně pozastaven kvůli podezřelé aktivitě.\n\nPokud si myslíš, že jde o chybu, kontaktuj administrátory.",

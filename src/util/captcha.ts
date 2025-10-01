@@ -393,8 +393,8 @@ export function shouldShowCaptcha(
 		return { showCaptcha: true, triggerReason: "recent_failure" };
 	}
 
-	// Always show for suspicious users
-	if (suspiciousScore > 50) {
+	// Always show for highly suspicious users
+	if (suspiciousScore > 70) {
 		return { showCaptcha: true, triggerReason: `suspicious_score_${suspiciousScore}` };
 	}
 

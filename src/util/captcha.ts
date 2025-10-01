@@ -63,10 +63,12 @@ const CAPTCHA_WORDS = [
 
 /**
  * Generate a random captcha challenge
+ * Now always includes all types (math, emoji, word) for variety and fun!
+ * Difficulty affects math problem complexity
  */
 export function generateCaptcha(difficulty: "easy" | "medium" | "hard" = "easy"): CaptchaChallenge {
-	const types: CaptchaType[] =
-		difficulty === "easy" ? ["math"] : difficulty === "medium" ? ["math", "emoji"] : ["math", "emoji", "word"];
+	// Always include all captcha types - users enjoy the variety!
+	const types: CaptchaType[] = ["math", "emoji", "word"];
 	const type = types[Math.floor(Math.random() * types.length)];
 
 	switch (type) {

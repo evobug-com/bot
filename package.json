@@ -15,17 +15,17 @@
 		"@orpc/client": "^1.9.2",
 		"@orpc/server": "^1.9.2",
 		"discord.js": "dev",
-		"dotenv": "^17.2.2",
+		"dotenv": "^17.2.3",
 		"execa": "^9.6.0",
 		"ffmpeg-static": "^5.2.0",
 		"glob": "^11.0.3",
-		"openai": "^5.23.1"
+		"openai": "^5.23.2"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^10.0.0",
 		"@snazzah/davey": "^0.1.7",
 		"@types/bun": "^1.2.23",
-		"@types/node": "^24.5.2",
+		"@types/node": "^24.6.1",
 		"@typescript/native-preview": "latest",
 		"oxlint": "^1.19.0",
 		"oxlint-tsgolint": "^0.2.0"

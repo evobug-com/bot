@@ -159,12 +159,12 @@ describe("Captcha Generation", () => {
 		});
 
 		it("should always show captcha for suspicious users", () => {
-			// Suspicious score > 50 should always trigger captcha
-			expect(shouldShowCaptcha(1, 60).showCaptcha).toBe(true);
+			// Suspicious score > 70 should always trigger captcha
+			expect(shouldShowCaptcha(1, 80).showCaptcha).toBe(true);
 			expect(shouldShowCaptcha(100, 80).showCaptcha).toBe(true);
 			expect(shouldShowCaptcha(5, 100).showCaptcha).toBe(true);
 			// Check trigger reason for suspicious score
-			expect(shouldShowCaptcha(1, 60).triggerReason).toBe("suspicious_score_60");
+			expect(shouldShowCaptcha(1, 80).triggerReason).toBe("suspicious_score_80");
 		});
 
 		it("should show captcha periodically with consistent intervals per user", () => {

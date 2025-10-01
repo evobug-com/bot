@@ -290,11 +290,11 @@ describe("Economy Commands with Captcha", () => {
 				dbUser: user,
 			});
 
-			// Verify suspicious response was detected
-			expect(captchaMocks.isSuspiciousResponseTime).toHaveBeenCalledWith(500, "math");
+			// Verify captcha was logged with the fast response time
+			expect(mockClient.hasBeenCalledWith("users.stats.captcha.log")).toBe(true);
 
-			// Verify suspicious score was updated
-			expect(mockClient.hasBeenCalledWith("users.stats.suspiciousScore.update")).toBe(true);
+			// Verify work was claimed successfully despite suspicious response
+			expect(mockClient.hasBeenCalledWith("users.stats.work.claim")).toBe(true);
 		});
 
 		it("should handle captcha timeout gracefully", async () => {

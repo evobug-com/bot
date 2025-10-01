@@ -163,6 +163,17 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 	if (workError) {
 		console.error("Error executing work command:", workError);
+
+		// Check for economy ban
+		if (workError.code === "ECONOMY_BANNED") {
+			const errorEmbed = createErrorEmbed(
+				"Přístup k ekonomice pozastaven",
+				"Tvůj přístup k ekonomickým příkazům byl dočasně pozastaven kvůli podezřelé aktivitě.\n\nPokud si myslíš, že jde o chybu, kontaktuj administrátory.",
+			);
+			await interaction.editReply({ embeds: [errorEmbed] });
+			return;
+		}
+
 		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se dokončit práci. Zkuste to prosím později.");
 		await interaction.editReply({ embeds: [errorEmbed] });
 		return;

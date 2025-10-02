@@ -73,14 +73,37 @@ client.on(Events.InteractionCreate, async (interaction) => {
 	const command = getCommand(interaction.commandName);
 	if (!command) return;
 
-	// Before executing the command, ensure the user is registered
-	const result = await ensureUserRegistered(interaction.guild, interaction.user.id);
-	if (!result.success) return;
+	try {
+		// Before executing the command, ensure the user is registered
+		const result = await ensureUserRegistered(interaction.guild, interaction.user.id);
+		if (!result.success) {
+			// Send error message to user
+			const replyMethod = interaction.deferred || interaction.replied ? "editReply" : "reply";
+			await interaction[replyMethod]({
+				content: `❌ Nepodařilo se ověřit uživatele: ${result.error}`,
+				flags: interaction.replied ? undefined : 64, // Ephemeral if not already replied
+			}).catch(console.error);
+			return;
+		}
 
-	return command.execute({
-		interaction,
-		dbUser: result.user,
-	});
+		await command.execute({
+			interaction,
+			dbUser: result.user,
+		});
+	} catch (error) {
+		console.error(`Error executing command ${interaction.commandName}:`, error);
+
+		// Attempt to send error message to user
+		try {
+			const replyMethod = interaction.deferred || interaction.replied ? "editReply" : "reply";
+			await interaction[replyMethod]({
+				content: "❌ Při provádění příkazu došlo k chybě. Zkuste to prosím později.",
+				flags: interaction.replied ? undefined : 64, // Ephemeral if not already replied
+			});
+		} catch (replyError) {
+			console.error("Failed to send error message to user:", replyError);
+		}
+	}
 });
 
 // Log in to Discord with your client's token

@@ -8,7 +8,9 @@
 	"scripts": {
 		"dev": "bun --watch src/bot.ts",
 		"test": "USE_TEMP_DATABASE=true bun test",
-		"test:watch": "bun test --watch"
+		"test:watch": "bun test --watch",
+		"ts": "tsgo --noEmit",
+		"lint": "oxlint --type-aware"
 	},
 	"dependencies": {
 		"@discordjs/voice": "^0.19.0",
@@ -25,7 +27,7 @@
 		"@faker-js/faker": "^10.0.0",
 		"@snazzah/davey": "^0.1.7",
 		"@types/bun": "^1.2.23",
-		"@types/node": "^24.6.1",
+		"@types/node": "^24.6.2",
 		"@typescript/native-preview": "latest",
 		"oxlint": "^1.19.0",
 		"oxlint-tsgolint": "^0.2.0"

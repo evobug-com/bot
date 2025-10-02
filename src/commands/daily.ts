@@ -1,6 +1,7 @@
 import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
 import { orpc } from "../client/client.ts";
 import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
+import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-cheat-handler.ts";
 import {
 	addLevelProgressField,
 	addLevelUpField,
@@ -10,13 +11,6 @@ import {
 	handleRewardResponse,
 	type RewardResponse,
 } from "../util/bot/rewards.ts";
-import {
-	generateCaptcha,
-	getCaptchaDifficulty,
-	presentCaptcha,
-	shouldShowCaptcha,
-} from "../util/captcha.ts";
-import { captchaTracker } from "../util/captcha-tracker.ts";
 import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
 
@@ -86,64 +80,32 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		}
 	}
 
-	// Check if we should show a captcha
-	const [statsError, userStatsData] = await orpc.users.stats.user({ id: dbUser.id });
-	if (statsError) {
-		console.error("Error fetching user stats for captcha:", statsError);
-	}
+	// Anti-cheat check using new comprehensive system
+	const antiCheatContext = {
+		userId: dbUser.id,
+		guildId: interaction.guildId || "unknown",
+		commandName: "daily" as const,
+		interaction,
+	};
 
-	const dailyStreak = userStatsData?.stats.dailyStreak || 0;
-	const suspiciousScore = userStatsData?.stats.suspiciousBehaviorScore || 0;
+	// Check user with anti-cheat system
+	const checkResult = await checkUserBeforeCommand(antiCheatContext);
 
-	// Determine if captcha is needed (less frequent for daily than work, pass user ID for failure tracking)
-	const captchaCheck = shouldShowCaptcha(dailyStreak * 2, suspiciousScore, interaction.user.id);
-	if (captchaCheck.showCaptcha) {
-		const difficulty = getCaptchaDifficulty(suspiciousScore);
-		const captcha = generateCaptcha(difficulty);
-		const captchaResult = await presentCaptcha(interaction, captcha);
+	// Enforce anti-cheat action (captcha, restriction, etc.)
+	const canProceed = await enforceAntiCheatAction(antiCheatContext, checkResult);
 
-		// Log captcha attempt with detailed context
-		const [logError, logResult] = await orpc.users.stats.captcha.log({
-			userId: dbUser.id,
-			captchaType: captcha.type,
-			success: captchaResult.success,
-			responseTime: captchaResult.responseTime,
-			command: "daily",
-			triggerReason: captchaCheck.triggerReason,
-			suspiciousScore: suspiciousScore,
-			claimCount: dailyStreak * 2, // Using adjusted count for daily
-			difficulty: difficulty,
-		});
-
-		if (logError) {
-			console.error("Error logging captcha attempt:", logError);
-		} else if (logResult?.suspiciousReasons && logResult.suspiciousReasons.length > 0) {
-			// Log any suspicious patterns detected
-			console.warn(
-				`[CAPTCHA WARNING] User ${interaction.user.tag} (${dbUser.id}):`,
-				logResult.suspiciousReasons.join(", "),
-			);
-		}
-
-		if (!captchaResult.success) {
-			// Record failure in memory for immediate retry requirement
-			captchaTracker.recordFailure(interaction.user.id);
-
-			// Update failed captcha count in database
-			await orpc.users.stats.captcha.failedCount.update({ userId: dbUser.id });
-
+	if (!canProceed) {
+		// User failed verification or is restricted
+		if (checkResult.action === "restrict") {
 			const errorEmbed = createErrorEmbed(
-				"Ověření selhalo",
-				captchaResult.timedOut
-					? "Nestihl jsi odpovědět včas. Zkus to znovu později."
-					: "Nesprávná odpověď. Zkus to znovu později.",
+				"Přístup omezen",
+				checkResult.message ||
+					"Tvůj přístup k ekonomickým příkazům byl dočasně omezen kvůli podezřelé aktivitě.\n\nPokud si myslíš, že jde o chybu, kontaktuj administrátory.",
 			);
-			await interaction.editReply({ embeds: [errorEmbed], components: [] });
-			return;
+			await interaction.editReply({ embeds: [errorEmbed] });
 		}
-
-		// Captcha passed - clear failure tracking and proceed
-		captchaTracker.clearFailure(interaction.user.id);
+		// Captcha failure is already handled in enforceAntiCheatAction
+		return;
 	}
 
 	// Claim daily reward with boost count
@@ -219,5 +181,13 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 			return embed;
 		},
+	});
+
+    // Record successful command completion for anti-cheat
+	await orpc.users.anticheat.trust.update({
+		userId: dbUser.id,
+		guildId: antiCheatContext.guildId,
+		delta: +1,
+		reason: "Successful daily command",
 	});
 };

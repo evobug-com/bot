@@ -6,7 +6,6 @@ achievements/TODO.MD
 *.json
 !package.json
 !tsconfig.json
-!biome.json
 .claude
 
 # Temporary files

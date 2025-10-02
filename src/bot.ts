@@ -1,6 +1,7 @@
 import {Client, Events, GatewayIntentBits, MessageFlags} from "discord.js";
 import { handleAchievements } from "./handlers/handleAchievements.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
+import { handleChangelog } from "./handlers/handleChangelog.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
 import { handleMediaForum } from "./handlers/handleMediaForum.ts";
 import { handleMessageLogging } from "./handlers/handleMessageLogging.ts";
@@ -40,6 +41,7 @@ client.once(Events.ClientReady, (readyClient) => {
 		void registerCommands(guild);
 	});
 
+	void handleChangelog(readyClient);
 	void handleVirtualVoiceChannels(readyClient);
 	void handleRulesVerification(readyClient);
 	void handleWarningSystem(readyClient);

@@ -145,6 +145,28 @@ export class MockORPCClient {
 			if (endpoint === "users.stats.suspiciousScore.update") {
 				return { updated: true, newScore: 20 };
 			}
+			// Anti-cheat endpoints
+			if (endpoint === "users.anticheat.trust.update") {
+				return { updated: true, newScore: 500, oldScore: 500 };
+			}
+			if (endpoint === "users.anticheat.command.record") {
+				return { recorded: true, commandId: 1 };
+			}
+			if (endpoint === "users.anticheat.rateLimit.recordViolation") {
+				return { recorded: true };
+			}
+			if (endpoint === "users.anticheat.timing.analyze") {
+				return { hasTimingPattern: false, cv: 1.5, suspicionLevel: "none", cooldownSnipeRate: 0, hasCooldownSnipping: false, hasUnnaturalConsistency: false, commandCount: 10 };
+			}
+			if (endpoint === "users.anticheat.behavioral.calculate") {
+				return { score: 0, hasNaturalBreaks: true, hasRepetitiveSequences: false, socialRatio: 0.5, reasons: [] };
+			}
+			if (endpoint === "users.anticheat.suspicion.calculate") {
+				return { totalScore: 0, breakdown: { timingScore: 0, behavioralScore: 0, socialScore: 0, accountScore: 0, rateLimitScore: 0 }, recommendation: "allow", reasons: [] };
+			}
+			if (endpoint === "users.anticheat.enforcement.get") {
+				return { action: "none", suspicionScore: 0, trustScore: 500 };
+			}
 			return {};
 		}
 
@@ -197,6 +219,13 @@ export class MockORPCClient {
 			"users.create",
 			"users.get",
 			"users.update",
+			"users.anticheat.command.record",
+			"users.anticheat.timing.analyze",
+			"users.anticheat.behavioral.calculate",
+			"users.anticheat.suspicion.calculate",
+			"users.anticheat.enforcement.get",
+			"users.anticheat.trust.update",
+			"users.anticheat.rateLimit.recordViolation",
 			"moderation.violations.issue",
 			"moderation.violations.list",
 			"moderation.violations.get",

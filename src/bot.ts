@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import {Client, Events, GatewayIntentBits, MessageFlags} from "discord.js";
 import { handleAchievements } from "./handlers/handleAchievements.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
@@ -78,11 +78,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		const result = await ensureUserRegistered(interaction.guild, interaction.user.id);
 		if (!result.success) {
 			// Send error message to user
-			const replyMethod = interaction.deferred || interaction.replied ? "editReply" : "reply";
-			await interaction[replyMethod]({
-				content: `❌ Nepodařilo se ověřit uživatele: ${result.error}`,
-				flags: interaction.replied ? undefined : 64, // Ephemeral if not already replied
-			}).catch(console.error);
+			const errorContent = `❌ Nepodařilo se ověřit uživatele: ${result.error}`;
+			if (interaction.deferred || interaction.replied) {
+				await interaction.editReply({ content: errorContent }).catch(console.error);
+			} else {
+				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral }).catch(console.error);
+			}
 			return;
 		}
 
@@ -95,11 +96,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 		// Attempt to send error message to user
 		try {
-			const replyMethod = interaction.deferred || interaction.replied ? "editReply" : "reply";
-			await interaction[replyMethod]({
-				content: "❌ Při provádění příkazu došlo k chybě. Zkuste to prosím později.",
-				flags: interaction.replied ? undefined : 64, // Ephemeral if not already replied
-			});
+			const errorContent = "❌ Při provádění příkazu došlo k chybě. Zkuste to prosím později.";
+			if (interaction.deferred || interaction.replied) {
+				await interaction.editReply({ content: errorContent });
+			} else {
+				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral });
+			}
 		} catch (replyError) {
 			console.error("Failed to send error message to user:", replyError);
 		}

@@ -1,4 +1,4 @@
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import {ChatInputCommandBuilder, type GuildMember, MessageFlags} from "discord.js";
 import { orpc } from "../client/client.ts";
 import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
 import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-cheat-handler.ts";
@@ -133,12 +133,19 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 	// Select work activity using crypto for better randomness
 	const [randomByte] = crypto.getRandomValues(new Uint32Array(1));
-	const activity = workActivities[(randomByte as number) % workActivities.length];
-	if (!activity) {
+	const _activity = workActivities[(randomByte as number) % workActivities.length];
+	if (!_activity) {
 		await interaction.editReply({
 			content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",
 		});
 		return;
+	}
+
+	let activity;
+	if(typeof _activity === "function") {
+		activity = _activity(interaction.member as GuildMember);
+	} else {
+		activity = _activity;
 	}
 
 	// Use the shared handler to display rewards
@@ -330,4 +337,84 @@ const workActivities = [
 		title: "💡 Inovátor",
 		activity: "Navrhli jste novou funkci pro bota.",
 	},
+	() => {
+		const randomNum = Math.floor(Math.random() * 5000) + 1;
+		let result = "Kandidovali jste ve volbách do parlamentu a získali jste " + randomNum + " hlasů."
+
+		if(randomNum > 4000) {
+			result += " Gratulujeme, stali jste se poslancem!";
+		}
+
+		return {
+			id: "elections-candidate",
+			title: "🗳️ Kandidát do parlamentu",
+			activity: result,
+		}
+	},
+	{
+		id: "complaint-about-work",
+		title: "📝 Stěžovatel",
+		activity: "Stěžovali jste si, že /work vyžaduje captchu.",
+	},
+	(_member: GuildMember) => {
+		const outcome = Math.random() < 0.90 ? "negativní" : "pozitivní";
+		return {
+			id: "homosexual-test",
+			title: "🏳️‍🌈 Testovaný",
+			activity: "Absolvovali jste homosexuální test. Výsledek: " + outcome + ".",
+		}
+	},
+	(_member: GuildMember) => {
+	    const coins = Math.floor(Math.random() * 10000) + 1;
+		return {
+			id: "stolen-money",
+			title: "💰 Zloděj",
+			activity: `Zmlátili jste babičku a ukradli jí peněženku. Našli jste tam ${coins} mincí! (Policie Vás ale chytila a peněženku Vám zabavila, takže jste nic nezískali.)`,
+		}
+	},
+	{
+		id: "wrong-elections",
+		title: "🗳️ Smutný Občan",
+		activity: "Šli jste volit, ale omylem jste odvolili Babiše.",
+	},
+	{
+		id: "discord-bot-developer",
+		title: "🤖 Vývojář bota",
+		activity: "Pracovali jste na vývoji tohoto bota.",
+	},
+	{
+		id: "coffee-fetcher",
+		title: "☕ Poslíček",
+		activity: "Přinesli jste šéfovi kávu.",
+	},
+	{
+		id: "meeting-attendee",
+		title: "📅 Účastník schůzky",
+		activity: "Zúčastnili jste se nekonečné schůzky, která mohla být e-mailem.",
+	},
+	{
+		id: "paperwork",
+		title: "🗂️ Administrátor",
+		activity: "Vyplnili jste hromadu papírování.",
+	},
+	{
+		id: "it-support",
+		title: "💻 IT Podpora",
+		activity: "Pomohli jste kolegovi s jeho počítačem.",
+	},
+	{
+		id: "network-engineer",
+		title: "🌐 Síťař",
+		activity: "Opravili jste firemní síť.",
+	},
+	{
+		id: "coffee-break",
+		title: "☕ Kávová pauza",
+		activity: "Dali jste si kávovou pauzu.",
+	},
+	{
+		id: "office-prank",
+		title: "🎉 Kancelářský žertík",
+		activity: "Udělal jste kolegovi žertík s jeho počítačem.",
+	}
 ];

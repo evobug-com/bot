@@ -21,7 +21,7 @@
 		"execa": "^9.6.0",
 		"ffmpeg-static": "^5.2.0",
 		"glob": "^11.0.3",
-		"openai": "^5.23.2"
+		"openai": "^6.1.0"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^10.0.0",

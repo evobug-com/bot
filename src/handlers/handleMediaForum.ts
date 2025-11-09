@@ -75,6 +75,9 @@ export const handleMediaForum = async (client: Client<true>) => {
  * @param thread - The newly created thread
  */
 async function handleThreadCreate(thread: AnyThreadChannel) {
+	// Sometimes the thread is null/undefined, catch it here
+	if (thread == null) return;
+
 	try {
 		// Check if thread is from a forum channel
 		if (thread.type !== ChannelType.PublicThread) return;

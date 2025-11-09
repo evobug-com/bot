@@ -19,6 +19,9 @@ export const handleMessageLogging = async (client: Client<true>) => {
 };
 
 async function handleMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
+	// Sometimes the message is null/undefined, catch it here
+	if (message == null) return;
+
 	if (!message.member) return;
 	if (!message.guild) return;
 
@@ -62,6 +65,9 @@ async function handleMessageUpdate(
 	_oldMessage: OmitPartialGroupDMChannel<Message<boolean> | PartialMessage>,
 	newMessage: OmitPartialGroupDMChannel<Message<boolean>>,
 ) {
+	// Sometimes the message is null/undefined, catch it here
+	if (newMessage == null) return;
+
 	if (!newMessage.member) return;
 	if (!newMessage.guild) return;
 
@@ -97,6 +103,9 @@ async function handleMessageUpdate(
 }
 
 async function handleMessageDelete(message: OmitPartialGroupDMChannel<Message<boolean> | PartialMessage>) {
+	// Sometimes the message is null/undefined, catch it here
+	if (message == null) return;
+
 	if (!message.member) return;
 	if (!message.guild) return;
 

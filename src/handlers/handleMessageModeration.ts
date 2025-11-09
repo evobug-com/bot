@@ -77,6 +77,9 @@ const sanitizeForModeration = (content: string) => {
 };
 
 async function processMessage(message: Message, isEdit = false): Promise<void> {
+	// Sometimes the message is null/undefined, catch it here
+	if (message == null) return;
+
 	// Skip bot messages, DMs, and system messages
 	if (message.author.bot || !message.guild || message.system) {
 		return;
@@ -210,6 +213,9 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 export async function handleMessageModeration(client: Client<true>): Promise<void> {
 	// Handle new messages
 	client.on(Events.MessageCreate, async (message: Message) => {
+		// Sometimes the message is null/undefined, catch it here
+		if (message == null) return;
+
 		if (message.partial) {
 			try {
 				message = await message.fetch();
@@ -224,6 +230,9 @@ export async function handleMessageModeration(client: Client<true>): Promise<voi
 
 	// Handle edited messages
 	client.on(Events.MessageUpdate, async (_oldMessage, newMessage) => {
+		// Sometimes the message is null/undefined, catch it here
+		if (newMessage == null) return;
+
 		// MessageUpdate can have partial messages, so we need to ensure we have the full message
 		if (newMessage.partial) {
 			try {

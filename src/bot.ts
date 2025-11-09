@@ -69,6 +69,9 @@ client.on(Events.GuildDelete, async (guild) => {
 
 // Handle commands
 client.on(Events.InteractionCreate, async (interaction) => {
+	// Sometimes the interaction is null/undefined, catch it here
+	if (interaction == null) return;
+
 	if (!interaction.isChatInputCommand()) return;
 	if (!interaction.guild) return;
 

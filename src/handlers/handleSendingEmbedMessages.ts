@@ -57,6 +57,9 @@ export const handleSendingEmbedMessages = async (client: Client<true>) => {
  * @param interaction - The interaction event from Discord
  */
 const handleInteractionCreate = async (interaction: Interaction) => {
+	// Sometimes the interaction is null/undefined, catch it here
+	if (interaction == null) return;
+
 	const guild = interaction.guild;
 	if (!guild) return;
 

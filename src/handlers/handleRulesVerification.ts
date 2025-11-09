@@ -190,6 +190,9 @@ export const handleRulesVerification = async (client: Client<true>) => {
 };
 
 async function handleInteractionCreate(interaction: Interaction) {
+	// Sometimes the interaction is null/undefined, catch it here
+	if (interaction == null) return;
+
 	if (interaction.isButton()) {
 		await handleButtonInteraction(interaction);
 	} else if (interaction.isModalSubmit()) {

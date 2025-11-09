@@ -39,6 +39,8 @@ export const handleStreamingNotifications = async (client: Client<true>) => {
 	});
 	client.on(Events.PresenceUpdate, handlePresenceUpdate);
 	client.on(Events.InteractionCreate, async (interaction) => {
+		// Sometimes the interaction is null/undefined, catch it here
+		if (interaction == null) return;
 		if (interaction.isButton()) {
 			await handleButtonInteraction(interaction);
 		}

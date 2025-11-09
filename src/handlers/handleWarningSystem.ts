@@ -892,6 +892,9 @@ async function handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceSta
  * Handle interaction restrictions
  */
 async function handleInteractionRestrictions(interaction: Interaction): Promise<void> {
+	// Sometimes the interaction is null/undefined, catch it here
+	if (interaction == null) return;
+
 	if (!interaction.isMessageComponent()) return;
 
 	const restrictions = activeRestrictions.get(interaction.user.id);
@@ -928,6 +931,9 @@ async function handleNicknameRestrictions(
  * Handle button interactions for warning system
  */
 async function handleButtonInteractions(interaction: Interaction): Promise<void> {
+	// Sometimes the interaction is null/undefined, catch it here
+	if (interaction == null) return;
+
 	if (!interaction.isButton()) return;
 
 	const customId = interaction.customId;

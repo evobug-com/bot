@@ -30,7 +30,7 @@
 		"@types/node": "^24.10.0",
 		"@typescript/native-preview": "latest",
 		"oxlint": "^1.26.0",
-		"oxlint-tsgolint": "^0.2.1"
+		"oxlint-tsgolint": "^0.5.1"
 	},
 	"engines": {
 		"node": ">=18.0.0"

@@ -36,31 +36,43 @@ const client = new Client({
 // When the client is ready, run this code (only once).
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
 	log("info", `Ready! Logged in as ${readyClient.user.tag}`);
 	log("info", "Available guilds:", readyClient.guilds.cache.map((guild) => guild.name).join(", "));
 
 	// Initialize logger with Discord client for channel logging
 	setLoggerClient(readyClient);
 
+	// Register commands for all guilds
 	readyClient.guilds.cache.forEach((guild) => {
 		void registerCommands(guild);
 	});
 
-	void handleChangelog(readyClient);
-	void handleVirtualVoiceChannels(readyClient);
-	void handleRulesVerification(readyClient);
-	void handleWarningSystem(readyClient);
-	void handleAntibotRooms(readyClient);
-	void handleMediaForum(readyClient);
-	void handleMessageLogging(readyClient);
-	void handleMessageModeration(readyClient);
-	void handleAchievements(readyClient);
-	void handleSendingEmbedMessages(readyClient);
-	void handleNewsEmbeds(readyClient);
-	void handleStreamingNotifications(readyClient);
-	void handleCommandsForRoom(readyClient);
-	void handleVoiceConnections(readyClient);
+	// Initialize all handlers and wait for them to complete
+	log("info", "Initializing handlers...");
+	await Promise.all([
+		handleChangelog(readyClient),
+		handleVirtualVoiceChannels(readyClient),
+		handleRulesVerification(readyClient),
+		handleWarningSystem(readyClient),
+		handleAntibotRooms(readyClient),
+		handleMediaForum(readyClient),
+		handleMessageLogging(readyClient),
+		handleMessageModeration(readyClient),
+		handleAchievements(readyClient),
+		handleSendingEmbedMessages(readyClient),
+		handleNewsEmbeds(readyClient),
+		handleStreamingNotifications(readyClient),
+		handleCommandsForRoom(readyClient),
+		handleVoiceConnections(readyClient),
+	]);
+	log("info", "All handlers initialized successfully");
+
+	// Notify PM2 that the bot is ready (if running under PM2)
+	if (process.send) {
+		process.send('ready');
+		log("info", "Sent ready signal to PM2");
+	}
 });
 
 client.on(Events.Warn, async (warn) => {
@@ -205,6 +217,7 @@ process.on('unhandledRejection', async (reason, promise) => {
 process.on('uncaughtException', async (error, origin) => {
 	if (error == null) {
 		log("error", "Uncaught exception with null/undefined error", { origin });
+		process.exit(1);
 		return;
 	}
 
@@ -217,8 +230,8 @@ process.on('uncaughtException', async (error, origin) => {
 
 	// Report to all guilds if client is ready
 	if (client.isReady()) {
-		for (const guild of client.guilds.cache.values()) {
-			await reportError(
+		const reportPromises = Array.from(client.guilds.cache.values()).map((guild) =>
+			reportError(
 				guild,
 				"Uncaught Exception",
 				error.message,
@@ -229,28 +242,41 @@ process.on('uncaughtException', async (error, origin) => {
 				}
 			).catch((reportErr) => {
 				log("error", "Failed to report uncaught exception to guild:", reportErr);
-			});
-		}
+			})
+		);
+
+		// Wait for all error reports to complete (with timeout)
+		await Promise.race([
+			Promise.all(reportPromises),
+			new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+		]);
 	}
 
 	// Exit process for uncaught exceptions after reporting
-	// Give time for async operations to complete
-	setTimeout(() => {
-		log("error", "Exiting process due to uncaught exception");
-		process.exit(1);
-	}, 1000);
+	log("error", "Exiting process due to uncaught exception");
+	process.exit(1);
 });
 
 // Handle process termination signals
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
 	log("info", "Received SIGINT signal, shutting down gracefully...");
-	void client.destroy();
+	try {
+		await client.destroy();
+		log("info", "Discord client destroyed successfully");
+	} catch (error) {
+		log("error", "Error during client cleanup:", error);
+	}
 	process.exit(0);
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
 	log("info", "Received SIGTERM signal, shutting down gracefully...");
-	void client.destroy();
+	try {
+		await client.destroy();
+		log("info", "Discord client destroyed successfully");
+	} catch (error) {
+		log("error", "Error during client cleanup:", error);
+	}
 	process.exit(0);
 });
 

@@ -1,7 +1,7 @@
 /**
  * Changelog Handler
  *
- * Sends changelog updates to bot-info channel on bot start.
+ * Sends changelog updates to bot-news channel on bot start.
  * Uses git commits to generate changelog and tracks what has been sent.
  */
 
@@ -151,7 +151,7 @@ function createChangelogEmbed(commits: Array<{ hash: string; message: string }>)
 }
 
 /**
- * Send changelog to bot-info channel
+ * Send changelog to bot-news channel
  */
 async function sendChangelog(client: Client<true>): Promise<void> {
 	const lastChangelog = readLastChangelog();
@@ -183,19 +183,19 @@ async function sendChangelog(client: Client<true>): Promise<void> {
 
 	log("info", `Found ${commits.length} new commits to report`);
 
-	// Send to each guild's bot-info channel
+	// Send to each guild's bot-news channel
 	for (const guild of client.guilds.cache.values()) {
-		const result = getChannelByConfig(guild, DISCORD_CHANNELS.BOT_INFO);
+		const result = getChannelByConfig(guild, DISCORD_CHANNELS.BOT_NEWS);
 
 		if (!result) {
-			log("warn", `Bot info channel not found in guild: ${guild.name}`);
+			log("warn", `Bot news channel not found in guild: ${guild.name}`);
 			continue;
 		}
 
 		const { channel } = result;
 
 		if (!channel.isSendable()) {
-			log("warn", `Cannot send to bot info channel in guild: ${guild.name}`);
+			log("warn", `Cannot send to bot news channel in guild: ${guild.name}`);
 			continue;
 		}
 

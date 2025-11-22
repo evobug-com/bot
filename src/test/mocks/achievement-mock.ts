@@ -85,15 +85,15 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 
 	mockGuild.channels.cache.set(DISCORD_CHANNELS.COMMANDS.id, mockChannel);
 
-	// Also create BOT_INFO channel (may be used by other achievements)
-	const mockBotInfoChannel = createMockChannel(mockGuild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
-	mockBotInfoChannel.isTextBased = () => true;
-	mockBotInfoChannel.send = mock().mockResolvedValue({
+	// Also create BOT_LOG channel (may be used by other achievements for error reporting)
+	const mockBotLogChannel = createMockChannel(mockGuild, DISCORD_CHANNELS.BOT_LOG.id, "bot-log");
+	mockBotLogChannel.isTextBased = () => true;
+	mockBotLogChannel.send = mock().mockResolvedValue({
 		id: "message-id",
 		components: [],
 	});
 
-	mockGuild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, mockBotInfoChannel);
+	mockGuild.channels.cache.set(DISCORD_CHANNELS.BOT_LOG.id, mockBotLogChannel);
 
 	// Create test member
 	const testMember = createMockMember(mockGuild, {

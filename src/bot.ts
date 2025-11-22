@@ -13,8 +13,11 @@ import { handleStreamingNotifications } from "./handlers/handleStreamingNotifica
 import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannels.ts";
 import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
-import { ensureUserRegistered } from "./util";
+import { ensureUserRegistered, reportError } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
+import { createLogger, setLoggerClient } from "./util/logger.ts";
+
+const log = createLogger("Bot");
 
 // Create a new client instance
 const client = new Client({
@@ -34,8 +37,11 @@ const client = new Client({
 // The distinction between `client: Client<boolean>` and `readyClient: Client<true>` is important for TypeScript developers.
 // It makes some properties non-nullable.
 client.once(Events.ClientReady, (readyClient) => {
-	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-	console.log("Available guilds:", readyClient.guilds.cache.map((guild) => guild.name).join(","));
+	log("info", `Ready! Logged in as ${readyClient.user.tag}`);
+	log("info", "Available guilds:", readyClient.guilds.cache.map((guild) => guild.name).join(", "));
+
+	// Initialize logger with Discord client for channel logging
+	setLoggerClient(readyClient);
 
 	readyClient.guilds.cache.forEach((guild) => {
 		void registerCommands(guild);
@@ -57,14 +63,50 @@ client.once(Events.ClientReady, (readyClient) => {
 	void handleVoiceConnections(readyClient);
 });
 
+client.on(Events.Warn, async (warn) => {
+	if (warn == null) {
+		log("warn", "Discord.js Warn event triggered with null/undefined warning");
+		return;
+	}
+	log("warn", "Discord.js Warning:", warn);
+});
+
+client.on(Events.Error, async (error) => {
+	if (error == null) {
+		log("error", "Discord.js Error event triggered with null/undefined error");
+		return;
+	}
+
+	log("error", "Discord.js Error:", {
+		message: error.message,
+		name: error.name,
+		stack: error.stack,
+	});
+
+	// Report critical errors to bot-info channel in all guilds
+	for (const guild of client.guilds.cache.values()) {
+		await reportError(
+			guild,
+			"Discord.js Client Error",
+			error.message,
+			{
+				errorName: error.name,
+				stack: error.stack?.substring(0, 1000), // Limit stack trace length
+			}
+		).catch((reportErr) => {
+			log("error", "Failed to report error to guild:", reportErr);
+		});
+	}
+});
+
 // Register commands per each guild and when bot is added to a guild
 client.on(Events.GuildCreate, async (guild) => {
-	console.log(`Joined a new guild: ${guild.name} (ID: ${guild.id})`);
+	log("info", `Joined a new guild: ${guild.name} (ID: ${guild.id})`);
 	void registerCommands(guild);
 });
 
 client.on(Events.GuildDelete, async (guild) => {
-	console.log(`Left a guild: ${guild.name} (ID: ${guild.id})`);
+	log("info", `Left a guild: ${guild.name} (ID: ${guild.id})`);
 });
 
 // Handle commands
@@ -82,12 +124,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		// Before executing the command, ensure the user is registered
 		const result = await ensureUserRegistered(interaction.guild, interaction.user.id);
 		if (!result.success) {
+			log("error", `Failed to verify user ${interaction.user.id}:`, result.error);
 			// Send error message to user
 			const errorContent = `❌ Nepodařilo se ověřit uživatele: ${result.error}`;
 			if (interaction.deferred || interaction.replied) {
-				await interaction.editReply({ content: errorContent }).catch(console.error);
+				await interaction.editReply({ content: errorContent }).catch((err) => {
+					log("error", "Failed to send user verification error message:", err);
+				});
 			} else {
-				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral }).catch(console.error);
+				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral }).catch((err) => {
+					log("error", "Failed to send user verification error message:", err);
+				});
 			}
 			return;
 		}
@@ -97,7 +144,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			dbUser: result.user,
 		});
 	} catch (error) {
-		console.error(`Error executing command ${interaction.commandName}:`, error);
+		log("error", `Error executing command ${interaction.commandName}:`, error);
 
 		// Attempt to send error message to user
 		try {
@@ -108,9 +155,103 @@ client.on(Events.InteractionCreate, async (interaction) => {
 				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral });
 			}
 		} catch (replyError) {
-			console.error("Failed to send error message to user:", replyError);
+			log("error", "Failed to send error message to user:", replyError);
 		}
 	}
+});
+
+// Global error handlers
+process.on('unhandledRejection', async (reason, promise) => {
+	if (reason == null) {
+		log("error", "Unhandled promise rejection with null/undefined reason", { promise });
+		return;
+	}
+
+	// Convert reason to string safely
+	const reasonString = reason instanceof Error
+		? reason.message
+		: typeof reason === 'string'
+			? reason
+			: JSON.stringify(reason);
+
+	const error = reason instanceof Error ? reason : new Error(reasonString);
+
+	log("error", "Unhandled promise rejection:", {
+		message: error.message,
+		name: error.name,
+		stack: error.stack,
+		reason: reasonString,
+	});
+
+	// Report to all guilds if client is ready
+	if (client.isReady()) {
+		for (const guild of client.guilds.cache.values()) {
+			await reportError(
+				guild,
+				"Unhandled Promise Rejection",
+				error.message,
+				{
+					errorName: error.name,
+					stack: error.stack?.substring(0, 1000),
+					reason: reasonString.substring(0, 500),
+				}
+			).catch((reportErr) => {
+				log("error", "Failed to report unhandled rejection to guild:", reportErr);
+			});
+		}
+	}
+});
+
+process.on('uncaughtException', async (error, origin) => {
+	if (error == null) {
+		log("error", "Uncaught exception with null/undefined error", { origin });
+		return;
+	}
+
+	log("error", "Uncaught exception:", {
+		message: error.message,
+		name: error.name,
+		stack: error.stack,
+		origin,
+	});
+
+	// Report to all guilds if client is ready
+	if (client.isReady()) {
+		for (const guild of client.guilds.cache.values()) {
+			await reportError(
+				guild,
+				"Uncaught Exception",
+				error.message,
+				{
+					errorName: error.name,
+					stack: error.stack?.substring(0, 1000),
+					origin,
+				}
+			).catch((reportErr) => {
+				log("error", "Failed to report uncaught exception to guild:", reportErr);
+			});
+		}
+	}
+
+	// Exit process for uncaught exceptions after reporting
+	// Give time for async operations to complete
+	setTimeout(() => {
+		log("error", "Exiting process due to uncaught exception");
+		process.exit(1);
+	}, 1000);
+});
+
+// Handle process termination signals
+process.on('SIGINT', () => {
+	log("info", "Received SIGINT signal, shutting down gracefully...");
+	void client.destroy();
+	process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+	log("info", "Received SIGTERM signal, shutting down gracefully...");
+	void client.destroy();
+	process.exit(0);
 });
 
 // Log in to Discord with your client's token

@@ -8,10 +8,16 @@ export interface ChannelConfig {
 
 export const DISCORD_CHANNELS = {
 	// System channels
-	BOT_INFO: {
+	BOT_NEWS: {
 		id: process.env.NODE_ENV === "development" ? "1380666049992720555" /** TEST ROOM **/ : "1381322985754988544",
-		name: "✍︱071︱bot-info",
-		description: "Bot information and error reporting channel",
+		name: "✍︱071︱bot-news",
+		description: "Bot news and announcements channel",
+	},
+
+	BOT_LOG: {
+		id: process.env.NODE_ENV === "development" ? "1380666049992720555" /** TEST ROOM **/ : "1441838702614675527",
+		name: "🤖︱bot-log",
+		description: "Bot log channel for warnings and errors",
 	},
 
 	// Stream channels

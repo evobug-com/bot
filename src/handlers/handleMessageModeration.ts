@@ -164,11 +164,11 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 			} catch (error) {
 				console.error("[Message Moderation] Error replying to message:", error);
 
-				// Fallback: if we can't reply (message deleted, no permissions), send to BOT_INFO channel
-				const botInfoResult = getChannelByConfig(message.guild, DISCORD_CHANNELS.BOT_INFO);
-				if (botInfoResult) {
-					const botInfoChannel = botInfoResult.channel as TextChannel;
-					await botInfoChannel.send({
+				// Fallback: if we can't reply (message deleted, no permissions), send to BOT_LOG channel
+				const botLogResult = getChannelByConfig(message.guild, DISCORD_CHANNELS.BOT_LOG);
+				if (botLogResult) {
+					const botLogChannel = botLogResult.channel as TextChannel;
+					await botLogChannel.send({
 						content: `${moderatorRoleMentions.join(" ")} - Automatická kontrola zpráv detekovala potenciální problém (nelze odpovědět na původní zprávu)`,
 						embeds: [
 							{

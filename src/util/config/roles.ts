@@ -91,17 +91,17 @@ export async function getRoleByConfig(
 }
 
 /**
- * Report an error to the bot-info channel
+ * Report an error to the bot-log channel
  */
 export async function reportError(guild: Guild, errorType: string, message: string, details?: unknown): Promise<void> {
 	try {
 		// Import dynamically to avoid circular dependency
 		const { DISCORD_CHANNELS } = await import("./channels.js");
-		const channel = guild.channels.cache.get(DISCORD_CHANNELS.BOT_INFO.id);
+		const channel = guild.channels.cache.get(DISCORD_CHANNELS.BOT_LOG.id);
 
 		if (!channel || !channel.isTextBased()) {
 			console.error(
-				`Bot info channel not found or not text-based in guild ${guild.id} (${guild.name}) Error: ${errorType} - ${message} Details: ${details ? JSON.stringify(details) : "N/A"}`,
+				`Bot log channel not found or not text-based in guild ${guild.id} (${guild.name}) Error: ${errorType} - ${message} Details: ${details ? JSON.stringify(details) : "N/A"}`,
 			);
 			return;
 		}

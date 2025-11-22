@@ -55,8 +55,8 @@ describe("Economy System Tests", () => {
 			const commandsChannel = createMockChannel(interaction.guild, DISCORD_CHANNELS.COMMANDS.id, "commands");
 			interaction.guild.channels.cache.set(DISCORD_CHANNELS.COMMANDS.id, commandsChannel);
 
-			const botsInfo = createMockChannel(interaction.guild, DISCORD_CHANNELS.BOT_INFO.id, "bot-info");
-			interaction.guild.channels.cache.set(DISCORD_CHANNELS.BOT_INFO.id, botsInfo);
+			const botLog = createMockChannel(interaction.guild, DISCORD_CHANNELS.BOT_LOG.id, "bot-log");
+			interaction.guild.channels.cache.set(DISCORD_CHANNELS.BOT_LOG.id, botLog);
 		}
 	});
 

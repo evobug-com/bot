@@ -420,7 +420,7 @@ async function logViolationToAudit(client: Client<true>, violation: Violation): 
 		const guild = client.guilds.cache.get(violation.guildId);
 		if (!guild) return;
 
-		const auditChannel = ChannelManager.getTextChannel(guild, "BOT_INFO"); // Use BOT_INFO until AUDIT_LOG is added
+		const auditChannel = ChannelManager.getTextChannel(guild, "BOT_LOG"); // Use BOT_LOG for audit logging
 		if (!auditChannel) return;
 
 		const user = await client.users.fetch(String(violation.userId)).catch(() => null);

@@ -121,6 +121,15 @@ async function findTriggerChannel(guild: Guild) {
  * @param newState - New voice state
  */
 async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+	// Check for null/undefined parameters
+	if (!oldState || !newState) {
+		log("warn", "handleVoiceStateUpdate called with null/undefined parameters", {
+			oldState: !!oldState,
+			newState: !!newState,
+		});
+		return;
+	}
+
 	const { guild } = newState;
 	if (!guild) return;
 
@@ -153,6 +162,15 @@ async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState
  * @param newChannel - Channel state after update
  */
 const handleChannelUpdate = async (oldChannel: BaseChannel, newChannel: BaseChannel): Promise<void> => {
+	// Check for null/undefined parameters
+	if (!oldChannel || !newChannel) {
+		log("warn", "handleChannelUpdate called with null/undefined parameters", {
+			oldChannel: !!oldChannel,
+			newChannel: !!newChannel,
+		});
+		return;
+	}
+
 	// We care only about voice channels
 	if (!oldChannel.isVoiceBased() || !newChannel.isVoiceBased()) return;
 

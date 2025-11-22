@@ -197,6 +197,12 @@ export const streamNotificationEmbeds = {
 };
 
 async function handlePresenceUpdate(oldPresence: Presence | null, newPresence: Presence) {
+	// Check for null/undefined parameters
+	if (!newPresence) {
+		log("warn", "handlePresenceUpdate called with null/undefined newPresence");
+		return;
+	}
+
 	if (!newPresence.guild) {
 		log("debug", "Presence update for unknown guild");
 		return;

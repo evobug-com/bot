@@ -537,6 +537,15 @@ function setupGuildInterval(guild: Guild): void {
  * Handle voice state updates (someone joining/leaving voice)
  */
 async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): Promise<void> {
+	// Check for null/undefined parameters
+	if (!oldState || !newState) {
+		log("warn", "handleVoiceStateUpdate called with null/undefined parameters", {
+			oldState: !!oldState,
+			newState: !!newState,
+		});
+		return;
+	}
+
 	if (!newState.guild || !config.enabled) {
 		return;
 	}

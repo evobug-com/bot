@@ -681,6 +681,11 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
  * Handle message restrictions
  */
 async function handleMessageRestrictions(message: Message): Promise<void> {
+	// Check for null/undefined parameters
+	if (!message) {
+		log("warn", "handleMessageRestrictions called with null/undefined message");
+		return;
+	}
 	if (message.author.bot) return;
 
 	const restrictions = activeRestrictions.get(message.author.id);
@@ -868,6 +873,15 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
  * Handle voice restrictions
  */
 async function handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceState): Promise<void> {
+	// Check for null/undefined parameters
+	if (!_oldState || !newState) {
+		log("warn", "handleVoiceRestrictions called with null/undefined parameters", {
+			oldState: !!_oldState,
+			newState: !!newState,
+		});
+		return;
+	}
+
 	const userId = newState.member?.id;
 	if (!userId) return;
 
@@ -915,6 +929,15 @@ async function handleNicknameRestrictions(
 	oldMember: GuildMember | PartialGuildMember,
 	newMember: GuildMember,
 ): Promise<void> {
+	// Check for null/undefined parameters
+	if (!oldMember || !newMember) {
+		log("warn", "handleNicknameRestrictions called with null/undefined parameters", {
+			oldMember: !!oldMember,
+			newMember: !!newMember,
+		});
+		return;
+	}
+
 	const restrictions = activeRestrictions.get(newMember.id);
 	if (!restrictions || !restrictions.has(FeatureRestriction.NICKNAME_CHANGE)) return;
 

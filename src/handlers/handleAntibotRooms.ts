@@ -64,7 +64,7 @@ export const handleAntibotRooms = async (client: Client<true>) => {
  */
 async function handleMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
 	// Ignore messages without guild context
-	if (!message.guild || !message.member) return;
+	if (!message || !message.guild || !message.member) return;
 
 	// Ignore bot messages
 	if (message.author.bot) return;

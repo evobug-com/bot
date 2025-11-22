@@ -23,7 +23,7 @@ describe("Changelog Handler", () => {
 		// Mock channel
 		mockChannel = {
 			id: "1380666049992720555", // Use the actual dev channel ID from channels.ts
-			name: "✍︱071︱bot-info",
+			name: "✍︱071︱bot-news",
 			isSendable: () => true,
 			send: mockSend as unknown as TextChannel["send"],
 		} as unknown as TextChannel;
@@ -399,7 +399,7 @@ describe("Changelog Handler", () => {
 		it("should send changelog to all guilds", async () => {
 			const mockChannel2 = {
 				id: "1380666049992720555",
-				name: "✍︱071︱bot-info",
+				name: "✍︱071︱bot-news",
 				isSendable: () => true,
 				send: mock(async () => ({ id: "message-id-2" })),
 			} as unknown as TextChannel;
@@ -457,7 +457,7 @@ describe("Changelog Handler", () => {
 	});
 
 	describe("Channel not found", () => {
-		it("should handle missing bot-info channel gracefully", async () => {
+		it("should handle missing bot-news channel gracefully", async () => {
 			// Create an empty Collection-like Map with find method
 			const emptyChannelCache = new Map();
 			(emptyChannelCache as any).find = () => undefined;

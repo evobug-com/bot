@@ -600,7 +600,7 @@ export async function handleVoiceConnections(client: Client<true>): Promise<void
 	// Check if sounds directory exists and has MP3 files
 	const mp3Files = await getMP3Files();
 	if (mp3Files.length === 0) {
-		log("warn", `No MP3 files found in ${config.soundsDirectory}. Voice connections will not be activated.`);
+		log("info", `No MP3 files found in ${config.soundsDirectory}. Voice connections will not be activated.`);
 		config.enabled = false;
 		return;
 	}

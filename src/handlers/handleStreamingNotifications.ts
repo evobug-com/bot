@@ -251,7 +251,7 @@ async function handlePresenceUpdate(oldPresence: Presence | null, newPresence: P
 async function handleStreamStart(presence: Presence, streamChannel: TextChannel): Promise<void> {
 	const streamActivity = presence.activities.find((a) => a.type === streamingActivityType);
 	if (!streamActivity) {
-		log("warn", `handleStreamStart - No streaming activity found for ${presence.user?.username}`);
+		log("info", `handleStreamStart - No streaming activity found for ${presence.user?.username}`);
 		return;
 	}
 

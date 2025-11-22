@@ -123,7 +123,7 @@ async function handleThreadCreate(thread: AnyThreadChannel) {
 		}
 
 		if (!matchedTag) {
-			log("warn", `No matching tag configuration found for thread: ${thread.name}`);
+			log("info", `No matching tag configuration found for thread: ${thread.name}`);
 			return;
 		}
 

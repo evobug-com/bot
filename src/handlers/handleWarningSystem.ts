@@ -405,7 +405,7 @@ async function sendViolationDM(client: Client<true>, violation: Violation): Prom
 			})
 			.catch(() => {
 				// User has DMs disabled
-				log("warn", `Could not send violation DM to user ${violation.userId}`);
+				log("info", `Could not send violation DM to user ${violation.userId}`);
 			});
 	} catch (error) {
 		log("error", "Failed to send violation DM:", error);
@@ -819,7 +819,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 					}
 				}
 			} catch (err) {
-				log("warn", "Could not fetch violation details for DM:", err);
+				log("info", "Could not fetch violation details for DM:", err);
 			}
 
 			// Create the DM using ContainerBuilder for components v2
@@ -861,7 +861,7 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 				});
 			} catch {
 				// User has DMs disabled, log it
-				log("warn", `Could not send restriction DM to user ${message.author.id} - DMs disabled`);
+				log("info", `Could not send restriction DM to user ${message.author.id} - DMs disabled`);
 			}
 		} catch (error) {
 			log("error", "Failed to enforce message restriction:", error);

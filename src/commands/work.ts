@@ -10,6 +10,13 @@ import {
 } from "../util/bot/rewards.ts";
 import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
+import { generateStolenMoneyStory } from "../util/storytelling/stolen-money.ts";
+import { generateElectionsCandidateStory } from "../util/storytelling/elections-candidate.ts";
+import { generateOfficePrankStory } from "../util/storytelling/office-prank.ts";
+import { generateITSupportStory } from "../util/storytelling/it-support.ts";
+import { generateRevealCheatingStory } from "../util/storytelling/reveal-cheating.ts";
+import { generateVideoConferenceStory } from "../util/storytelling/video-conference.ts";
+import { generateChristmasPartyStory } from "../util/storytelling/christmas-party.ts";
 export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
@@ -216,6 +223,82 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		},
 	});
 
+	// Check if this activity has storytelling enabled
+	const storytellingActivities: Record<string, {
+		generator: (userId: number, userLevel: number, ...args: any[]) => Promise<{story: string, totalCoinsChange: number, xpGranted: number}>,
+		title: string,
+		args?: any[]
+	}> = {
+		"stolen-money": {
+			generator: generateStolenMoneyStory,
+			title: "💰 Příběh zloděje",
+		},
+		"elections-candidate": {
+			generator: generateElectionsCandidateStory,
+			title: "🗳️ Příběh politika",
+		},
+		"office-prank": {
+			generator: generateOfficePrankStory,
+			title: "🎉 Příběh žertíka",
+		},
+		"it-support": {
+			generator: generateITSupportStory,
+			title: "💻 Příběh IT supportu",
+			args: [false], // not network engineer
+		},
+		"network-engineer": {
+			generator: generateITSupportStory,
+			title: "🌐 Příběh síťaře",
+			args: [true], // is network engineer
+		},
+		"reveal-cheating": {
+			generator: generateRevealCheatingStory,
+			title: "🕵️ Příběh detektiva",
+		},
+		"video-conference": {
+			generator: generateVideoConferenceStory,
+			title: "📡 Příběh videokonference",
+		},
+		"christmas-party": {
+			generator: generateChristmasPartyStory,
+			title: "🎄 Příběh vánočního večírku",
+		},
+	};
+
+	const storytellingConfig = storytellingActivities[activity.id];
+	if (storytellingConfig) {
+		try {
+			// Generate the story with all random events
+			const storyResult = await storytellingConfig.generator(
+				dbUser.id,
+				work.levelProgress.currentLevel,
+				...(storytellingConfig.args || []),
+			);
+
+			// Create a follow-up embed with the story
+			const storyEmbed = createUradPraceEmbed()
+				.setTitle(storytellingConfig.title)
+				.setDescription(storyResult.story)
+				.setColor(storyResult.totalCoinsChange >= 0 ? 0x00ff00 : 0xff0000)
+				.setFooter(
+					createEconomyFooter(
+						work.updatedStats.coinsCount + storyResult.totalCoinsChange,
+						work.levelProgress.currentLevel,
+						work.updatedStats.workCount,
+					),
+				);
+
+			// Send the story as a follow-up message
+			await interaction.followUp({
+				embeds: [storyEmbed],
+			});
+		} catch (error) {
+			console.error(`Error generating ${activity.id} story:`, error);
+			// Don't fail the whole command if story generation fails
+			// User already got their base work reward
+		}
+	}
+
 	// Record successful command completion for anti-cheat
 	await orpc.users.anticheat.trust.update({
 		userId: dbUser.id,
@@ -259,7 +342,7 @@ const workActivities = [
 	{
 		id: "video-conference",
 		title: "📡 Mezinárodní komunikátor",
-		activity: "Přežili jste videokonferenci s indickými kolegy",
+		activity: "Připojuješ se na videokonferenci s indickými kolegy... (příběh pokračuje níže)",
 	},
 	{
 		id: "desk-assembly",
@@ -279,7 +362,7 @@ const workActivities = [
 	{
 		id: "christmas-party",
 		title: "👯 Párty účastník",
-		activity: "Učastnili jste se vánočního večírku",
+		activity: "Účastníš se vánočního večírku... (příběh pokračuje níže)",
 	},
 	{
 		id: "quarterly-goals",
@@ -325,7 +408,7 @@ const workActivities = [
 	{
 		id: "reveal-cheating",
 		title: "🕵️ Detektiv",
-		activity: "Odhalili jste podvádění na Discord příkazech!",
+		activity: "Odhalil jsi podvádění na Discord příkazech... (příběh pokračuje níže)",
 	},
 	{
 		id: "bug-hunter",
@@ -337,19 +420,10 @@ const workActivities = [
 		title: "💡 Inovátor",
 		activity: "Navrhli jste novou funkci pro bota.",
 	},
-	() => {
-		const randomNum = Math.floor(Math.random() * 5000) + 1;
-		let result = "Kandidovali jste ve volbách do parlamentu a získali jste " + randomNum + " hlasů."
-
-		if(randomNum > 4000) {
-			result += " Gratulujeme, stali jste se poslancem!";
-		}
-
-		return {
-			id: "elections-candidate",
-			title: "🗳️ Kandidát do parlamentu",
-			activity: result,
-		}
+	{
+		id: "elections-candidate",
+		title: "🗳️ Kandidát do parlamentu",
+		activity: "Kandidoval jsi ve volbách do parlamentu... (příběh pokračuje níže)",
 	},
 	{
 		id: "complaint-about-work",
@@ -364,13 +438,10 @@ const workActivities = [
 			activity: "Absolvovali jste homosexuální test. Výsledek: " + outcome + ".",
 		}
 	},
-	(_member: GuildMember) => {
-	    const coins = Math.floor(Math.random() * 10000) + 1;
-		return {
-			id: "stolen-money",
-			title: "💰 Zloděj",
-			activity: `Zmlátili jste babičku a ukradli jí peněženku. Našli jste tam ${coins} mincí! (Policie Vás ale chytila a peněženku Vám zabavila, takže jste nic nezískali.)`,
-		}
+	{
+		id: "stolen-money",
+		title: "💰 Zloděj",
+		activity: "Rozhodl jsi se ukrást peníze babičce... (příběh pokračuje níže)",
 	},
 	{
 		id: "wrong-elections",
@@ -400,12 +471,12 @@ const workActivities = [
 	{
 		id: "it-support",
 		title: "💻 IT Podpora",
-		activity: "Pomohli jste kolegovi s jeho počítačem.",
+		activity: "Pomáháš kolegovi s jeho počítačem... (příběh pokračuje níže)",
 	},
 	{
 		id: "network-engineer",
 		title: "🌐 Síťař",
-		activity: "Opravili jste firemní síť.",
+		activity: "Opravuješ firemní síť... (příběh pokračuje níže)",
 	},
 	{
 		id: "coffee-break",
@@ -415,6 +486,6 @@ const workActivities = [
 	{
 		id: "office-prank",
 		title: "🎉 Kancelářský žertík",
-		activity: "Udělal jste kolegovi žertík s jeho počítačem.",
+		activity: "Děláš kolegovi žertík s jeho počítačem... (příběh pokračuje níže)",
 	}
 ];

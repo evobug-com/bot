@@ -362,14 +362,14 @@ async function playSoundInChannel(channel: VoiceChannel): Promise<boolean> {
 
 	// Check if already connected to this guild
 	if (activeConnections.has(guildId)) {
-		log("warn", `Already connected in guild ${channel.guild.name}`);
+		log("info", `Already connected in guild ${channel.guild.name}`);
 		return false;
 	}
 
 	// Get random unplayed MP3 file
 	const mp3FileName = await getRandomUnplayedMP3(guildId);
 	if (!mp3FileName) {
-		log("warn", "No unplayed MP3 files found for guild");
+		log("info", "No unplayed MP3 files found for guild");
 		return false;
 	}
 

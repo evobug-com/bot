@@ -176,7 +176,7 @@ describe("Economy System Tests", () => {
 			const embed = response.embeds[0];
 			const fields = embed.fields || embed.data?.fields || [];
 			// Fields can have either f.name or f.data.name
-			expect(fields.some((f: any) => (f.name || f.data?.name || "").includes("Boost"))).toBe(true);
+			expect(fields.some((f: { name?: string; data?: { name?: string } }) => (f.name || f.data?.name || "").includes("Boost"))).toBe(true);
 		});
 
 		it("should test all possible work activities", async () => {

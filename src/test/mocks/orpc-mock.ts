@@ -1,190 +1,197 @@
 import type { RouterClient } from "@orpc/server";
 import type { router } from "../../../../api/src/contract/router.ts";
-import { schemas } from "../utils/schema-extractor.ts";
+import type { z } from "zod";
 import { type GeneratorOptions, generateMockData } from "../utils/zod-generator.ts";
 
 export interface MockConfig {
 	defaultOptions?: GeneratorOptions;
 	errorRate?: number;
 	latency?: number;
-	customResponses?: Record<string, any>;
+	customResponses?: Record<string, unknown>;
+}
+
+type Procedure = {
+	'~orpc': {
+		outputSchema?: z.ZodType;
+		handler: unknown;
+	};
+};
+
+type SchemaMap = Map<string, z.ZodType>;
+
+function isProcedure(value: unknown): value is Procedure {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"~orpc" in value &&
+		typeof value["~orpc"] === "object" &&
+		value["~orpc"] !== null &&
+		"handler" in value["~orpc"]
+	);
+}
+
+function extractSchemas(obj: unknown, path: string[] = []): SchemaMap {
+	const schemas: SchemaMap = new Map();
+
+	if (isProcedure(obj)) {
+		const fullPath = path.join(".");
+		if (obj["~orpc"].outputSchema) {
+			schemas.set(fullPath, obj["~orpc"].outputSchema);
+		}
+		return schemas;
+	}
+
+	if (typeof obj === "object" && obj !== null) {
+		for (const [key, value] of Object.entries(obj)) {
+			const nestedSchemas = extractSchemas(value, [...path, key]);
+			for (const [nestedPath, schema] of nestedSchemas) {
+				schemas.set(nestedPath, schema);
+			}
+		}
+	}
+
+	return schemas;
+}
+
+function getAllEndpoints(obj: unknown, path: string[] = []): Set<string> {
+	const endpoints = new Set<string>();
+
+	if (isProcedure(obj)) {
+		endpoints.add(path.join("."));
+		return endpoints;
+	}
+
+	if (typeof obj === "object" && obj !== null) {
+		for (const [key, value] of Object.entries(obj)) {
+			const nestedEndpoints = getAllEndpoints(value, [...path, key]);
+			for (const endpoint of nestedEndpoints) {
+				endpoints.add(endpoint);
+			}
+		}
+	}
+
+	return endpoints;
 }
 
 export class MockORPCClient {
 	private config: MockConfig;
-	private callHistory: Array<{ endpoint: string; input: any; timestamp: Date }> = [];
-	private customHandlers: Map<string, (input: any) => any> = new Map();
+	private callHistory: Array<{ endpoint: string; input: unknown; timestamp: Date }> = [];
+	private customHandlers: Map<string, (input: unknown) => unknown> = new Map();
+	private schemaMap: SchemaMap | undefined;
+	private knownEndpoints: Set<string> | undefined;
+	private routerInstance: typeof router | undefined;
 
-	constructor(config: MockConfig = {}) {
+	constructor(config: MockConfig = {}, routerInstance?: typeof router) {
 		this.config = {
 			errorRate: config.errorRate ?? 0,
 			latency: config.latency ?? 0,
 			defaultOptions: config.defaultOptions ?? { seed: 123 },
 			customResponses: config.customResponses ?? {},
 		};
+
+		this.routerInstance = routerInstance;
+
+		if (routerInstance) {
+			this.schemaMap = extractSchemas(routerInstance);
+			this.knownEndpoints = getAllEndpoints(routerInstance);
+		}
+	}
+
+	private async ensureInitialized(): Promise<void> {
+		if (this.schemaMap && this.knownEndpoints) {
+			return;
+		}
+
+		if (!this.routerInstance) {
+			const { router: importedRouter } = await import("../../../../api/src/contract/router.ts");
+			this.routerInstance = importedRouter;
+		}
+
+		this.schemaMap = extractSchemas(this.routerInstance);
+		this.knownEndpoints = getAllEndpoints(this.routerInstance);
 	}
 
 	createClient(): RouterClient<typeof router> {
 		return this.buildProxy() as RouterClient<typeof router>;
 	}
 
-	private buildProxy(path: string[] = []): any {
+	private buildProxy(path: string[] = []): unknown {
 		return new Proxy(
-			{},
+			() => {},
 			{
 				get: (target, prop: string) => {
 					const currentPath = [...path, prop];
-					const fullPath = currentPath.join(".");
 
 					if (prop === "then" || prop === "catch") {
 						return undefined;
 					}
 
-					const isEndpoint = this.isKnownEndpoint(fullPath);
-					if (isEndpoint) {
-						return async (input: any) => {
-							return this.handleCall(fullPath, input);
-						};
-					}
-
 					return this.buildProxy(currentPath);
+				},
+				apply: async (target, thisArg, args: unknown[]) => {
+					await this.ensureInitialized();
+					const fullPath = path.join(".");
+					const input = args[0];
+					return this.handleCall(fullPath, input);
 				},
 			},
 		);
 	}
 
-	private async handleCall(endpoint: string, input: any): Promise<any> {
+	private async handleCall(endpoint: string, input: unknown): Promise<unknown> {
 		this.callHistory.push({ endpoint, input, timestamp: new Date() });
 
-		// if (this.config.latency && this.config.latency > 0) {
-		// 	await new Promise((resolve) => setTimeout(resolve, this.config.latency));
-		// }
-
-		// if (this.config.errorRate && Math.random() < this.config.errorRate) {
-		// 	// Return error tuple for safe client
-		// 	return [this.generateError(endpoint), undefined];
-		// }
-
 		if (this.config.customResponses?.[endpoint]) {
-			// Return success tuple for safe client
 			return [undefined, this.config.customResponses[endpoint]];
 		}
 
 		const customHandler = this.customHandlers.get(endpoint);
 		if (customHandler) {
 			const result = customHandler(input);
-			// Return success tuple for safe client
 			return [undefined, result];
 		}
 
 		const response = this.generateResponse(endpoint, input);
-		// Return success tuple for safe client
 		return [undefined, response];
 	}
 
-	private generateResponse(endpoint: string, input: any): any {
-		const schemaMap: Record<string, string> = {
-			"users.stats.user": "stats.userStatsOutput",
-			"users.stats.daily.cooldown": "stats.dailyCooldownOutput",
-			"users.stats.daily.claim": "stats.claimDailyOutput",
-			"users.stats.work.cooldown": "stats.workCooldownOutput",
-			"users.stats.work.claim": "stats.claimWorkOutput",
-			"users.stats.captcha.log": "stats.captchaLogOutput",
-			"users.stats.serverTag.check": "stats.serverTagStreakOutput",
-			"users.stats.serverTag.get": "stats.getServerTagStreakOutput",
-			"users.stats.top": "stats.leaderboardOutput",
-			"users.create": "users.createUserOutput",
-			"users.get": "users.getUserOutput",
-			"users.update": "users.updateUserOutput",
-			"moderation.violations.issue": "violations.issueViolationOutput",
-			"moderation.violations.list": "violations.listViolationsOutput",
-			"moderation.violations.get": "violations.getViolationOutput",
-			"moderation.violations.expire": "violations.expireViolationOutput",
-			"moderation.violations.updateReview": "violations.updateViolationReviewOutput",
-			"moderation.violations.bulkExpire": "violations.bulkExpireViolationsOutput",
-			"moderation.suspensions.create": "suspensions.createSuspensionOutput",
-			"moderation.suspensions.lift": "suspensions.liftSuspensionOutput",
-			"moderation.suspensions.check": "suspensions.checkSuspensionOutput",
-			"moderation.suspensions.list": "suspensions.listSuspensionsOutput",
-			"moderation.suspensions.history": "suspensions.getSuspensionHistoryOutput",
-			"moderation.suspensions.autoExpire": "suspensions.autoExpireSuspensionsOutput",
-			"moderation.standing.get": "standing.getStandingOutput",
-			"moderation.standing.calculate": "standing.calculateStandingOutput",
-			"moderation.standing.bulk": "standing.getBulkStandingsOutput",
-			"moderation.standing.restrictions": "standing.getUserRestrictionsOutput",
-		};
-
-		const schemaPath = schemaMap[endpoint];
-		if (!schemaPath) {
-			console.warn(`No schema found for endpoint: ${endpoint}`);
-			// Return a default success response for unknown endpoints
-			return { success: true };
+	private generateResponse(endpoint: string, input: unknown): unknown {
+		if (!this.schemaMap) {
+			console.warn(`Schema map not initialized for endpoint: ${endpoint}`);
+			return this.getFallbackResponse(endpoint, input);
 		}
 
-		const parts = schemaPath.split(".");
-		if (parts.length !== 2) {
-			console.warn(`Invalid schema path: ${schemaPath}`);
-			return {};
-		}
-		const [category, schemaName] = parts;
-		if (!category || !schemaName) {
-			console.warn(`Invalid schema path components: ${schemaPath}`);
-			return {};
-		}
-		const schema = (schemas as any)[category]?.[schemaName];
+		const schema = this.schemaMap.get(endpoint);
 
 		if (!schema) {
-			console.warn(`Schema not found: ${schemaPath}`);
-			// Return default responses for specific endpoints
-			if (endpoint === "users.stats.captcha.log") {
-				return { logged: true, isSuspicious: false };
-			}
-			if (endpoint === "users.stats.captcha.failedCount.update") {
-				return { updated: true, newCount: 1 };
-			}
-			if (endpoint === "users.stats.suspiciousScore.update") {
-				return { updated: true, newScore: 20 };
-			}
-			// Anti-cheat endpoints
-			if (endpoint === "users.anticheat.trust.update") {
-				return { updated: true, newScore: 500, oldScore: 500 };
-			}
-			if (endpoint === "users.anticheat.command.record") {
-				return { recorded: true, commandId: 1 };
-			}
-			if (endpoint === "users.anticheat.rateLimit.recordViolation") {
-				return { recorded: true };
-			}
-			if (endpoint === "users.anticheat.timing.analyze") {
-				return { hasTimingPattern: false, cv: 1.5, suspicionLevel: "none", cooldownSnipeRate: 0, hasCooldownSnipping: false, hasUnnaturalConsistency: false, commandCount: 10 };
-			}
-			if (endpoint === "users.anticheat.behavioral.calculate") {
-				return { score: 0, hasNaturalBreaks: true, hasRepetitiveSequences: false, socialRatio: 0.5, reasons: [] };
-			}
-			if (endpoint === "users.anticheat.suspicion.calculate") {
-				return { totalScore: 0, breakdown: { timingScore: 0, behavioralScore: 0, socialScore: 0, accountScore: 0, rateLimitScore: 0 }, recommendation: "allow", reasons: [] };
-			}
-			if (endpoint === "users.anticheat.enforcement.get") {
-				return { action: "none", suspicionScore: 0, trustScore: 500 };
-			}
-			return {};
+			console.warn(`No schema found for endpoint: ${endpoint}`);
+			return this.getFallbackResponse(endpoint, input);
 		}
 
 		const mockData = generateMockData(schema, this.config.defaultOptions);
 
-		if (endpoint === "users.get" && input?.discordId) {
+		return this.customizeResponse(endpoint, mockData, input);
+	}
+
+	private customizeResponse(endpoint: string, mockData: unknown, input: unknown): unknown {
+		if (endpoint === "users.get" && input && typeof input === "object" && "discordId" in input) {
+			const base = typeof mockData === "object" && mockData !== null ? mockData : {};
 			return {
-				...mockData,
+				...base,
 				discordId: input.discordId,
-				id: input.userId || Math.floor(Math.random() * 10000),
+				id: ("userId" in input ? input.userId : Math.floor(Math.random() * 10000)) as number,
 			};
 		}
 
-		if (endpoint === "users.stats.user" && input?.id) {
+		if (endpoint === "users.stats.user" && input && typeof input === "object" && "id" in input) {
+			const base = typeof mockData === "object" && mockData !== null ? mockData : {};
+			const existingStats =
+				typeof mockData === "object" && mockData !== null && "stats" in mockData ? mockData.stats : {};
+			const statsBase = typeof existingStats === "object" && existingStats !== null ? existingStats : {};
 			return {
-				...mockData,
+				...base,
 				stats: {
-					...mockData.stats,
+					...statsBase,
 					userId: input.id,
 				},
 			};
@@ -192,8 +199,9 @@ export class MockORPCClient {
 
 		if (endpoint.includes("cooldown")) {
 			const isOnCooldown = Math.random() > 0.5;
+			const base = typeof mockData === "object" && mockData !== null ? mockData : {};
 			return {
-				...mockData,
+				...base,
 				isOnCooldown,
 				cooldownRemaining: isOnCooldown ? Math.floor(Math.random() * 3600) : 0,
 				cooldownEndTime: isOnCooldown ? new Date(Date.now() + Math.random() * 3600000) : new Date(),
@@ -203,63 +211,33 @@ export class MockORPCClient {
 		return mockData;
 	}
 
-	private isKnownEndpoint(path: string): boolean {
-		const knownEndpoints = [
-			"users.stats.user",
-			"users.stats.daily.cooldown",
-			"users.stats.daily.claim",
-			"users.stats.work.cooldown",
-			"users.stats.work.claim",
-			"users.stats.captcha.log",
-			"users.stats.captcha.failedCount.update",
-			"users.stats.suspiciousScore.update",
-			"users.stats.serverTag.check",
-			"users.stats.serverTag.get",
-			"users.stats.reward.grant",
-			"users.stats.top",
-			"users.create",
-			"users.get",
-			"users.update",
-			"users.anticheat.command.record",
-			"users.anticheat.timing.analyze",
-			"users.anticheat.behavioral.calculate",
-			"users.anticheat.suspicion.calculate",
-			"users.anticheat.enforcement.get",
-			"users.anticheat.trust.update",
-			"users.anticheat.rateLimit.recordViolation",
-			"moderation.violations.issue",
-			"moderation.violations.list",
-			"moderation.violations.get",
-			"moderation.violations.expire",
-			"moderation.violations.updateReview",
-			"moderation.violations.bulkExpire",
-			"moderation.suspensions.create",
-			"moderation.suspensions.lift",
-			"moderation.suspensions.check",
-			"moderation.suspensions.list",
-			"moderation.suspensions.history",
-			"moderation.suspensions.autoExpire",
-			"moderation.standing.get",
-			"moderation.standing.calculate",
-			"moderation.standing.bulk",
-			"moderation.standing.restrictions",
-		];
-
-		return knownEndpoints.includes(path);
+	private getFallbackResponse(endpoint: string, _input: unknown): unknown {
+		// All endpoints should have schemas now. If we hit this, it means:
+		// 1. The endpoint doesn't exist in the router, OR
+		// 2. The endpoint exists but has no output schema defined
+		// Both cases should be fixed in the API, not worked around here.
+		console.warn(
+			`Fallback response used for ${endpoint}. This endpoint should have an output schema defined in the API.`,
+		);
+		return {};
 	}
 
-	setCustomHandler(endpoint: string, handler: (input: any) => any): void {
+	private isKnownEndpoint(path: string): boolean {
+		return this.knownEndpoints?.has(path) ?? false;
+	}
+
+	setCustomHandler(endpoint: string, handler: (input: unknown) => unknown): void {
 		this.customHandlers.set(endpoint, handler);
 	}
 
-	setCustomResponse(endpoint: string, response: any): void {
+	setCustomResponse(endpoint: string, response: unknown): void {
 		if (!this.config.customResponses) {
 			this.config.customResponses = {};
 		}
 		this.config.customResponses[endpoint] = response;
 	}
 
-	getCallHistory(): Array<{ endpoint: string; input: any; timestamp: Date }> {
+	getCallHistory(): Array<{ endpoint: string; input: unknown; timestamp: Date }> {
 		return [...this.callHistory];
 	}
 
@@ -272,7 +250,7 @@ export class MockORPCClient {
 		return this.callHistory.filter((call) => call.endpoint === endpoint).length;
 	}
 
-	getLastCall(endpoint?: string): { endpoint: string; input: any; timestamp: Date } | undefined {
+	getLastCall(endpoint?: string): { endpoint: string; input: unknown; timestamp: Date } | undefined {
 		const calls = endpoint ? this.callHistory.filter((call) => call.endpoint === endpoint) : this.callHistory;
 		return calls[calls.length - 1];
 	}
@@ -288,8 +266,11 @@ export class MockORPCClient {
 	}
 }
 
-export function createMockORPCClient(config?: MockConfig): RouterClient<typeof router> {
-	const mockClient = new MockORPCClient(config);
+export function createMockORPCClient(
+	config?: MockConfig,
+	routerInstance?: typeof router,
+): RouterClient<typeof router> {
+	const mockClient = new MockORPCClient(config, routerInstance);
 	return mockClient.createClient();
 }
 
@@ -299,12 +280,16 @@ export function createTestORPCClient(
 		latency: number;
 		seed: number;
 	}>,
+	routerInstance?: typeof router,
 ): { client: RouterClient<typeof router>; mock: MockORPCClient } {
-	const mock = new MockORPCClient({
-		errorRate: overrides?.errorRate ?? 0,
-		latency: overrides?.latency ?? 0,
-		defaultOptions: { seed: overrides?.seed ?? 123 },
-	});
+	const mock = new MockORPCClient(
+		{
+			errorRate: overrides?.errorRate ?? 0,
+			latency: overrides?.latency ?? 0,
+			defaultOptions: { seed: overrides?.seed ?? 123 },
+		},
+		routerInstance,
+	);
 
 	return {
 		client: mock.createClient(),

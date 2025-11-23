@@ -101,7 +101,7 @@ async function handleThreadCreate(thread: AnyThreadChannel) {
 		// Get applied tags
 		const appliedTags = thread.appliedTags;
 		if (!appliedTags || appliedTags.length === 0) {
-			log("warn", "New thread has no tags applied");
+			log("info", "New thread has no tags applied");
 			return;
 		}
 

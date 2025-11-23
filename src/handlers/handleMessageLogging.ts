@@ -92,7 +92,7 @@ async function handleMessageUpdate(
 	});
 
 	if (error || !message) {
-		_log("error", "Failed to update message log", { error });
+		_log("info", "Failed to update message log", { error });
 	} else {
 		_log("info", "Updated message log", {
 			messageId: newMessage.id,
@@ -120,7 +120,7 @@ async function handleMessageDelete(message: OmitPartialGroupDMChannel<Message<bo
 	});
 
 	if (error || !status) {
-		_log("error", "Failed to mark message as deleted", { error });
+		_log("info", "Failed to mark message as deleted", { error });
 	} else {
 		_log("info", "Marked message as deleted", { messageId: message.id });
 	}

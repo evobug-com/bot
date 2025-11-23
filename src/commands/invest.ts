@@ -37,10 +37,10 @@ export const data = new ChatInputCommandBuilder()
 			)
 			.addIntegerOptions((option) =>
 				option
-					.setName("amount")
-					.setNameLocalizations({ cs: "částka" })
-					.setDescription("Amount of coins to invest (minimum 100)")
-					.setDescriptionLocalizations({ cs: "Počet mincí k investici (minimum 100)" })
+					.setName("coins")
+					.setNameLocalizations({ cs: "mince" })
+					.setDescription("How many COINS to invest (min 100 coins, NOT amount of shares!)")
+					.setDescriptionLocalizations({ cs: "Kolik MINCÍ investovat (min 100 mincí, NE počet akcií!)" })
 					.setRequired(true)
 					.setMinValue(100),
 			),
@@ -247,7 +247,7 @@ async function handleBuy(
 	await interaction.deferReply();
 
 	const symbol = interaction.options.getString("symbol", true).toUpperCase();
-	const amount = interaction.options.getInteger("amount", true);
+	const amount = interaction.options.getInteger("coins", true);
 
 	// Call API to buy
 	const [error, result] = await orpc.users.investments.buy({
@@ -776,6 +776,11 @@ async function handleHelp(
 			"• 1 mince = 1 CZK\n" +
 			"• 1 USD = 25 CZK (fixní kurz)\n" +
 			"• Ceny z USD trhů jsou automaticky přepočítány\n\n" +
+			"**🔒 Jak fungují investované mince:**\n" +
+			"• Když nakoupíš akcie, mince se **odečtou z tvého zůstatku**\n" +
+			"• Investované mince jsou \"zamčené\" v portfoliu jako akcie\n" +
+			"• **Nemůžeš je utratit** - musíš nejdřív prodat investice\n" +
+			"• Tvůj zůstatek = pouze volné mince (ne hodnota portfolia)\n\n" +
 			"**Účel:** Vyzkoušej si investování s herními mincemi a uč se o důsledcích investičních rozhodnutí v bezpečném prostředí!\n\n" +
 			"**⚠️ Upozornění:** Používáš své skutečné mince z ekonomiky bota. Buď opatrný!"
 		)
@@ -787,7 +792,7 @@ async function handleHelp(
 			},
 			{
 				name: "💰 /invest buy",
-				value: "Kup akcie nebo kryptoměny\n*Minimální investice: 100 mincí*",
+				value: "Kup akcie nebo kryptoměny za své mince\n*Minimální investice: 100 mincí (ne 100 akcií!)*\n*Příklad: 100 mincí koupí část BTC, ne 100 celých BTC*",
 				inline: false,
 			},
 			{

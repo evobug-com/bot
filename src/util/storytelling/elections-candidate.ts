@@ -57,10 +57,31 @@ export async function generateElectionsCandidateStory(
 		throw xpError;
 	}
 
-	// Step 1: Get random votes
+	// Step 1: Campaign introduction
+	events.push({
+		description: "🗳️ Rozhodl jsi se kandidovat ve volbách do parlamentu...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "📢 Připravuješ volební kampaň a setkáváš se s voliči...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "📺 Účastníš se předvolebních debat...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🗳️ Volby proběhly, čekáš na výsledky...",
+		coinsChange: 0,
+	});
+
+	// Step 2: Get random votes
 	const votes = randomInt(1, 5000);
 	events.push({
-		description: `Kandidoval jsi ve volbách do parlamentu a získal jsi **${votes}** hlasů.`,
+		description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
 		coinsChange: 0,
 	});
 

@@ -47,7 +47,17 @@ export async function generateVideoConferenceStory(
 	}
 
 	events.push({
-		description: "Přežil jsi videokonferenci s indickými kolegy...",
+		description: "📹 Připojuješ se na videokonferenci s indickými kolegy...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🎤 Testuješ mikrofon a kameru před začátkem meetingu...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "👔 Meeting začíná, představuješ svůj projekt...",
 		coinsChange: 0,
 	});
 
@@ -56,9 +66,19 @@ export async function generateVideoConferenceStory(
 
 	if (outcome < 50) {
 		// Successful pitch
+		events.push({
+			description: "💬 Kolegyně z Bangaloru pokládá důležité otázky...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "✅ Odpovídáš sebejistě a přesvědčivě...",
+			coinsChange: 0,
+		});
+
 		const bonus = randomInt(300, 600);
 		events.push({
-			description: `🎯 **Úspěšný pitch!** Klient je nadšený z tvé prezentace. Dostáváš bonus **${bonus}** mincí.`,
+			description: `🎯 **Úspěšný pitch!** Klient je nadšený z tvé prezentace. Team leader tě chválí před všemi. Dostáváš bonus **${bonus}** mincí.`,
 			coinsChange: bonus,
 		});
 
@@ -77,9 +97,24 @@ export async function generateVideoConferenceStory(
 		totalCoinsChange += bonus;
 	} else if (outcome < 80) {
 		// Technical problems
+		events.push({
+			description: "⚠️ Začínáš pozorovat zpoždění v přenosu...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📶 Signál slábne... Obraz se seká...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "❌ Internet ti úplně vypadl!",
+			coinsChange: 0,
+		});
+
 		const penalty = randomInt(100, 300);
 		events.push({
-			description: `🔌 **Technické problémy!** Internet ti vypadl uprostřed prezentace. Klient je naštvaný. Musel jsi zaplatit **${penalty}** mincí za zkaženou příležitost.`,
+			description: `🔌 **Technické problémy!** Nedokončil jsi prezentaci. Klient je naštvaný a musel jsi přeplánovat meeting. Musel jsi zaplatit **${penalty}** mincí za zkaženou příležitost.`,
 			coinsChange: -penalty,
 		});
 
@@ -98,9 +133,24 @@ export async function generateVideoConferenceStory(
 		totalCoinsChange -= penalty;
 	} else {
 		// Cat goes viral
+		events.push({
+			description: "😺 Tvoje kočka vskočila na stůl...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📸 Prochází přímo před kamerou a mňouká...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "😂 Všichni se smějí, někdo to nahrál!",
+			coinsChange: 0,
+		});
+
 		const viralBonus = randomInt(800, 1200);
 		events.push({
-			description: `😺 **Kočka prošla před kamerou!** Video se stalo virální na sociálních sítích. Firma dostala obrovskou reklamu a ty dostáváš **${viralBonus}** mincí jako odměnu!`,
+			description: `🌟 **Video se stalo virální!** Společnost získala obrovskou pozornost na sociálních sítích. Marketing tým je nadšený a ty dostáváš **${viralBonus}** mincí jako odměnu za nejlepší reklamu roku!`,
 			coinsChange: viralBonus,
 		});
 

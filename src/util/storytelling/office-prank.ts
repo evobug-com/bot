@@ -47,7 +47,22 @@ export async function generateOfficePrankStory(
 	}
 
 	events.push({
-		description: "Udělal jsi kolegovi žertík s jeho počítačem...",
+		description: "🎭 Plánuješ žertík s počítačem kolegy...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🖱️ Zatímco je na obědě, měníš mu pozadí na vtipný obrázek...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "⌨️ A navíc přehazuješ několik kláves na klávesnici...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "👀 Kolega se vrací a zapíná počítač...",
 		coinsChange: 0,
 	});
 
@@ -56,9 +71,19 @@ export async function generateOfficePrankStory(
 
 	if (outcome < 50) {
 		// Everyone laughs - bonus
+		events.push({
+			description: "😆 Kolega se začíná smát...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🤣 Ostatní si toho všimli a přidávají se!",
+			coinsChange: 0,
+		});
+
 		const bonus = randomInt(200, 400);
 		events.push({
-			description: `😂 **Všichni se smějí!** Šéf ti dává bonus **${bonus}** mincí za zlepšení atmosféry v kanceláři.`,
+			description: `😂 **Všichni se smějí!** Atmosféra v kanceláři se zlepšila. Šéf oceňuje tvou kreativitu a dává ti bonus **${bonus}** mincí.`,
 			coinsChange: bonus,
 		});
 
@@ -77,9 +102,19 @@ export async function generateOfficePrankStory(
 		totalCoinsChange += bonus;
 	} else if (outcome < 80) {
 		// Colleague gets angry
+		events.push({
+			description: "😠 Kolega vypadá naštvaně...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🔥 Jeho tvář červená vztekem, má důležitou prezentaci!",
+			coinsChange: 0,
+		});
+
 		const damage = randomInt(100, 200);
 		events.push({
-			description: `😡 **Kolega se rozzlobil** a v hněvu rozbil tvou klávesnici. Musíš zaplatit **${damage}** mincí za novou.`,
+			description: `😡 **Kolega se rozzlobil!** V hněvu náhodou rozbil tvou klávesnici při gestikulaci. Musíš zaplatit **${damage}** mincí za novou.`,
 			coinsChange: -damage,
 		});
 
@@ -98,9 +133,24 @@ export async function generateOfficePrankStory(
 		totalCoinsChange -= damage;
 	} else {
 		// Prank goes terribly wrong
+		events.push({
+			description: "⚠️ Něco se pokazilo... Počítač zamrzl...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🚨 Celý firemní server je dole!",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💻 Tvoje úprava nějakým způsobem spustila kritickou chybu!",
+			coinsChange: 0,
+		});
+
 		const penalty = randomInt(300, 600);
 		events.push({
-			description: `💥 **Žertík se strašně pokazil!** Nějakým způsobem jsi způsobil pád serveru. IT muselo pracovat přes noc. Zaplatil jsi pokutu **${penalty}** mincí.`,
+			description: `💥 **Žertík se strašně pokazil!** IT tým musel pracovat celou noc na obnovení systému. CTO je rozzuřený. Zaplatil jsi pokutu **${penalty}** mincí.`,
 			coinsChange: -penalty,
 		});
 

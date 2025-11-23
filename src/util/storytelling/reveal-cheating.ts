@@ -52,7 +52,22 @@ export async function generateRevealCheatingStory(
 	}
 
 	events.push({
-		description: "Odhalil jsi podvádění na Discord příkazech!",
+		description: "🕵️ Procházíš ekonomické logy a všímáš si neobvyklých aktivit...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "📊 Analýza dat odhaluje podezřelé vzory v /work příkazech...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🔍 Jeden uživatel má nadměrný počet coinů získaných za krátkou dobu!",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🎯 Máš důkazy o podvádění!",
 		coinsChange: 0,
 	});
 
@@ -61,9 +76,19 @@ export async function generateRevealCheatingStory(
 
 	if (reportToAdmins) {
 		// Safe choice - report to admins
+		events.push({
+			description: "📝 Připravuješ detailní report s důkazy...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📨 Odesíláš zprávu administrátorům...",
+			coinsChange: 0,
+		});
+
 		const reward = randomInt(200, 300);
 		events.push({
-			description: `✅ **Nahlásil jsi to adminům.** Dostáváš odměnu **${reward}** mincí za pomoc s udržením férovosti.`,
+			description: `✅ **Admini zasáhli!** Podvodník byl potrestán. Dostáváš odměnu **${reward}** mincí za pomoc s udržením férovosti serveru.`,
 			coinsChange: reward,
 		});
 
@@ -82,9 +107,19 @@ export async function generateRevealCheatingStory(
 		totalCoinsChange += reward;
 	} else {
 		// Risky choice - cheater offers bribe
+		events.push({
+			description: "💬 Podvodník si všiml, že ho sleduješ...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📩 Posílá ti soukromou zprávu...",
+			coinsChange: 0,
+		});
+
 		const bribeAmount = randomInt(500, 1000);
 		events.push({
-			description: `💰 **Podvodník ti nabídl úplatek ${bribeAmount} mincí,** abys to nikomu neřekl...`,
+			description: `💰 **Nabídka úplatku!** Podvodník ti nabízí **${bribeAmount}** mincí, abys to nikomu neřekl...`,
 			coinsChange: 0,
 		});
 
@@ -93,6 +128,16 @@ export async function generateRevealCheatingStory(
 
 		if (takeBribeSuccessfully) {
 			// Successfully take bribe
+			events.push({
+				description: "🤔 Rozhoduješ se přijmout nabídku...",
+				coinsChange: 0,
+			});
+
+			events.push({
+				description: "💸 Transfer proběhl úspěšně...",
+				coinsChange: 0,
+			});
+
 			events.push({
 				description: `🤫 **Vzal jsi úplatek.** Nikdo to neví... zatím. Získáváš **${bribeAmount}** mincí.`,
 				coinsChange: bribeAmount,
@@ -113,9 +158,24 @@ export async function generateRevealCheatingStory(
 			totalCoinsChange += bribeAmount;
 		} else {
 			// Caught by admins
+			events.push({
+				description: "👀 Administrátor sledoval vaši konverzaci...",
+				coinsChange: 0,
+			});
+
+			events.push({
+				description: "⚠️ Anti-cheat systém zaznamenal podezřelou transakci!",
+				coinsChange: 0,
+			});
+
+			events.push({
+				description: "🔨 Admin zasahuje...",
+				coinsChange: 0,
+			});
+
 			const penalty = randomInt(1000, 1500);
 			events.push({
-				description: `🚨 **Admini vás chytili oba!** Ty i podvodník jste dostali ban na ekonomické příkazy a pokutu **${penalty}** mincí. Korupce se nevyplácí.`,
+				description: `🚨 **Chyceni při činu!** Ty i podvodník jste dostali dočasný ban na ekonomické příkazy a pokutu **${penalty}** mincí. Korupce se nevyplácí.`,
 				coinsChange: -penalty,
 			});
 

@@ -49,12 +49,25 @@ export async function generateITSupportStory(
 
 	if (isNetworkEngineer) {
 		events.push({
-			description: "Opravuješ firemní síť...",
+			description: "🌐 Opravuješ firemní síť...",
 			coinsChange: 0,
 		});
 	} else {
 		events.push({
-			description: "Pomáháš kolegovi s jeho počítačem...",
+			description: "💻 Pomáháš kolegovi s jeho počítačem...",
+			coinsChange: 0,
+		});
+	}
+
+	// Add diagnostic step
+	if (isNetworkEngineer) {
+		events.push({
+			description: "🔍 Kontroluješ síťovou konfiguraci a prováděcí toky...",
+			coinsChange: 0,
+		});
+	} else {
+		events.push({
+			description: "🔍 Spouštíš diagnostické nástroje a kontroluješ systémové logy...",
 			coinsChange: 0,
 		});
 	}
@@ -63,10 +76,22 @@ export async function generateITSupportStory(
 	const outcome = Math.random() * 100;
 
 	if (outcome < 60) {
-		// Successfully fixed
+		// Successfully fixed - add problem identification step
+		if (isNetworkEngineer) {
+			events.push({
+				description: "🔧 Identifikoval jsi problém s routerem v přízemí...",
+				coinsChange: 0,
+			});
+		} else {
+			events.push({
+				description: "🔧 Zjistil jsi, že problém způsobuje zastaralý ovladač...",
+				coinsChange: 0,
+			});
+		}
+
 		const bonus = randomInt(100, 200);
 		events.push({
-			description: `✅ **Úspěšně opraveno!** ${isNetworkEngineer ? "Síť běží rychleji než kdykoliv předtím" : "Počítač funguje jako nový"}. Dostáváš bonus **${bonus}** mincí za rychlost.`,
+			description: `✅ **Úspěšně opraveno!** ${isNetworkEngineer ? "Síť běží rychleji než kdykoliv předtím. Všechny oddělení ti děkují" : "Počítač funguje jako nový. Kolega je nadšený"}. Dostáváš bonus **${bonus}** mincí za rychlost.`,
 			coinsChange: bonus,
 		});
 
@@ -84,10 +109,30 @@ export async function generateITSupportStory(
 
 		totalCoinsChange += bonus;
 	} else if (outcome < 85) {
-		// Found security hole
+		// Found security hole - add investigation steps
+		if (isNetworkEngineer) {
+			events.push({
+				description: "⚠️ Něco vypadá podezřele... Port 22 je otevřený všem...",
+				coinsChange: 0,
+			});
+			events.push({
+				description: "🕵️ Kontroluješ firewall pravidla a nacházíš další zranitelnosti...",
+				coinsChange: 0,
+			});
+		} else {
+			events.push({
+				description: "⚠️ Objevuješ podezřelé procesy běžící na pozadí...",
+				coinsChange: 0,
+			});
+			events.push({
+				description: "🕵️ Analyzuješ systém a nacházíš bezpečnostní díru...",
+				coinsChange: 0,
+			});
+		}
+
 		const reward = randomInt(500, 1000);
 		events.push({
-			description: `🔒 **Našel jsi bezpečnostní díru!** ${isNetworkEngineer ? "V síťové konfiguraci" : "V systému kolegy"} jsi objevil kritickou zranitelnost. Dostáváš velkou odměnu **${reward}** mincí.`,
+			description: `🔒 **Našel jsi bezpečnostní díru!** ${isNetworkEngineer ? "V síťové konfiguraci" : "V systému kolegy"} jsi objevil kritickou zranitelnost. Bezpečnostní tým je vděčný. Dostáváš velkou odměnu **${reward}** mincí.`,
 			coinsChange: reward,
 		});
 
@@ -105,10 +150,30 @@ export async function generateITSupportStory(
 
 		totalCoinsChange += reward;
 	} else {
-		// Made it worse
+		// Made it worse - add escalation steps
+		if (isNetworkEngineer) {
+			events.push({
+				description: "⚠️ Zkouším restartovat hlavní switch...",
+				coinsChange: 0,
+			});
+			events.push({
+				description: "❌ Switch se nespouští... Všechna připojení padla!",
+				coinsChange: 0,
+			});
+		} else {
+			events.push({
+				description: "⚠️ Zkouším reinstalovat systém...",
+				coinsChange: 0,
+			});
+			events.push({
+				description: "❌ Omylem jsi smazal důležitou partition!",
+				coinsChange: 0,
+			});
+		}
+
 		const penalty = randomInt(800, 1500);
 		events.push({
-			description: `💥 **Pokazil jsi to ještě víc!** ${isNetworkEngineer ? "Celá firma je offline. Všechny servery padly" : "Smazal jsi důležitá data. IT tým musí pracovat přes noc na obnově"}. Zaplatil jsi pokutu **${penalty}** mincí.`,
+			description: `💥 **Pokazil jsi to ještě víc!** ${isNetworkEngineer ? "Celá firma je offline. Všechny servery padly. CEO volá krizovou schůzku" : "Smazal jsi důležitá data kolegi. IT tým musí pracovat přes noc na obnově ze záloh"}. Zaplatil jsi pokutu **${penalty}** mincí.`,
 			coinsChange: -penalty,
 		});
 

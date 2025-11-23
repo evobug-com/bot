@@ -48,7 +48,17 @@ export async function generateChristmasPartyStory(
 	}
 
 	events.push({
-		description: "Účastníš se vánočního večírku...",
+		description: "🎄 Účastníš se vánočního večírku...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🍽️ Večeře je výborná, atmosféra příjemná...",
+		coinsChange: 0,
+	});
+
+	events.push({
+		description: "🎵 Hraje vánoční hudba, kolegové si povídají...",
 		coinsChange: 0,
 	});
 
@@ -57,9 +67,19 @@ export async function generateChristmasPartyStory(
 
 	if (outcome < 40) {
 		// Win raffle
+		events.push({
+			description: "🎟️ Účastníš se tomboly...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🎲 Losuje se, čísla se odhalují...",
+			coinsChange: 0,
+		});
+
 		const prize = randomInt(200, 500);
 		events.push({
-			description: `🎁 **Vyhrál jsi tombolu!** Získáváš **${prize}** mincí v ceně.`,
+			description: `🎁 **Vyhrál jsi tombolu!** Tvoje číslo bylo vylosováno! Získáváš cenu v hodnotě **${prize}** mincí.`,
 			coinsChange: prize,
 		});
 
@@ -78,9 +98,29 @@ export async function generateChristmasPartyStory(
 		totalCoinsChange += prize;
 	} else if (outcome < 70) {
 		// Get drunk
+		events.push({
+			description: "🍷 Začínáš popíjet s kolegy...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🍺 Jeden drink... dva... tři... ztrácíš počet...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💫 Všechno se začíná točit...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💥 Srazil jsi drahocennou vázu z podstavce!",
+			coinsChange: 0,
+		});
+
 		const damage = randomInt(100, 300);
 		events.push({
-			description: `🍷 **Opil jsi se** a v opilosti jsi rozbil drahocennou vázu. Musel jsi zaplatit **${damage}** mincí za náhradu.`,
+			description: `🍷 **Opil jsi se a rozbil vázu!** HR tě upozorňuje, že to budou strhávat z výplaty. Musel jsi zaplatit **${damage}** mincí za náhradu.`,
 			coinsChange: -damage,
 		});
 
@@ -99,9 +139,24 @@ export async function generateChristmasPartyStory(
 		totalCoinsChange -= damage;
 	} else if (outcome < 90) {
 		// Great networking
+		events.push({
+			description: "💼 Využíváš příležitosti k networkingu...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🤝 Bavíš se s CEO a klíčovými klienty...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💡 Sdílíš zajímavé nápady a ukazuješ své odhodlání...",
+			coinsChange: 0,
+		});
+
 		const raise = randomInt(500, 800);
 		events.push({
-			description: `🤝 **Skvělý networking!** Udělal jsi dojem na šéfa a důležité klienty. Šéf ti zvyšuje plat! Dostáváš **${raise}** mincí.`,
+			description: `🌟 **Skvělý networking!** Udělal jsi výborný dojem. Druhý den tě šéf volá do kanceláře a oznamuje ti zvýšení platu! Dostáváš **${raise}** mincí.`,
 			coinsChange: raise,
 		});
 
@@ -120,9 +175,29 @@ export async function generateChristmasPartyStory(
 		totalCoinsChange += raise;
 	} else {
 		// Secret Santa Bitcoin
+		events.push({
+			description: "🎁 Otevírá se Secret Santa...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📦 Dostáváš malou krabičku s USB diskem...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💾 Na disku je... Bitcoin wallet!",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📈 Kontroluješ hodnotu - právě vyletěla nahoru!",
+			coinsChange: 0,
+		});
+
 		const bitcoin = randomInt(1000, 2000);
 		events.push({
-			description: `🎅 **Secret Santa ti dal Bitcoin!** Hodnota Bitcoinu právě vyletěla nahoru. Prodal jsi ho za **${bitcoin}** mincí!`,
+			description: `🎅 **Secret Santa ti dal Bitcoin!** Prodal jsi ho ve správný moment za neuvěřitelných **${bitcoin}** mincí! Nejlepší dárek ever!`,
 			coinsChange: bitcoin,
 		});
 

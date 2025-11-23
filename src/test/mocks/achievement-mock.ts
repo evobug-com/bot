@@ -121,10 +121,28 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 	const guildsCache = new Map([["test-guild-id", mockGuild]]);
 	(guildsCache as any).first = () => mockGuild;
 
+	const eventListeners = new Map<string, Array<(...args: any[]) => void>>();
+
 	const mockClient = {
 		guilds: {
 			cache: guildsCache,
 			first: () => mockGuild,
+		},
+		on: (event: string, listener: (...args: any[]) => void) => {
+			if (!eventListeners.has(event)) {
+				eventListeners.set(event, []);
+			}
+			eventListeners.get(event)?.push(listener);
+			return mockClient;
+		},
+		emit: (event: string, ...args: any[]) => {
+			const listeners = eventListeners.get(event);
+			if (listeners) {
+				for (const listener of listeners) {
+					listener(...args);
+				}
+			}
+			return true;
 		},
 	} as unknown as Client<true>;
 

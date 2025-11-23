@@ -7,3 +7,6 @@
 
 # Tests
 - All code must have tests.
+
+# Other
+- Do not commit any md file unless you are explicitly told to do it.

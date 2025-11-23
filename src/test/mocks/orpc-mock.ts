@@ -215,6 +215,7 @@ export class MockORPCClient {
 			"users.stats.suspiciousScore.update",
 			"users.stats.serverTag.check",
 			"users.stats.serverTag.get",
+			"users.stats.reward.grant",
 			"users.stats.top",
 			"users.create",
 			"users.get",

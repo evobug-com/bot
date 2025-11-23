@@ -14,6 +14,7 @@ import {
 	getProfitLossEmoji,
 } from "../util/bot/investment-helpers.ts";
 import type { CommandContext } from "../util/commands.ts";
+import { chunkSymbols } from "./invest.test.ts";
 
 const getAdminIds = (): string[] => {
 	const adminIds = process.env.ADMIN_IDS;
@@ -137,6 +138,13 @@ export const data = new ChatInputCommandBuilder()
 					.setNameLocalizations({ cs: "hledat" })
 					.setDescription("Search by symbol or name")
 					.setDescriptionLocalizations({ cs: "Hledat podle symbolu nebo jména" }),
+			)
+			.addBooleanOptions((option) =>
+				option
+					.setName("compact")
+					.setNameLocalizations({ cs: "kompaktní" })
+					.setDescription("Show only symbols in compact format")
+					.setDescriptionLocalizations({ cs: "Zobrazit pouze symboly v kompaktním formátu" }),
 			),
 	)
 	// Info subcommand
@@ -290,7 +298,7 @@ async function handleBuy(
 					errorMessage = `Aktivum "${symbol}" není momentálně dostupné pro obchodování.`;
 					break;
 				case "PRICE_NOT_AVAILABLE":
-					errorMessage = "Cenová data nejsou momentálně dostupná. Ceny se aktualizují každé 3 hodiny (12:00, 15:00, 18:00, 21:00, 00:00, 03:00, 06:00, 09:00). Zkus to po další synchronizaci.";
+					errorMessage = "Cenová data nejsou momentálně dostupná. Ceny se aktualizují každé 4 hodiny (00:00, 04:00, 08:00, 12:00, 16:00, 20:00). Zkus to po další synchronizaci.";
 					break;
 				case "ECONOMY_BANNED":
 					errorMessage = "Tvůj přístup k ekonomice byl pozastaven kvůli podezřelé aktivitě.";
@@ -401,7 +409,7 @@ async function handleSell(
 					errorMessage = `Nevlastníš žádné "${symbol}".`;
 					break;
 				case "PRICE_NOT_AVAILABLE":
-					errorMessage = "Cenová data nejsou momentálně dostupná. Ceny se aktualizují každé 3 hodiny (12:00, 15:00, 18:00, 21:00, 00:00, 03:00, 06:00, 09:00). Zkus to po další synchronizaci.";
+					errorMessage = "Cenová data nejsou momentálně dostupná. Ceny se aktualizují každé 4 hodiny (00:00, 04:00, 08:00, 12:00, 16:00, 20:00). Zkus to po další synchronizaci.";
 					break;
 				case "INVALID_INPUT":
 					errorMessage = "Neplatné vstupní parametry.";
@@ -554,35 +562,89 @@ async function handleAssets(
 
 	const assetType = (interaction.options.getString("type") || "all") as "stock_us" | "stock_intl" | "crypto" | "all";
 	const search = interaction.options.getString("search");
+	const compact = interaction.options.getBoolean("compact") ?? false;
 
-	// If search is provided, we'll filter client-side
-	const [error, result] = await orpc.users.investments.assets({
-		assetType,
-		limit: 25,
-		offset: 0,
-	});
+	// Fetch assets - if compact mode, fetch all assets using pagination
+	type AssetWithPrice = {
+		asset: {
+			id: number;
+			symbol: string;
+			name: string;
+			assetType: string;
+			exchange: string | null;
+			currency: string;
+			apiSource: string;
+			apiSymbol: string;
+			isActive: boolean;
+			minInvestment: number;
+			description: string | null;
+			logoUrl: string | null;
+			createdAt: Date;
+			updatedAt: Date;
+		};
+		currentPrice: number | null;
+		change24h: number | null;
+		changePercent24h: number | null;
+		priceTimestamp: Date | null;
+	};
+	let allAssets: AssetWithPrice[] = [];
 
-	if (error) {
-		console.error("Error fetching assets:", error);
-		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se načíst aktiva.");
-		await interaction.editReply({ embeds: [errorEmbed] });
-		return;
+	if (compact) {
+		// Fetch ALL assets using pagination
+		let offset = 0;
+		const limit = 100; // Max limit per API request
+		let hasMore = true;
+
+		while (hasMore) {
+			const [error, result] = await orpc.users.investments.assets({
+				assetType,
+				limit,
+				offset,
+			});
+
+			if (error) {
+				console.error("Error fetching assets:", error);
+				const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se načíst aktiva.");
+				await interaction.editReply({ embeds: [errorEmbed] });
+				return;
+			}
+
+			allAssets.push(...result.assets);
+
+			// Check if there are more assets to fetch
+			hasMore = result.assets.length === limit;
+			offset += limit;
+		}
+	} else {
+		// Regular mode: fetch limited assets
+		const [error, result] = await orpc.users.investments.assets({
+			assetType,
+			limit: 25,
+			offset: 0,
+		});
+
+		if (error) {
+			console.error("Error fetching assets:", error);
+			const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se načíst aktiva.");
+			await interaction.editReply({ embeds: [errorEmbed] });
+			return;
+		}
+
+		allAssets = result.assets;
 	}
-
-	let assets = result.assets;
 
 	// Filter by search if provided (search in symbol, name, and description)
 	if (search) {
 		const searchLower = search.toLowerCase();
-		assets = assets.filter(
-			(a) =>
+		allAssets = allAssets.filter(
+			(a: AssetWithPrice) =>
 				a.asset.symbol.toLowerCase().includes(searchLower) ||
 				a.asset.name.toLowerCase().includes(searchLower) ||
 				(a.asset.description && a.asset.description.toLowerCase().includes(searchLower)),
 		);
 	}
 
-	if (assets.length === 0) {
+	if (allAssets.length === 0) {
 		const embed = createInvestmentEmbed()
 			.setDescription(
 				search
@@ -594,18 +656,6 @@ async function handleAssets(
 		return;
 	}
 
-	// Build asset list (limit to 15)
-	const assetList = assets
-		.slice(0, 15)
-		.map((item) => {
-			const price = item.currentPrice ? formatPrice(item.currentPrice) : "N/A";
-			const change = item.changePercent24h !== null ? formatPercentageChange(item.changePercent24h) : "";
-			const type = formatAssetType(item.asset.assetType);
-
-			return `**${item.asset.symbol}** - ${item.asset.name}\n${type} | ${price} ${change}`;
-		})
-		.join("\n\n");
-
 	const typeLabel = {
 		all: "Všechna aktiva",
 		stock_us: "Americké akcie",
@@ -613,12 +663,52 @@ async function handleAssets(
 		crypto: "Kryptoměny",
 	}[assetType];
 
-	const embed = createInvestmentEmbed(typeLabel)
-		.setDescription(assetList)
-		.setFooter(createInvestmentHelpFooter(`Zobrazeno ${Math.min(assets.length, 15)} aktiv`))
-		.setTimestamp();
+	// Compact mode: show only symbols
+	if (compact) {
+		// Extract symbols and chunk them for Discord's character limit
+		const symbols = allAssets.map((item: AssetWithPrice) => item.asset.symbol);
+		const chunks = chunkSymbols(symbols, 1900);
 
-	await interaction.editReply({ embeds: [embed] });
+		// Send first chunk as embed
+		const embed = createInvestmentEmbed(typeLabel)
+			.setDescription(chunks[0] || "")
+			.setFooter(createInvestmentHelpFooter(
+				chunks.length > 1
+					? `Celkem: ${allAssets.length} symbolů (${chunks.length}/${chunks.length})`
+					: `Celkem: ${allAssets.length} symbolů`
+			))
+			.setTimestamp();
+
+		await interaction.editReply({ embeds: [embed] });
+
+		// Send additional chunks as follow-up messages if needed
+		for (let i = 1; i < chunks.length; i++) {
+			const followUpEmbed = createInvestmentEmbed(`${typeLabel} (pokračování)`)
+				.setDescription(chunks[i] || "")
+				.setFooter(createInvestmentHelpFooter(`${i + 1}/${chunks.length}`));
+
+			await interaction.followUp({ embeds: [followUpEmbed] });
+		}
+	} else {
+		// Regular detailed view (existing behavior)
+		const assetList = allAssets
+			.slice(0, 15)
+			.map((item: AssetWithPrice) => {
+				const price = item.currentPrice ? formatPrice(item.currentPrice) : "N/A";
+				const change = item.changePercent24h !== null ? formatPercentageChange(item.changePercent24h) : "";
+				const type = formatAssetType(item.asset.assetType);
+
+				return `**${item.asset.symbol}** - ${item.asset.name}\n${type} | ${price} ${change}`;
+			})
+			.join("\n\n");
+
+		const embed = createInvestmentEmbed(typeLabel)
+			.setDescription(assetList)
+			.setFooter(createInvestmentHelpFooter(`Zobrazeno ${Math.min(allAssets.length, 15)} aktiv`))
+			.setTimestamp();
+
+		await interaction.editReply({ embeds: [embed] });
+	}
 }
 
 /**
@@ -673,7 +763,7 @@ async function handleInfo(
 			{ name: "📈 24h změna", value: change24h, inline: true },
 			{ name: "🕐 Poslední aktualizace", value: lastUpdate, inline: true },
 		)
-		.setFooter(createInvestmentHelpFooter("Ceny se aktualizují každé 3 hodiny (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)"))
+		.setFooter(createInvestmentHelpFooter("Ceny se aktualizují každé 4 hodiny (00:00, 04:00, 08:00, 12:00, 16:00, 20:00)"))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -788,7 +878,7 @@ async function handleHelp(
 		.setDescription(
 			"**Co jsou investice?**\n" +
 			"Investice ti umožňují použít své mince k nákupu skutečných akcií a kryptoměn. " +
-			"Ceny se aktualizují každé **3 hodiny** (8x denně) podle reálného trhu. " +
+			"Ceny se aktualizují každé **4 hodiny** (6x denně) podle reálného trhu. " +
 			"Můžeš vydělat nebo ztratit mince v závislosti na výkonu trhu.\n\n" +
 			"**💱 Směnný kurz:**\n" +
 			"• 1 mince = 1 CZK\n" +
@@ -848,7 +938,7 @@ async function handleHelp(
 			{
 				name: "\u200B",
 				value: "**💡 Tipy:**\n" +
-					"• Ceny se aktualizují v **00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00**\n" +
+					"• Ceny se aktualizují v **00:00, 04:00, 08:00, 12:00, 16:00, 20:00**\n" +
 					"• Každá transakce má **1.5% poplatek**\n" +
 					"• Diverzifikuj své portfolio pro nižší riziko\n" +
 					"• Sleduj 24h změny před nákupem",

@@ -4,3 +4,6 @@
 
 # Typescript
 - Never use 'any' type, it is disabling typescript. Instead figure out what is wrong and plan to fix it.
+
+# Tests
+- All code must have tests.

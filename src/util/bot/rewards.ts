@@ -248,7 +248,7 @@ export interface HandleRewardOptions {
  * Universal handler for reward responses
  * Handles level up notifications, main reward embed, and proper message flow
  */
-export async function handleRewardResponse(response: RewardResponse, options: HandleRewardOptions): Promise<void> {
+export async function handleRewardResponse(response: Pick<RewardResponse, 'levelUp'>, options: HandleRewardOptions): Promise<void> {
 	const { interaction, channel, userId, createMainEmbed } = options;
 
 	// Validate we have either interaction or channel

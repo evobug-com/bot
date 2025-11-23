@@ -223,6 +223,51 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		},
 	});
 
+	// Check for 23-works-in-a-day achievement
+	try {
+		const [countError, todayCount] = await orpc.users.stats.work.todayCount({ userId: dbUser.id });
+
+		if (!countError && todayCount.count === 23) {
+			// User just completed their 23rd work today! Grant achievement
+			const [rewardError, rewardResult] = await orpc.users.stats.reward.grant({
+				userId: dbUser.id,
+				coins: 2500,
+				xp: 250,
+				activityType: "work_milestone_23",
+				notes: "Completed 23 works in a single day",
+			});
+
+			if (!rewardError && rewardResult) {
+				// Use the shared handler to properly handle level ups
+				await handleRewardResponse(rewardResult, {
+					interaction,
+					createMainEmbed: () => {
+						return createUradPraceEmbed()
+							.setTitle("🏆 ACHIEVEMENT UNLOCKED: Workaholic!")
+							.setDescription(
+								`Dokončil jsi 23 prací za jediný den!\n\n` +
+								`**Odměna za úspěch:**\n` +
+								`🪙 **+2500** mincí\n` +
+								`⭐ **+250** XP`
+							)
+							.setColor(0xFFD700) // Gold color for achievements
+							.setThumbnail("https://cdn.discordapp.com/emojis/1326286362760187944.png")
+							.setFooter(
+								createEconomyFooter(
+									rewardResult.updatedStats.coinsCount,
+									rewardResult.levelProgress.currentLevel,
+									work.updatedStats.workCount,
+								),
+							);
+					},
+				});
+			}
+		}
+	} catch (error) {
+		console.error("Error checking/granting 23-work achievement:", error);
+		// Don't fail the whole command if achievement check fails
+	}
+
 	// Check if this activity has storytelling enabled
 	const storytellingActivities: Record<string, {
 		generator: (userId: number, userLevel: number, ...args: any[]) => Promise<{story: string, totalCoinsChange: number, xpGranted: number}>,

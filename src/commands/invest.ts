@@ -15,6 +15,12 @@ import {
 } from "../util/bot/investment-helpers.ts";
 import type { CommandContext } from "../util/commands.ts";
 
+const getAdminIds = (): string[] => {
+	const adminIds = process.env.ADMIN_IDS;
+	if (!adminIds) return [];
+	return adminIds.split(",").map((id) => id.trim());
+};
+
 export const data = new ChatInputCommandBuilder()
 	.setName("invest")
 	.setNameLocalizations({ cs: "investovat" })
@@ -204,6 +210,14 @@ export const data = new ChatInputCommandBuilder()
 			.setNameLocalizations({ cs: "nápověda" })
 			.setDescription("Learn about investments and available commands")
 			.setDescriptionLocalizations({ cs: "Zjisti více o investicích a dostupných příkazech" }),
+	)
+	// Sync subcommand (admin only)
+	.addSubcommands((subcommand) =>
+		subcommand
+			.setName("sync")
+			.setNameLocalizations({ cs: "synchronizovat" })
+			.setDescription("[ADMIN] Force sync asset prices from Twelve Data API")
+			.setDescriptionLocalizations({ cs: "[ADMIN] Vynutit synchronizaci cen aktiv z Twelve Data API" }),
 	);
 
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
@@ -215,7 +229,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		| "info"
 		| "history"
 		| "leaderboard"
-		| "help";
+		| "help"
+		| "sync";
 
 	switch (subcommand) {
 		case "buy":
@@ -234,6 +249,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			return await handleLeaderboard(interaction, dbUser);
 		case "help":
 			return await handleHelp(interaction);
+		case "sync":
+			return await handleSync(interaction, dbUser);
 	}
 };
 
@@ -554,13 +571,14 @@ async function handleAssets(
 
 	let assets = result.assets;
 
-	// Filter by search if provided
+	// Filter by search if provided (search in symbol, name, and description)
 	if (search) {
 		const searchLower = search.toLowerCase();
 		assets = assets.filter(
 			(a) =>
 				a.asset.symbol.toLowerCase().includes(searchLower) ||
-				a.asset.name.toLowerCase().includes(searchLower),
+				a.asset.name.toLowerCase().includes(searchLower) ||
+				(a.asset.description && a.asset.description.toLowerCase().includes(searchLower)),
 		);
 	}
 
@@ -839,6 +857,75 @@ async function handleHelp(
 		)
 		.setFooter({ text: "Investice nesou riziko ztráty. Investuj zodpovědně!" })
 		.setTimestamp();
+
+	await interaction.editReply({ embeds: [embed] });
+}
+
+/**
+ * Handle /invest sync subcommand (admin only)
+ */
+async function handleSync(
+	interaction: CommandContext["interaction"],
+	_dbUser: CommandContext["dbUser"],
+): Promise<void> {
+	// Check if user is admin
+	const adminIds = getAdminIds();
+	if (!adminIds.includes(interaction.user.id)) {
+		const embed = createErrorEmbed(
+			"⛔ Nemáš oprávnění",
+			"Pouze administrátoři mohou vynutit synchronizaci cen.",
+		);
+		await interaction.reply({ embeds: [embed] });
+		return;
+	}
+
+	await interaction.deferReply();
+
+	const startEmbed = createInvestmentEmbed("🔄 Synchronizace zahájená")
+		.setDescription("Stahuji aktuální ceny ze Twelve Data API...\n*Toto může trvat několik minut.*");
+
+	await interaction.editReply({ embeds: [startEmbed] });
+
+	// Call sync API endpoint
+	const [error, _result] = await orpc.users.investments.sync({
+		adminKey: process.env.ADMIN_SYNC_KEY || "change-me-in-production",
+	});
+
+	if (error) {
+		console.error("Error during sync:", error);
+
+		let errorMessage = "Neznámá chyba při synchronizaci cen.";
+
+		if ("code" in error) {
+			switch (error.code) {
+				case "UNAUTHORIZED":
+					errorMessage = "Neplatný admin klíč. Zkontroluj konfiguraci ADMIN_SYNC_KEY.";
+					break;
+				case "SYNC_FAILED":
+					errorMessage = `Synchronizace selhala s ${error.data?.errors?.length || 0} chybami.`;
+					break;
+				default:
+					errorMessage = error.message || errorMessage;
+			}
+		}
+
+		const errorEmbed = createErrorEmbed("❌ Chyba synchronizace", errorMessage);
+		await interaction.editReply({ embeds: [errorEmbed] });
+		return;
+	}
+
+	// Create result embed
+	const embed = createInvestmentEmbed("✅ Synchronizace spuštěna")
+		.setDescription(
+			"Synchronizace běží na pozadí. Trvá **~11 minut** pro všech 90 aktiv.\n\n" +
+			"Výsledky synchronizace najdeš v **logách API serveru**."
+		)
+		.addFields(
+			{ name: "⏱️ Očekávaná doba", value: "~11 minut", inline: true },
+			{ name: "📊 Počet aktiv", value: "90", inline: true },
+			{ name: "📞 API volání", value: "~90", inline: true },
+		)
+		.setFooter({ text: `Voláno uživatelem ${interaction.user.tag}` });
 
 	await interaction.editReply({ embeds: [embed] });
 }

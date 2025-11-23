@@ -128,13 +128,14 @@ export function formatLargeNumber(value: number): string {
 
 /**
  * Format percentage change with color
- * @param percentage - Percentage change
- * @returns Formatted string with emoji (e.g., "🟢 +5.2%")
+ * @param basisPoints - Percentage change in basis points (e.g., 196 = 1.96%)
+ * @returns Formatted string with emoji (e.g., "🟢 +1.96%")
  */
-export function formatPercentageChange(percentage: number): string {
+export function formatPercentageChange(basisPoints: number): string {
+	const percentage = basisPoints / 100; // Convert basis points to percentage
 	const emoji = percentage >= 0 ? "🟢" : "🔴";
 	const sign = percentage >= 0 ? "+" : "";
-	return `${emoji} ${sign}${percentage.toFixed(2)}%`;
+	return `${emoji} ${sign}${Math.abs(percentage).toFixed(2)}%`;
 }
 
 /**

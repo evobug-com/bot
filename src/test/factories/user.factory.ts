@@ -68,7 +68,6 @@ export class UserFactory {
 export class UserStatsFactory {
 	static create(options: UserStatsFactoryOptions = {}): z.infer<typeof userStatsSchema> {
 		const now = new Date();
-		const lastDaily = options.lastDailyAt ?? faker.date.recent({ days: 1 });
 		const lastWork = options.lastWorkAt ?? faker.date.recent({ days: 1 });
 
 		return {
@@ -76,7 +75,6 @@ export class UserStatsFactory {
 			userId: options.userId ?? faker.number.int({ min: 1, max: 10000 }),
 			dailyStreak: options.dailyStreak ?? faker.number.int({ min: 0, max: 30 }),
 			maxDailyStreak: options.maxDailyStreak ?? faker.number.int({ min: 0, max: 100 }),
-			lastDailyAt: lastDaily,
 			workCount: options.workCount ?? faker.number.int({ min: 0, max: 1000 }),
 			lastWorkAt: lastWork,
 			messagesCount: options.messagesCount ?? faker.number.int({ min: 0, max: 10000 }),

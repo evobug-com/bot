@@ -5,7 +5,6 @@ import { orpc } from "../client/client.ts";
 import { createErrorEmbed } from "../util";
 import {
 	createInvestmentEmbed,
-	createInvestmentFooter,
 	formatPercentageChange,
 	formatPrice,
 	formatProfitLoss,
@@ -197,6 +196,14 @@ export const data = new ChatInputCommandBuilder()
 						{ name: "ROI", value: "roi" },
 					),
 			),
+	)
+	// Help subcommand
+	.addSubcommands((subcommand) =>
+		subcommand
+			.setName("help")
+			.setNameLocalizations({ cs: "nápověda" })
+			.setDescription("Learn about investments and available commands")
+			.setDescriptionLocalizations({ cs: "Zjisti více o investicích a dostupných příkazech" }),
 	);
 
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
@@ -207,7 +214,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		| "assets"
 		| "info"
 		| "history"
-		| "leaderboard";
+		| "leaderboard"
+		| "help";
 
 	switch (subcommand) {
 		case "buy":
@@ -224,6 +232,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			return await handleHistory(interaction, dbUser);
 		case "leaderboard":
 			return await handleLeaderboard(interaction, dbUser);
+		case "help":
+			return await handleHelp(interaction);
 	}
 };
 
@@ -300,7 +310,7 @@ async function handleBuy(
 			{ name: "Poplatek (1.5%)", value: `${fee} mincí`, inline: true },
 			{ name: "Celkem", value: `${total} mincí`, inline: true },
 		)
-		.setFooter(createInvestmentFooter(newBalance))
+		.setFooter(createInvestmentHelpFooter(`💰 Balance: ${newBalance.toLocaleString()} coins`))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -415,7 +425,7 @@ async function handleSell(
 			{ name: "Přijato", value: `${received} mincí`, inline: true },
 			{ name: "Zisk/Ztráta", value: profitLossFormatted, inline: false },
 		)
-		.setFooter(createInvestmentFooter(newBalance))
+		.setFooter(createInvestmentHelpFooter(`💰 Balance: ${newBalance.toLocaleString()} coins`))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -459,12 +469,13 @@ async function handlePortfolio(
 	}
 
 	if (portfolio.holdings.length === 0) {
-		const embed = createInvestmentEmbed("Portfolio prázdné")
+		const embed = createInvestmentEmbed()
 			.setDescription(
 				targetUser.id === interaction.user.id
-					? "Ještě nemáš žádné investice. Použij `/invest buy` k nákupu aktiv!"
-					: `${targetUser.username} ještě nemá žádné investice.`,
-			);
+					? "**Portfolio prázdné**\n\nJeště nemáš žádné investice. Použij `/invest buy` k nákupu aktiv!"
+					: `**Portfolio prázdné**\n\n${targetUser.username} ještě nemá žádné investice.`,
+			)
+			.setFooter(createInvestmentHelpFooter());
 		await interaction.editReply({ embeds: [embed] });
 		return;
 	}
@@ -507,7 +518,9 @@ async function handlePortfolio(
 		.setTimestamp();
 
 	if (portfolio.holdings.length > 10) {
-		embed.setFooter({ text: `Zobrazeno 10 z ${portfolio.holdings.length} pozic` });
+		embed.setFooter(createInvestmentHelpFooter(`Zobrazeno 10 z ${portfolio.holdings.length} pozic`));
+	} else {
+		embed.setFooter(createInvestmentHelpFooter());
 	}
 
 	await interaction.editReply({ embeds: [embed] });
@@ -552,12 +565,13 @@ async function handleAssets(
 	}
 
 	if (assets.length === 0) {
-		const embed = createInvestmentEmbed("Žádná aktiva")
+		const embed = createInvestmentEmbed()
 			.setDescription(
 				search
-					? `Nebyla nalezena žádná aktiva odpovídající "${search}".`
-					: "Nebyla nalezena žádná dostupná aktiva.",
-			);
+					? `**Žádná aktiva**\n\nNebyla nalezena žádná aktiva odpovídající "${search}".`
+					: "**Žádná aktiva**\n\nNebyla nalezena žádná dostupná aktiva.",
+			)
+			.setFooter(createInvestmentHelpFooter());
 		await interaction.editReply({ embeds: [embed] });
 		return;
 	}
@@ -583,7 +597,7 @@ async function handleAssets(
 
 	const embed = createInvestmentEmbed(typeLabel)
 		.setDescription(assetList)
-		.setFooter({ text: `Zobrazeno ${Math.min(assets.length, 15)} aktiv` })
+		.setFooter(createInvestmentHelpFooter(`Zobrazeno ${Math.min(assets.length, 15)} aktiv`))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -641,7 +655,7 @@ async function handleInfo(
 			{ name: "📈 24h změna", value: change24h, inline: true },
 			{ name: "🕐 Poslední aktualizace", value: lastUpdate, inline: true },
 		)
-		.setFooter({ text: "Ceny se aktualizují každé 3 hodiny (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)" })
+		.setFooter(createInvestmentHelpFooter("Ceny se aktualizují každé 3 hodiny (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)"))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -675,12 +689,13 @@ async function handleHistory(
 	}
 
 	if (result.transactions.length === 0) {
-		const embed = createInvestmentEmbed("Historie transakcí")
+		const embed = createInvestmentEmbed()
 			.setDescription(
 				transactionType === "all"
-					? "Ještě nemáš žádné transakce. Použij `/invest buy` k nákupu aktiv!"
-					: `Nemáš žádné ${transactionType === "buy" ? "nákupy" : "prodeje"}.`,
-			);
+					? "**Historie transakcí**\n\nJeště nemáš žádné transakce. Použij `/invest buy` k nákupu aktiv!"
+					: `**Historie transakcí**\n\nNemáš žádné ${transactionType === "buy" ? "nákupy" : "prodeje"}.`,
+			)
+			.setFooter(createInvestmentHelpFooter());
 		await interaction.editReply({ embeds: [embed] });
 		return;
 	}
@@ -719,7 +734,7 @@ async function handleHistory(
 
 	const embed = createInvestmentEmbed(typeLabel)
 		.setDescription(transactionList)
-		.setFooter({ text: `Zobrazeno ${result.transactions.length} z ${result.total} transakcí` })
+		.setFooter(createInvestmentHelpFooter(`Zobrazeno ${result.transactions.length} z ${result.total} transakcí`))
 		.setTimestamp();
 
 	await interaction.editReply({ embeds: [embed] });
@@ -739,11 +754,100 @@ async function handleLeaderboard(
 	const errorEmbed = createInfoEmbed(
 		"Momentálně nedostupné",
 		"Investiční žebříček bude brzy k dispozici!",
-	);
+	).setFooter(createInvestmentHelpFooter());
 	await interaction.editReply({ embeds: [errorEmbed] });
+}
+
+/**
+ * Handle /invest help subcommand
+ */
+async function handleHelp(
+	interaction: CommandContext["interaction"],
+): Promise<void> {
+	await interaction.deferReply();
+
+	const embed = createInvestmentEmbed("Nápověda")
+		.setDescription(
+			"**Co jsou investice?**\n" +
+			"Investice ti umožňují použít své mince k nákupu skutečných akcií a kryptoměn. " +
+			"Ceny se aktualizují každé **3 hodiny** (8x denně) podle reálného trhu. " +
+			"Můžeš vydělat nebo ztratit mince v závislosti na výkonu trhu.\n\n" +
+			"**💱 Směnný kurz:**\n" +
+			"• 1 mince = 1 CZK\n" +
+			"• 1 USD = 25 CZK (fixní kurz)\n" +
+			"• Ceny z USD trhů jsou automaticky přepočítány\n\n" +
+			"**Účel:** Vyzkoušej si investování s herními mincemi a uč se o důsledcích investičních rozhodnutí v bezpečném prostředí!\n\n" +
+			"**⚠️ Upozornění:** Používáš své skutečné mince z ekonomiky bota. Buď opatrný!"
+		)
+		.addFields(
+			{
+				name: "📋 Dostupné příkazy",
+				value: "\u200B",
+				inline: false,
+			},
+			{
+				name: "💰 /invest buy",
+				value: "Kup akcie nebo kryptoměny\n*Minimální investice: 100 mincí*",
+				inline: false,
+			},
+			{
+				name: "💸 /invest sell",
+				value: "Prodej své akcie nebo kryptoměny\n*Prodej vše, konkrétní množství nebo procenta*",
+				inline: false,
+			},
+			{
+				name: "📊 /invest portfolio",
+				value: "Zobraz své investiční portfolio\n*Uvidíš všechny své pozice a celkový zisk/ztrátu*",
+				inline: false,
+			},
+			{
+				name: "🏢 /invest assets",
+				value: "Seznam dostupných aktiv k investici\n*Filtruj podle typu nebo hledej konkrétní symbol*",
+				inline: false,
+			},
+			{
+				name: "ℹ️ /invest info",
+				value: "Detailní informace o konkrétním aktivu\n*Zobrazí aktuální cenu, 24h změnu a další detaily*",
+				inline: false,
+			},
+			{
+				name: "📜 /invest history",
+				value: "Tvoje historie transakcí\n*Zobraz své nákupy a prodeje s detaily*",
+				inline: false,
+			},
+			{
+				name: "🏆 /invest leaderboard",
+				value: "Investiční žebříček\n*Porovnej se s ostatními investory*",
+				inline: false,
+			},
+		)
+		.addFields(
+			{
+				name: "\u200B",
+				value: "**💡 Tipy:**\n" +
+					"• Ceny se aktualizují v **00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00**\n" +
+					"• Každá transakce má **1.5% poplatek**\n" +
+					"• Diverzifikuj své portfolio pro nižší riziko\n" +
+					"• Sleduj 24h změny před nákupem",
+				inline: false,
+			}
+		)
+		.setFooter({ text: "Investice nesou riziko ztráty. Investuj zodpovědně!" })
+		.setTimestamp();
+
+	await interaction.editReply({ embeds: [embed] });
 }
 
 // Helper to create info embed
 function createInfoEmbed(title: string, description: string) {
 	return createInvestmentEmbed(title).setDescription(description);
+}
+
+// Helper to create footer with help suggestion
+function createInvestmentHelpFooter(additionalText?: string): { text: string } {
+	const helpText = "Chceš vědět více? Použij /invest help";
+	if (additionalText) {
+		return { text: `${additionalText} • ${helpText}` };
+	}
+	return { text: helpText };
 }

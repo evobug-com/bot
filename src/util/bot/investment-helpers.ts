@@ -2,13 +2,14 @@ import type { EmbedBuilder } from "discord.js";
 import { createEmbed } from "./embed-builder.ts";
 
 /**
- * Format price from cents to dollar/currency format
- * @param cents - Price in cents (e.g., 15000 = $150.00)
- * @returns Formatted price string (e.g., "$150.00")
+ * Format price from coin-cents to CZK format
+ * Backend converts USD to CZK (1 USD = 25 CZK) and multiplies by 100 for precision
+ * @param coinCents - Price in coin-cents (e.g., 15000 = 150.00 Kč)
+ * @returns Formatted price string (e.g., "150.00 Kč")
  */
-export function formatPrice(cents: number): string {
-	const dollars = cents / 100;
-	return `$${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export function formatPrice(coinCents: number): string {
+	const czk = coinCents / 100;
+	return `${czk.toLocaleString("cs-CZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Kč`;
 }
 
 /**
@@ -64,13 +65,17 @@ export function formatAssetType(type: string): string {
 }
 
 /**
- * Create investment-themed embed (gold color like economy)
- * @param title - Embed title
+ * Create investment-themed embed with consistent header
+ * @param title - Optional embed title (will be prefixed with 📈)
  * @param description - Optional embed description
- * @returns EmbedBuilder with investment theme
+ * @returns EmbedBuilder with investment theme and consistent header
  */
 export function createInvestmentEmbed(title?: string, description?: string): EmbedBuilder {
-	const embed = createEmbed("economy");
+	const embed = createEmbed("economy")
+		.setAuthor({
+			name: "Burza cenných papírů",
+			icon_url: "https://yt3.ggpht.com/fS63bZX9-vCHKq-_UA8Dp2E9BtTrM1LKL6aOhmXHqrk1z4503QV4Tz_ah-Xxu2xxjIXd1XJBgw=s68-c-k-c0x00ffffff-no-rj"
+		});
 
 	if (title) {
 		embed.setTitle(`📈 ${title}`);

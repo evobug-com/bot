@@ -1,33 +1,5 @@
 import { describe, expect, it } from "bun:test";
-
-/**
- * Utility function to chunk symbols into parts that fit Discord's character limit
- */
-export function chunkSymbols(symbols: string[], maxLength = 1900): string[] {
-	const symbolsText = symbols.join(", ");
-	const chunks: string[] = [];
-
-	if (symbolsText.length <= maxLength) {
-		chunks.push(symbolsText);
-	} else {
-		// Split by comma and rebuild chunks
-		let currentChunk = "";
-		for (const symbol of symbols) {
-			const addition = (currentChunk ? ", " : "") + symbol;
-			if ((currentChunk + addition).length > maxLength) {
-				chunks.push(currentChunk);
-				currentChunk = symbol;
-			} else {
-				currentChunk += addition;
-			}
-		}
-		if (currentChunk) {
-			chunks.push(currentChunk);
-		}
-	}
-
-	return chunks;
-}
+import { chunkSymbols } from "./invest";
 
 describe("invest command utilities", () => {
 	describe("chunkSymbols", () => {

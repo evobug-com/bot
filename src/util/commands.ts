@@ -14,6 +14,11 @@ const commands: Record<
 const glob = new Glob("**/*.ts");
 // Scans the current working directory and each of its sub-directories recursively
 for await (const file of glob.scan(join(import.meta.dirname, "../commands"))) {
+	// Skip test files
+	if (file.endsWith(".test.ts")) {
+		continue;
+	}
+
 	const module = (await import(join(import.meta.dirname, "../commands", file))) as {
 		data: ChatInputCommandBuilder;
 		execute: (context: CommandContext) => Promise<void>;

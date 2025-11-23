@@ -108,6 +108,16 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 		fetch: mock().mockResolvedValue(undefined),
 	};
 
+	// Set up premium subscriber role (booster role) with members
+	const boosterMembersMap = new Map();
+	boosterMembersMap.set("test-user-id", testMember);
+	const premiumSubscriberRole = {
+		id: "booster-role-id",
+		name: "Server Booster",
+		members: boosterMembersMap,
+	};
+	mockGuild.roles.premiumSubscriberRole = premiumSubscriberRole;
+
 	const guildsCache = new Map([["test-guild-id", mockGuild]]);
 	(guildsCache as any).first = () => mockGuild;
 

@@ -16,12 +16,12 @@ function randomInt(min: number, max: number): number {
 }
 
 /**
- * Office prank storytelling
+ * Office prank storytelling with single-roll outcome
  *
- * Flow:
- * - 50% Everyone laughs, boss gives bonus (+2000-4000)
- * - 30% Colleague gets angry, breaks keyboard (-1000-2000)
- * - 20% Prank goes wrong, IT must fix server (-3000-6000)
+ * Story outcomes (single roll at start, 70% positive):
+ * - 70% Everyone laughs, boss gives bonus (+200-400)
+ * - 20% Colleague gets angry, breaks keyboard (-100-200)
+ * - 10% Prank goes wrong, IT must fix server (-300-600)
  */
 export async function generateOfficePrankStory(
 	userId: number,
@@ -69,8 +69,8 @@ export async function generateOfficePrankStory(
 	// Random outcome
 	const outcome = Math.random() * 100;
 
-	if (outcome < 50) {
-		// Everyone laughs - bonus
+	if (outcome < 70) {
+		// Everyone laughs - bonus (70%)
 		events.push({
 			description: "😆 Kolega se začíná smát...",
 			coinsChange: 0,
@@ -100,8 +100,8 @@ export async function generateOfficePrankStory(
 		}
 
 		totalCoinsChange += bonus;
-	} else if (outcome < 80) {
-		// Colleague gets angry
+	} else if (outcome < 90) {
+		// Colleague gets angry (20%)
 		events.push({
 			description: "😠 Kolega vypadá naštvaně...",
 			coinsChange: 0,
@@ -132,7 +132,7 @@ export async function generateOfficePrankStory(
 
 		totalCoinsChange -= damage;
 	} else {
-		// Prank goes terribly wrong
+		// Prank goes terribly wrong (10%)
 		events.push({
 			description: "⚠️ Něco se pokazilo... Počítač zamrzl...",
 			coinsChange: 0,

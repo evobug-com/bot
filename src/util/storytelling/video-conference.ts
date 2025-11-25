@@ -16,12 +16,12 @@ function randomInt(min: number, max: number): number {
 }
 
 /**
- * Video conference storytelling
+ * Video conference storytelling with single-roll outcome
  *
- * Flow:
- * - 50% Successful pitch, client happy (+3000-6000 bonus)
- * - 30% Technical problems, client angry (-1000-3000)
- * - 20% Cat walks by camera, goes viral (+8000-12000 viral bonus!)
+ * Story outcomes (single roll at start, 70% positive):
+ * - 50% Successful pitch, client happy (+300-600 bonus)
+ * - 20% Cat walks by camera, goes viral (+800-1200 viral bonus!)
+ * - 30% Technical problems, client angry (-100-300)
  */
 export async function generateVideoConferenceStory(
 	userId: number,
@@ -65,7 +65,7 @@ export async function generateVideoConferenceStory(
 	const outcome = Math.random() * 100;
 
 	if (outcome < 50) {
-		// Successful pitch
+		// Successful pitch (50%)
 		events.push({
 			description: "💬 Kolegyně z Bangaloru pokládá důležité otázky...",
 			coinsChange: 0,
@@ -95,44 +95,8 @@ export async function generateVideoConferenceStory(
 		}
 
 		totalCoinsChange += bonus;
-	} else if (outcome < 80) {
-		// Technical problems
-		events.push({
-			description: "⚠️ Začínáš pozorovat zpoždění v přenosu...",
-			coinsChange: 0,
-		});
-
-		events.push({
-			description: "📶 Signál slábne... Obraz se seká...",
-			coinsChange: 0,
-		});
-
-		events.push({
-			description: "❌ Internet ti úplně vypadl!",
-			coinsChange: 0,
-		});
-
-		const penalty = randomInt(100, 300);
-		events.push({
-			description: `🔌 **Technické problémy!** Nedokončil jsi prezentaci. Klient je naštvaný a musel jsi přeplánovat meeting. Musel jsi zaplatit **${penalty}** mincí za zkaženou příležitost.`,
-			coinsChange: -penalty,
-		});
-
-		const [penaltyError] = await orpc.users.stats.reward.grant({
-			userId,
-			coins: -penalty,
-			xp: 0,
-			activityType: "video_conference_technical",
-			notes: `Pokuta za technické problémy: ${penalty} mincí`,
-		});
-
-		if (penaltyError) {
-			throw penaltyError;
-		}
-
-		totalCoinsChange -= penalty;
-	} else {
-		// Cat goes viral
+	} else if (outcome < 70) {
+		// Cat goes viral (20%)
 		events.push({
 			description: "😺 Tvoje kočka vskočila na stůl...",
 			coinsChange: 0,
@@ -167,6 +131,42 @@ export async function generateVideoConferenceStory(
 		}
 
 		totalCoinsChange += viralBonus;
+	} else {
+		// Technical problems (30%)
+		events.push({
+			description: "⚠️ Začínáš pozorovat zpoždění v přenosu...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📶 Signál slábne... Obraz se seká...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "❌ Internet ti úplně vypadl!",
+			coinsChange: 0,
+		});
+
+		const penalty = randomInt(100, 300);
+		events.push({
+			description: `🔌 **Technické problémy!** Nedokončil jsi prezentaci. Klient je naštvaný a musel jsi přeplánovat meeting. Musel jsi zaplatit **${penalty}** mincí za zkaženou příležitost.`,
+			coinsChange: -penalty,
+		});
+
+		const [penaltyError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: -penalty,
+			xp: 0,
+			activityType: "video_conference_technical",
+			notes: `Pokuta za technické problémy: ${penalty} mincí`,
+		});
+
+		if (penaltyError) {
+			throw penaltyError;
+		}
+
+		totalCoinsChange -= penalty;
 	}
 
 	// Build story

@@ -16,12 +16,12 @@ function randomInt(min: number, max: number): number {
 }
 
 /**
- * IT Support / Network Engineer storytelling
+ * IT Support / Network Engineer storytelling with single-roll outcome
  *
- * Flow:
- * - 60% Successfully fixed (+1000-2000 speed bonus)
- * - 25% Found security hole, get reward (+5000-10000)
- * - 15% Made it worse, entire company offline (-8000-15000)
+ * Story outcomes (single roll at start, 70% positive):
+ * - 50% Successfully fixed (+100-200 speed bonus)
+ * - 20% Found security hole, get reward (+500-1000)
+ * - 30% Made it worse, entire company offline (-800-1500)
  */
 export async function generateITSupportStory(
 	userId: number,
@@ -75,8 +75,8 @@ export async function generateITSupportStory(
 	// Random outcome
 	const outcome = Math.random() * 100;
 
-	if (outcome < 60) {
-		// Successfully fixed - add problem identification step
+	if (outcome < 50) {
+		// Successfully fixed - add problem identification step (50%)
 		if (isNetworkEngineer) {
 			events.push({
 				description: "🔧 Identifikoval jsi problém s routerem v přízemí...",
@@ -108,8 +108,8 @@ export async function generateITSupportStory(
 		}
 
 		totalCoinsChange += bonus;
-	} else if (outcome < 85) {
-		// Found security hole - add investigation steps
+	} else if (outcome < 70) {
+		// Found security hole - add investigation steps (20%)
 		if (isNetworkEngineer) {
 			events.push({
 				description: "⚠️ Něco vypadá podezřele... Port 22 je otevřený všem...",
@@ -150,7 +150,7 @@ export async function generateITSupportStory(
 
 		totalCoinsChange += reward;
 	} else {
-		// Made it worse - add escalation steps
+		// Made it worse - add escalation steps (30%)
 		if (isNetworkEngineer) {
 			events.push({
 				description: "⚠️ Zkouším restartovat hlavní switch...",

@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
-import { ORPCError } from "@orpc/client";
 import { generateStolenMoneyStory } from "./stolen-money.ts";
 
 describe("Stolen Money Storytelling", () => {
@@ -17,19 +16,6 @@ describe("Stolen Money Storytelling", () => {
 								activityType: string;
 								notes: string;
 							}) => {
-								// Check for insufficient funds scenario (lawyer fee when user has no money)
-								if (
-									input.activityType === "stolen_money_lawyer" &&
-									input.coins < 0 &&
-									Math.abs(input.coins) > 2500 // Simulate insufficient funds sometimes
-								) {
-									// Return ORPC error tuple format with proper ORPCError instance
-									const error = new ORPCError("INSUFFICIENT_FUNDS", {
-										message: "Insufficient funds",
-									});
-									return [error, undefined];
-								}
-
 								// Return successful response in ORPC tuple format [error, data]
 								return [
 									undefined,
@@ -112,12 +98,15 @@ describe("Stolen Money Storytelling", () => {
 		expect(result.story).toMatch(/\d+/); // Contains at least one number
 	});
 
-	it("should have valid coin change (within stolen range or negative)", async () => {
+	it("should have valid coin change within expected bounds", async () => {
 		const result = await generateStolenMoneyStory(1, 10);
 
-		// Total coins change should be within reasonable bounds
-		// Stolen: 200-1000, so even with worst case penalties, should be > -2000
-		expect(result.totalCoinsChange).toBeGreaterThan(-2000);
+		// With single-roll:
+		// - 40% lucky escape: +200 to +1000
+		// - 30% block fine: net gain (stolen - fine), roughly +50 to +900
+		// - 20% win court: +200 to +1000
+		// - 10% lose court: -100 to -300
+		expect(result.totalCoinsChange).toBeGreaterThanOrEqual(-300);
 		expect(result.totalCoinsChange).toBeLessThanOrEqual(1000);
 	});
 
@@ -153,7 +142,7 @@ describe("Stolen Money Storytelling", () => {
 		for (const result of results) {
 			expect(result.story.length).toBeGreaterThan(0);
 			expect(result.xpGranted).toBe(110); // level 10: 10 * 6 + 50
-			expect(result.totalCoinsChange).toBeGreaterThan(-2000);
+			expect(result.totalCoinsChange).toBeGreaterThanOrEqual(-300);
 		}
 
 		// With 10 runs, we should see some variety in outcomes
@@ -173,26 +162,23 @@ describe("Stolen Money Storytelling", () => {
 			}
 		}
 
-		// With 20 runs at 30% chance, very likely to see police at least once
-		// But we won't fail the test if we don't, as it's probabilistic
-		// This is more of a smoke test
+		// With 20 runs at 60% chance (block fine + court scenarios), very likely
 		expect(policeMentioned || true).toBe(true);
 	});
 
-	it("should have positive or negative outcomes", async () => {
+	it("should have mostly positive outcomes (70% chance)", async () => {
 		const results = [];
 
 		// Run multiple times to get different outcomes
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 20; i++) {
 			const result = await generateStolenMoneyStory(i + 1, 10);
 			results.push(result);
 		}
 
 		const positiveOutcomes = results.filter((r) => r.totalCoinsChange > 0);
 
-		// We should see at least some positive outcomes across 10 runs
-		// (70% not caught + some block fine scenarios = high chance)
-		expect(positiveOutcomes.length).toBeGreaterThan(0);
+		// 70% chance of positive outcome, so with 20 runs we should see many
+		expect(positiveOutcomes.length).toBeGreaterThan(5);
 	});
 
 	it("should include coin amounts in the summary", async () => {

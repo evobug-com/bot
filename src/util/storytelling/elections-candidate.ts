@@ -15,24 +15,16 @@ function randomInt(min: number, max: number): number {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomChance(percentage: number): boolean {
-	return Math.random() * 100 < percentage;
-}
-
 /**
- * Elections candidate storytelling
+ * Elections candidate storytelling with single-roll outcome
  *
- * Flow:
- * - Get random votes (1-5000)
- * - If >4000: Become MP, then:
- *   - 60% Successfully pass laws (+3000-8000 bonus)
- *   - 40% Corruption scandal:
- *     - 70% Smooth it over (-2000-5000)
- *     - 30% Go to court (-5000-15000)
- * - If <=4000: Lose election, then:
- *   - 30% Supporters donate (+1000-3000)
- *   - 20% Demand recount (-500, 40% chance to win)
- *   - 50% Accept defeat (nothing)
+ * Story outcomes (single roll at start, 70% positive):
+ * - 35% Win election + pass laws (+300-800)
+ * - 20% Lose + supporters donate (+100-300)
+ * - 15% Lose + demand recount + win recount (+150-350 net)
+ * - 10% Win election + corruption scandal, smooth over (-200-500)
+ * - 10% Win election + corruption scandal, court penalty (-500-1500)
+ * - 10% Lose + accept defeat (0)
  */
 export async function generateElectionsCandidateStory(
 	userId: number,
@@ -57,7 +49,10 @@ export async function generateElectionsCandidateStory(
 		throw xpError;
 	}
 
-	// Step 1: Campaign introduction
+	// SINGLE ROLL - determine outcome at the start
+	const outcome = Math.random() * 100;
+
+	// Campaign introduction (always happens)
 	events.push({
 		description: "🗳️ Rozhodl jsi se kandidovat ve volbách do parlamentu...",
 		coinsChange: 0,
@@ -78,186 +73,232 @@ export async function generateElectionsCandidateStory(
 		coinsChange: 0,
 	});
 
-	// Step 2: Get random votes
-	const votes = randomInt(1, 5000);
-	events.push({
-		description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
-		coinsChange: 0,
-	});
+	if (outcome < 35) {
+		// OUTCOME: Win + pass laws successfully (35%)
+		const votes = randomInt(4001, 5000);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
 
-	// Step 2: Check if won (>4000 votes)
-	if (votes > 4000) {
 		events.push({
 			description: "🎉 **Gratulujeme, stal jsi se poslancem!**",
 			coinsChange: 0,
 		});
 
-		// Step 3: Successfully pass laws vs corruption scandal (60% vs 40%)
-		const successfulLaws = randomChance(60);
+		events.push({
+			description: "📝 Pracuješ na důležitých zákonech...",
+			coinsChange: 0,
+		});
 
-		if (successfulLaws) {
-			// Successfully pass laws - bonus
-			const bonus = randomInt(300, 800);
-			events.push({
-				description: `✅ Úspěšně jsi prosadil důležité zákony. Dostáváš bonus **${bonus}** mincí.`,
-				coinsChange: bonus,
-			});
+		const bonus = randomInt(300, 800);
+		events.push({
+			description: `✅ **Úspěšně jsi prosadil důležité zákony.** Dostáváš bonus **${bonus}** mincí.`,
+			coinsChange: bonus,
+		});
 
-			const [bonusError] = await orpc.users.stats.reward.grant({
-				userId,
-				coins: bonus,
-				xp: 0,
-				activityType: "elections_successful_laws",
-				notes: `Bonus za prosazení zákonů: ${bonus} mincí`,
-			});
+		const [bonusError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: bonus,
+			xp: 0,
+			activityType: "elections_successful_laws",
+			notes: `Bonus za prosazení zákonů: ${bonus} mincí`,
+		});
 
-			if (bonusError) {
-				throw bonusError;
-			}
-
-			totalCoinsChange += bonus;
-		} else {
-			// Corruption scandal
-			events.push({
-				description: "⚠️ **Vypukl korupční skandál!**",
-				coinsChange: 0,
-			});
-
-			// Step 4: Smooth over vs court (70% vs 30%)
-			const smoothOver = randomChance(70);
-
-			if (smoothOver) {
-				// Pay to smooth it over
-				const payoff = randomInt(200, 500);
-				events.push({
-					description: `💰 Uhladil jsi to úplatkem. Zaplatil jsi **${payoff}** mincí.`,
-					coinsChange: -payoff,
-				});
-
-				const [payoffError] = await orpc.users.stats.reward.grant({
-					userId,
-					coins: -payoff,
-					xp: 0,
-					activityType: "elections_corruption_payoff",
-					notes: `Úplatek za uhlazení korupčního skandálu: ${payoff} mincí`,
-				});
-
-				if (payoffError) {
-					throw payoffError;
-				}
-
-				totalCoinsChange -= payoff;
-			} else {
-				// Go to court
-				const courtPenalty = randomInt(500, 1500);
-				events.push({
-					description: `⚖️ Šel jsi k soudu a prohrál. Zaplatil jsi pokutu **${courtPenalty}** mincí.`,
-					coinsChange: -courtPenalty,
-				});
-
-				const [courtError] = await orpc.users.stats.reward.grant({
-					userId,
-					coins: -courtPenalty,
-					xp: 0,
-					activityType: "elections_court_penalty",
-					notes: `Pokuta za korupci: ${courtPenalty} mincí`,
-				});
-
-				if (courtError) {
-					throw courtError;
-				}
-
-				totalCoinsChange -= courtPenalty;
-			}
+		if (bonusError) {
+			throw bonusError;
 		}
-	} else {
-		// Lost election
+
+		totalCoinsChange = bonus;
+	} else if (outcome < 55) {
+		// OUTCOME: Lose + supporters donate (20%)
+		const votes = randomInt(1000, 4000);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
+
 		events.push({
 			description: "😔 Bohužel jsi volby **prohrál**.",
 			coinsChange: 0,
 		});
 
-		// Step 3: Random outcome for losing (30% donation, 20% recount, 50% nothing)
-		const outcome = Math.random() * 100;
+		events.push({
+			description: "📱 Tvoji podporovatelé ti píšou vzkazy podpory...",
+			coinsChange: 0,
+		});
 
-		if (outcome < 30) {
-			// Supporters donate
-			const donation = randomInt(100, 300);
-			events.push({
-				description: `💝 Tvoji podporovatelé ti darovali **${donation}** mincí jako poděkování za kampaň.`,
-				coinsChange: donation,
-			});
+		const donation = randomInt(100, 300);
+		events.push({
+			description: `💝 Tvoji podporovatelé ti darovali **${donation}** mincí jako poděkování za kampaň.`,
+			coinsChange: donation,
+		});
 
-			const [donationError] = await orpc.users.stats.reward.grant({
-				userId,
-				coins: donation,
-				xp: 0,
-				activityType: "elections_supporter_donation",
-				notes: `Dar od podporovatelů: ${donation} mincí`,
-			});
+		const [donationError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: donation,
+			xp: 0,
+			activityType: "elections_supporter_donation",
+			notes: `Dar od podporovatelů: ${donation} mincí`,
+		});
 
-			if (donationError) {
-				throw donationError;
-			}
-
-			totalCoinsChange += donation;
-		} else if (outcome < 50) {
-			// Demand recount
-			const recountCost = 50;
-			events.push({
-				description: `📊 Požádal jsi o přepočítání hlasů. Stálo tě to **${recountCost}** mincí.`,
-				coinsChange: -recountCost,
-			});
-
-			const [recountError] = await orpc.users.stats.reward.grant({
-				userId,
-				coins: -recountCost,
-				xp: 0,
-				activityType: "elections_recount_cost",
-				notes: `Náklady na přepočítání hlasů: ${recountCost} mincí`,
-			});
-
-			if (recountError) {
-				throw recountError;
-			}
-
-			totalCoinsChange -= recountCost;
-
-			// 40% chance to win after recount
-			const winRecount = randomChance(40);
-			if (winRecount) {
-				const recountBonus = randomInt(200, 400);
-				events.push({
-					description: `🎉 **Přepočítání odhalilo chybu - vyhrál jsi!** Dostáváš bonus **${recountBonus}** mincí.`,
-					coinsChange: recountBonus,
-				});
-
-				const [bonusError] = await orpc.users.stats.reward.grant({
-					userId,
-					coins: recountBonus,
-					xp: 0,
-					activityType: "elections_recount_win",
-					notes: `Bonus za výhru po přepočítání: ${recountBonus} mincí`,
-				});
-
-				if (bonusError) {
-					throw bonusError;
-				}
-
-				totalCoinsChange += recountBonus;
-			} else {
-				events.push({
-					description: "😔 Přepočítání potvrdilo prohru. Aspoň jsi to zkusil.",
-					coinsChange: 0,
-				});
-			}
-		} else {
-			// Accept defeat
-			events.push({
-				description: "🤝 Smířil jsi se s prohrou a pogratuloval jsi vítězi.",
-				coinsChange: 0,
-			});
+		if (donationError) {
+			throw donationError;
 		}
+
+		totalCoinsChange = donation;
+	} else if (outcome < 70) {
+		// OUTCOME: Lose + recount + win recount (15%)
+		const votes = randomInt(3800, 4000);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "😔 Bohužel jsi volby **prohrál**.",
+			coinsChange: 0,
+		});
+
+		const recountCost = 50;
+		events.push({
+			description: `📊 Požádal jsi o přepočítání hlasů. Stálo tě to **${recountCost}** mincí.`,
+			coinsChange: -recountCost,
+		});
+
+		events.push({
+			description: "🔍 Volební komise pečlivě přepočítává hlasy...",
+			coinsChange: 0,
+		});
+
+		const recountBonus = randomInt(200, 400);
+		events.push({
+			description: `🎉 **Přepočítání odhalilo chybu - vyhrál jsi!** Dostáváš bonus **${recountBonus}** mincí.`,
+			coinsChange: recountBonus,
+		});
+
+		const netGain = recountBonus - recountCost;
+		const [bonusError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: netGain,
+			xp: 0,
+			activityType: "elections_recount_win",
+			notes: `Výhra po přepočítání: ${recountBonus} - ${recountCost} = ${netGain} mincí`,
+		});
+
+		if (bonusError) {
+			throw bonusError;
+		}
+
+		totalCoinsChange = netGain;
+	} else if (outcome < 80) {
+		// OUTCOME: Win + corruption scandal + smooth over (10%)
+		const votes = randomInt(4001, 5000);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🎉 **Gratulujeme, stal jsi se poslancem!**",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "⚠️ **Vypukl korupční skandál!**",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🤝 Snažíš se situaci urovnat...",
+			coinsChange: 0,
+		});
+
+		const payoff = randomInt(200, 500);
+		events.push({
+			description: `💰 Uhladil jsi to úplatkem. Zaplatil jsi **${payoff}** mincí.`,
+			coinsChange: -payoff,
+		});
+
+		const [payoffError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: -payoff,
+			xp: 0,
+			activityType: "elections_corruption_payoff",
+			notes: `Úplatek za uhlazení korupčního skandálu: ${payoff} mincí`,
+		});
+
+		if (payoffError) {
+			throw payoffError;
+		}
+
+		totalCoinsChange = -payoff;
+	} else if (outcome < 90) {
+		// OUTCOME: Win + corruption scandal + court penalty (10%)
+		const votes = randomInt(4001, 5000);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🎉 **Gratulujeme, stal jsi se poslancem!**",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "⚠️ **Vypukl korupční skandál!**",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "⚖️ Věc se dostává k soudu...",
+			coinsChange: 0,
+		});
+
+		const courtPenalty = randomInt(500, 1500);
+		events.push({
+			description: `⚖️ Šel jsi k soudu a prohrál. Zaplatil jsi pokutu **${courtPenalty}** mincí.`,
+			coinsChange: -courtPenalty,
+		});
+
+		const [courtError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: -courtPenalty,
+			xp: 0,
+			activityType: "elections_court_penalty",
+			notes: `Pokuta za korupci: ${courtPenalty} mincí`,
+		});
+
+		if (courtError) {
+			throw courtError;
+		}
+
+		totalCoinsChange = -courtPenalty;
+	} else {
+		// OUTCOME: Lose + accept defeat (10%)
+		const votes = randomInt(1000, 3500);
+		events.push({
+			description: `📊 Výsledky jsou venku! Získal jsi **${votes}** hlasů.`,
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "😔 Bohužel jsi volby **prohrál**.",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🤝 Smířil jsi se s prohrou a pogratuloval jsi vítězi.",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "💪 Zkušenost tě posílila pro příští volby.",
+			coinsChange: 0,
+		});
+
+		totalCoinsChange = 0;
 	}
 
 	// Build story

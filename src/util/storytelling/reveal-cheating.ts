@@ -15,18 +15,13 @@ function randomInt(min: number, max: number): number {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomChance(percentage: number): boolean {
-	return Math.random() * 100 < percentage;
-}
-
 /**
- * Reveal cheating storytelling
+ * Reveal cheating storytelling with single-roll outcome
  *
- * Flow:
- * - 65% Report to admins (safe, +2000-3000 reward)
- * - 35% Cheater offers bribe:
- *   - 70% Take bribe successfully (+5000-10000, risky)
- *   - 30% Admins catch you (-10000-15000, caught with cheater)
+ * Story outcomes (single roll at start, 70% positive):
+ * - 40% Report to admins - safe, get reward (+200-300)
+ * - 30% Take bribe successfully (+500-1000)
+ * - 30% Take bribe but get caught (-1000-1500)
  */
 export async function generateRevealCheatingStory(
 	userId: number,
@@ -51,6 +46,10 @@ export async function generateRevealCheatingStory(
 		throw xpError;
 	}
 
+	// SINGLE ROLL - determine outcome at the start
+	const outcome = Math.random() * 100;
+
+	// Investigation intro (always happens)
 	events.push({
 		description: "🕵️ Procházíš ekonomické logy a všímáš si neobvyklých aktivit...",
 		coinsChange: 0,
@@ -71,11 +70,8 @@ export async function generateRevealCheatingStory(
 		coinsChange: 0,
 	});
 
-	// Random choice: 65% report, 35% bribe offered
-	const reportToAdmins = randomChance(65);
-
-	if (reportToAdmins) {
-		// Safe choice - report to admins
+	if (outcome < 40) {
+		// OUTCOME: Report to admins - safe choice (40%)
 		events.push({
 			description: "📝 Připravuješ detailní report s důkazy...",
 			coinsChange: 0,
@@ -83,6 +79,11 @@ export async function generateRevealCheatingStory(
 
 		events.push({
 			description: "📨 Odesíláš zprávu administrátorům...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "⏳ Čekáš na jejich reakci...",
 			coinsChange: 0,
 		});
 
@@ -104,9 +105,9 @@ export async function generateRevealCheatingStory(
 			throw rewardError;
 		}
 
-		totalCoinsChange += reward;
-	} else {
-		// Risky choice - cheater offers bribe
+		totalCoinsChange = reward;
+	} else if (outcome < 70) {
+		// OUTCOME: Take bribe successfully (30%)
 		events.push({
 			description: "💬 Podvodník si všiml, že ho sleduješ...",
 			coinsChange: 0,
@@ -123,76 +124,91 @@ export async function generateRevealCheatingStory(
 			coinsChange: 0,
 		});
 
-		// 70% success, 30% caught
-		const takeBribeSuccessfully = randomChance(70);
+		events.push({
+			description: "🤔 Rozhoduješ se přijmout nabídku...",
+			coinsChange: 0,
+		});
 
-		if (takeBribeSuccessfully) {
-			// Successfully take bribe
-			events.push({
-				description: "🤔 Rozhoduješ se přijmout nabídku...",
-				coinsChange: 0,
-			});
+		events.push({
+			description: "💸 Transfer proběhl úspěšně...",
+			coinsChange: 0,
+		});
 
-			events.push({
-				description: "💸 Transfer proběhl úspěšně...",
-				coinsChange: 0,
-			});
+		events.push({
+			description: `🤫 **Vzal jsi úplatek.** Nikdo to neví... zatím. Získáváš **${bribeAmount}** mincí.`,
+			coinsChange: bribeAmount,
+		});
 
-			events.push({
-				description: `🤫 **Vzal jsi úplatek.** Nikdo to neví... zatím. Získáváš **${bribeAmount}** mincí.`,
-				coinsChange: bribeAmount,
-			});
+		const [bribeError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: bribeAmount,
+			xp: 0,
+			activityType: "reveal_cheating_bribe_success",
+			notes: `Úplatek od podvodníka: ${bribeAmount} mincí`,
+		});
 
-			const [bribeError] = await orpc.users.stats.reward.grant({
-				userId,
-				coins: bribeAmount,
-				xp: 0,
-				activityType: "reveal_cheating_bribe_success",
-				notes: `Úplatek od podvodníka: ${bribeAmount} mincí`,
-			});
-
-			if (bribeError) {
-				throw bribeError;
-			}
-
-			totalCoinsChange += bribeAmount;
-		} else {
-			// Caught by admins
-			events.push({
-				description: "👀 Administrátor sledoval vaši konverzaci...",
-				coinsChange: 0,
-			});
-
-			events.push({
-				description: "⚠️ Anti-cheat systém zaznamenal podezřelou transakci!",
-				coinsChange: 0,
-			});
-
-			events.push({
-				description: "🔨 Admin zasahuje...",
-				coinsChange: 0,
-			});
-
-			const penalty = randomInt(1000, 1500);
-			events.push({
-				description: `🚨 **Chyceni při činu!** Ty i podvodník jste dostali dočasný ban na ekonomické příkazy a pokutu **${penalty}** mincí. Korupce se nevyplácí.`,
-				coinsChange: -penalty,
-			});
-
-			const [penaltyError] = await orpc.users.stats.reward.grant({
-				userId,
-				coins: -penalty,
-				xp: 0,
-				activityType: "reveal_cheating_caught",
-				notes: `Pokuta za přijetí úplatku: ${penalty} mincí`,
-			});
-
-			if (penaltyError) {
-				throw penaltyError;
-			}
-
-			totalCoinsChange -= penalty;
+		if (bribeError) {
+			throw bribeError;
 		}
+
+		totalCoinsChange = bribeAmount;
+	} else {
+		// OUTCOME: Take bribe but get caught (30%)
+		events.push({
+			description: "💬 Podvodník si všiml, že ho sleduješ...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "📩 Posílá ti soukromou zprávu...",
+			coinsChange: 0,
+		});
+
+		const bribeAmount = randomInt(500, 1000);
+		events.push({
+			description: `💰 **Nabídka úplatku!** Podvodník ti nabízí **${bribeAmount}** mincí, abys to nikomu neřekl...`,
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🤔 Rozhoduješ se přijmout nabídku...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "👀 Administrátor sledoval vaši konverzaci...",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "⚠️ Anti-cheat systém zaznamenal podezřelou transakci!",
+			coinsChange: 0,
+		});
+
+		events.push({
+			description: "🔨 Admin zasahuje...",
+			coinsChange: 0,
+		});
+
+		const penalty = randomInt(1000, 1500);
+		events.push({
+			description: `🚨 **Chyceni při činu!** Ty i podvodník jste dostali dočasný ban na ekonomické příkazy a pokutu **${penalty}** mincí. Korupce se nevyplácí.`,
+			coinsChange: -penalty,
+		});
+
+		const [penaltyError] = await orpc.users.stats.reward.grant({
+			userId,
+			coins: -penalty,
+			xp: 0,
+			activityType: "reveal_cheating_caught",
+			notes: `Pokuta za přijetí úplatku: ${penalty} mincí`,
+		});
+
+		if (penaltyError) {
+			throw penaltyError;
+		}
+
+		totalCoinsChange = -penalty;
 	}
 
 	// Build story

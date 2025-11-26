@@ -204,10 +204,19 @@ export const data = new ChatInputCommandBuilder()
 					.setDescription("Sort by metric")
 					.setDescriptionLocalizations({ cs: "Seřadit podle metriky" })
 					.addChoices(
-						{ name: "Total Value", value: "total_value" },
-						{ name: "Total Profit", value: "profit" },
-						{ name: "ROI", value: "roi" },
+						{ name: "Celkový zisk", value: "totalProfit" },
+						{ name: "Úspěšnost (%)", value: "profitPercent" },
+						{ name: "Hodnota portfolia", value: "totalValue" },
 					),
+			)
+			.addIntegerOptions((option) =>
+				option
+					.setName("limit")
+					.setNameLocalizations({ cs: "počet" })
+					.setDescription("Number of users to show (default: 10)")
+					.setDescriptionLocalizations({ cs: "Počet uživatelů (výchozí: 10)" })
+					.setMinValue(5)
+					.setMaxValue(25),
 			),
 	)
 	// Help subcommand
@@ -856,13 +865,122 @@ async function handleLeaderboard(
 ): Promise<void> {
 	await interaction.deferReply();
 
-	// Get all portfolios and calculate metrics
-	// Note: This is a simplified implementation. In production, you'd want a dedicated API endpoint
-	const errorEmbed = createInfoEmbed(
-		"Momentálně nedostupné",
-		"Investiční žebříček bude brzy k dispozici!",
-	).setFooter(createInvestmentHelpFooter());
-	await interaction.editReply({ embeds: [errorEmbed] });
+	const metric = (interaction.options.getString("metric") || "totalProfit") as
+		| "totalProfit"
+		| "profitPercent"
+		| "totalValue";
+	const limit = interaction.options.getInteger("limit") || 10;
+
+	// Call the new investment leaderboard API
+	const [error, leaderboard] = await orpc.users.investments.leaderboard({
+		metric,
+		limit,
+	});
+
+	if (error) {
+		console.error("Error fetching investment leaderboard:", error);
+		const errorEmbed = createErrorEmbed(
+			"Chyba",
+			"Nepodařilo se načíst investiční žebříček. Zkuste to prosím později.",
+		);
+		await interaction.editReply({ embeds: [errorEmbed] });
+		return;
+	}
+
+	if (leaderboard.length === 0) {
+		const embed = createInvestmentEmbed("Investiční žebříček")
+			.setDescription("Zatím nikdo neinvestoval! Buď první a použij `/invest buy`.")
+			.setFooter(createInvestmentHelpFooter());
+		await interaction.editReply({ embeds: [embed] });
+		return;
+	}
+
+	// Metric labels and formatters
+	const metricConfig = {
+		totalProfit: {
+			label: "Celkový zisk",
+			emoji: "💰",
+			formatValue: (entry: typeof leaderboard[number]) => {
+				const sign = entry.totalProfit >= 0 ? "+" : "";
+				const emoji = entry.totalProfit >= 0 ? "🟢" : "🔴";
+				return `${emoji} ${sign}${entry.totalProfit.toLocaleString()} mincí`;
+			},
+		},
+		profitPercent: {
+			label: "Úspěšnost (%)",
+			emoji: "📈",
+			formatValue: (entry: typeof leaderboard[number]) => {
+				const sign = entry.profitPercent >= 0 ? "+" : "";
+				const emoji = entry.profitPercent >= 0 ? "🟢" : "🔴";
+				return `${emoji} ${sign}${entry.profitPercent.toFixed(2)}%`;
+			},
+		},
+		totalValue: {
+			label: "Hodnota portfolia",
+			emoji: "💎",
+			formatValue: (entry: typeof leaderboard[number]) => {
+				return `💎 ${entry.currentValue.toLocaleString()} mincí`;
+			},
+		},
+	};
+
+	const config = metricConfig[metric];
+
+	// Build leaderboard fields
+	const fields = await Promise.all(
+		leaderboard.map(async (entry) => {
+			const medal = entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : `#${entry.rank}`;
+
+			// Get display name from Discord
+			let displayName: string;
+			if (entry.user.discordId) {
+				try {
+					const discordUser = await interaction.client.users.fetch(entry.user.discordId);
+					displayName = discordUser.username;
+					if (entry.user.discordId === interaction.user.id) {
+						displayName = `**${displayName}** (Vy)`;
+					}
+				} catch {
+					displayName = entry.user.username || entry.user.guildedId || "Neznámý";
+				}
+			} else {
+				displayName = entry.user.username || entry.user.guildedId || "Neznámý";
+			}
+
+			const mainValue = config.formatValue(entry);
+			const subInfo = `Investováno: ${entry.totalInvested.toLocaleString()} | Hodnota: ${entry.currentValue.toLocaleString()}`;
+
+			return {
+				name: `${medal} ${displayName}`,
+				value: `${mainValue}\n${subInfo}`,
+				inline: false,
+			};
+		}),
+	);
+
+	const embed = createInvestmentEmbed(`Investiční žebříček - ${config.label}`)
+		.addFields(
+			{
+				name: `${config.emoji} Metrika`,
+				value: config.label,
+				inline: true,
+			},
+			{
+				name: "🔢 Zobrazeno",
+				value: `${leaderboard.length} investorů`,
+				inline: true,
+			},
+			{
+				name: "",
+				value: "",
+				inline: false,
+			},
+		)
+		.addFields(fields)
+		.setFooter(createInvestmentHelpFooter())
+		.setTimestamp();
+
+	await interaction.editReply({ embeds: [embed] });
 }
 
 /**
@@ -1017,11 +1135,6 @@ async function handleSync(
 		.setFooter({ text: `Voláno uživatelem ${interaction.user.tag}` });
 
 	await interaction.editReply({ embeds: [embed] });
-}
-
-// Helper to create info embed
-function createInfoEmbed(title: string, description: string) {
-	return createInvestmentEmbed(title).setDescription(description);
 }
 
 // Helper to create footer with help suggestion

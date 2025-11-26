@@ -8,12 +8,12 @@ const METRICS: Record<string, MetricConfig> = {
 	coins: {
 		emoji: "🪙",
 		label: "Mince",
-		formatValue: (value) => `🪙 ${value}`,
+		formatValue: (value) => `🪙 ${value.toLocaleString()}`,
 	},
 	xp: {
 		emoji: "✨",
 		label: "XP",
-		formatValue: (value) => `✨ ${value}`,
+		formatValue: (value) => `✨ ${value.toLocaleString()}`,
 	},
 	level: {
 		emoji: "📊",
@@ -34,6 +34,26 @@ const METRICS: Record<string, MetricConfig> = {
 		emoji: "💼",
 		label: "Počet prací",
 		formatValue: (value) => `💼 ${value}x`,
+	},
+	// Investment metrics
+	investmentvalue: {
+		emoji: "📈",
+		label: "Hodnota investic",
+		formatValue: (value) => `📈 ${value.toLocaleString()} mincí`,
+	},
+	investmentprofit: {
+		emoji: "💰",
+		label: "Zisk z investic",
+		formatValue: (value) => {
+			const sign = value >= 0 ? "+" : "";
+			const emoji = value >= 0 ? "🟢" : "🔴";
+			return `${emoji} ${sign}${value.toLocaleString()} mincí`;
+		},
+	},
+	totalwealth: {
+		emoji: "💎",
+		label: "Celkové bohatství",
+		formatValue: (value) => `💎 ${value.toLocaleString()} mincí`,
 	},
 };
 
@@ -72,13 +92,7 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction }: CommandContext): Promise<void> => {
 	await interaction.deferReply();
 
-	const metric = (interaction.options.getString("metric") || "coins") as
-		| "coins"
-		| "xp"
-		| "level"
-		| "dailystreak"
-		| "maxdailystreak"
-		| "workcount";
+	const metric = (interaction.options.getString("metric") || "coins") as MetricKey;
 	const limit = interaction.options.getInteger("limit") || 10;
 
 	// Get top users
@@ -159,6 +173,17 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 
 	await interaction.editReply({ embeds: [embed] });
 };
+
+type MetricKey =
+	| "coins"
+	| "xp"
+	| "level"
+	| "dailystreak"
+	| "maxdailystreak"
+	| "workcount"
+	| "investmentvalue"
+	| "investmentprofit"
+	| "totalwealth";
 
 type MetricConfig = {
 	emoji: string;

@@ -991,7 +991,8 @@ async function handleHelp(
 ): Promise<void> {
 	await interaction.deferReply();
 
-	const embed = createInvestmentEmbed("Nápověda")
+	// Main help embed
+	const mainEmbed = createInvestmentEmbed("Nápověda - Základy")
 		.setDescription(
 			"**Co jsou investice?**\n" +
 			"Investice ti umožňují použít své mince k nákupu skutečných akcií a kryptoměn. " +
@@ -1055,17 +1056,64 @@ async function handleHelp(
 			{
 				name: "\u200B",
 				value: "**💡 Tipy:**\n" +
-					"• Ceny se aktualizují v **00:00, 04:00, 08:00, 12:00, 16:00, 20:00**\n" +
-					"• Každá transakce má **1.5% poplatek**\n" +
+					"• Ceny se aktualizují v **00:00, 04:00, 08:00, 12:00, 16:00, 20:00** UTC\n" +
+					"• Každá transakce má **1.5% poplatek** (celkem 3% při koupi + prodeji)\n" +
 					"• Diverzifikuj své portfolio pro nižší riziko\n" +
 					"• Sleduj 24h změny před nákupem",
 				inline: false,
 			}
+		);
+
+	// FAQ embed with common questions from users
+	const faqEmbed = createInvestmentEmbed("Často kladené otázky (FAQ)")
+		.setDescription(
+			"**❓ Investoval jsem 100k a mám jen +4k zisk. Proč tak málo?**\n" +
+			"Tvůj zisk závisí na **procentuální změně ceny**, ne na tom kolik jsi investoval. " +
+			"Pokud akcie vyrostla o 3%, tvých 100k ti vydělá 3k (3% ze 100k). " +
+			"Kdybys investoval 1M a akcie vyrostla o 3%, měl bys +30k.\n\n" +
+
+			"**❓ Co znamená procento u mého portfolia?**\n" +
+			"Procento ukazuje **nerealizovaný zisk/ztrátu** = rozdíl mezi tvou nákupní cenou a aktuální cenou.\n" +
+			"• 🟢 +5% = akcie je o 5% dražší než když jsi koupil\n" +
+			"• 🔴 -3% = akcie je o 3% levnější než když jsi koupil\n" +
+			"Zisk/ztráta se \"realizuje\" až když **prodáš**.\n\n" +
+
+			"**❓ Jak vydělám peníze?**\n" +
+			"Jediný způsob jak vydělat: **koupit levně, prodat draze**.\n" +
+			"1. Koupíš akcie za 1000 mincí\n" +
+			"2. Cena akcie vzroste o 10%\n" +
+			"3. Prodáš za 1100 mincí (minus poplatky)\n" +
+			"4. Zisk = ~85 mincí (100 - 15 na poplatcích)\n\n" +
+
+			"**❓ Co je shorting? Můžu ho použít?**\n" +
+			"Shorting = sázka na pokles ceny. **Nepodporujeme to.** " +
+			"Zde můžeš pouze klasicky investovat (long) - kupuješ a doufáš v růst.\n\n" +
+
+			"**❓ Co znamená 24h změna u aktiva?**\n" +
+			"Ukazuje o kolik % se cena změnila za posledních 24 hodin na reálném trhu. " +
+			"**Pozor:** Nesouvisí s tvým ziskem! Tvůj zisk se počítá od tvé nákupní ceny.\n\n" +
+
+			"**❓ Proč se ceny neaktualizují v reálném čase?**\n" +
+			"API pro reálné ceny stojí peníze. Aktualizujeme každé 4 hodiny, což je dostačující " +
+			"pro dlouhodobé investování. Pro day trading (denní obchodování) to není ideální, ale to ani není účel.\n\n" +
+
+			"**❓ Kdy je nejlepší čas koupit/prodat?**\n" +
+			"To nikdo neví! Kdyby to šlo předpovědět, všichni bychom byli miliardáři. " +
+			"Můžeš sledovat trendy, ale **nikdy nevíš jistě** jestli cena půjde nahoru nebo dolů.\n\n" +
+
+			"**❓ Koupil jsem víckrát za různé ceny. Jak se počítá zisk?**\n" +
+			"Systém počítá **průměrnou nákupní cenu** ze všech tvých nákupů:\n" +
+			"• Koupíš 1 akcii za 100 mincí\n" +
+			"• Cena klesne, koupíš další za 80 mincí\n" +
+			"• Cena vzroste, koupíš další za 120 mincí\n" +
+			"• Průměrná cena = (100+80+120)/3 = **100 mincí**\n" +
+			"• Pokud aktuální cena je 110, tvůj zisk je +10% (od průměru)\n" +
+			"Tomuto se říká **DCA** (Dollar-Cost Averaging) - rozložení nákupů v čase."
 		)
 		.setFooter({ text: "Investice nesou riziko ztráty. Investuj zodpovědně!" })
 		.setTimestamp();
 
-	await interaction.editReply({ embeds: [embed] });
+	await interaction.editReply({ embeds: [mainEmbed, faqEmbed] });
 }
 
 /**

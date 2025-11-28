@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import type { APIApplicationCommandOptionChoice, APIApplicationCommandStringOption, APIApplicationCommandIntegerOption } from "discord.js";
 import { data } from "./top";
 
 // Get the serialized command data
@@ -9,8 +10,8 @@ describe("top command", () => {
 		// Get the metric choices from the command data
 		const metricOption = commandData.options?.find(
 			(opt) => opt.name === "metric"
-		);
-		const metricChoices = metricOption?.choices?.map((c) => c.value) ?? [];
+		) as APIApplicationCommandStringOption | undefined;
+		const metricChoices = metricOption?.choices?.map((c: APIApplicationCommandOptionChoice<string>) => c.value) ?? [];
 
 		it("should only contain standard stats metrics (no investment metrics)", () => {
 			const allowedMetrics = [
@@ -72,7 +73,7 @@ describe("top command", () => {
 		it("should have limit option with correct constraints", () => {
 			const limitOption = commandData.options?.find(
 				(opt) => opt.name === "limit"
-			);
+			) as APIApplicationCommandIntegerOption | undefined;
 
 			expect(limitOption).toBeDefined();
 			expect(limitOption?.min_value).toBe(5);

@@ -4,6 +4,7 @@ import { createErrorEmbed, createInfoEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";
 import { createCeskyStatistickyUradEmbed } from "../util/messages/embedBuilders.ts";
 
+// Investment metrics removed - use /invest leaderboard for investment rankings
 const METRICS: Record<string, MetricConfig> = {
 	coins: {
 		emoji: "🪙",
@@ -34,26 +35,6 @@ const METRICS: Record<string, MetricConfig> = {
 		emoji: "💼",
 		label: "Počet prací",
 		formatValue: (value) => `💼 ${value}x`,
-	},
-	// Investment metrics
-	investmentvalue: {
-		emoji: "📈",
-		label: "Hodnota investic",
-		formatValue: (value) => `📈 ${value.toLocaleString()} mincí`,
-	},
-	investmentprofit: {
-		emoji: "💰",
-		label: "Zisk z investic",
-		formatValue: (value) => {
-			const sign = value >= 0 ? "+" : "";
-			const emoji = value >= 0 ? "🟢" : "🔴";
-			return `${emoji} ${sign}${value.toLocaleString()} mincí`;
-		},
-	},
-	totalwealth: {
-		emoji: "💎",
-		label: "Celkové bohatství",
-		formatValue: (value) => `💎 ${value.toLocaleString()} mincí`,
 	},
 };
 
@@ -180,10 +161,7 @@ type MetricKey =
 	| "level"
 	| "dailystreak"
 	| "maxdailystreak"
-	| "workcount"
-	| "investmentvalue"
-	| "investmentprofit"
-	| "totalwealth";
+	| "workcount";
 
 type MetricConfig = {
 	emoji: string;

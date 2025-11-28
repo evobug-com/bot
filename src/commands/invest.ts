@@ -991,129 +991,91 @@ async function handleHelp(
 ): Promise<void> {
 	await interaction.deferReply();
 
-	// Main help embed
-	const mainEmbed = createInvestmentEmbed("Nápověda - Základy")
+	// Embed 1: Quick Start - What beginners need to know first
+	const quickStartEmbed = createInvestmentEmbed("Jak začít investovat")
 		.setDescription(
-			"**Co jsou investice?**\n" +
-			"Investice ti umožňují použít své mince k nákupu skutečných akcií a kryptoměn. " +
-			"Ceny se aktualizují každé **4 hodiny** (6x denně) podle reálného trhu. " +
-			"Můžeš vydělat nebo ztratit mince v závislosti na výkonu trhu.\n\n" +
-			"**💱 Směnný kurz:**\n" +
-			"• 1 mince = 1 CZK\n" +
-			"• 1 USD = 25 CZK (fixní kurz)\n" +
-			"• Ceny z USD trhů jsou automaticky přepočítány\n\n" +
-			"**🔒 Jak fungují investované mince:**\n" +
-			"• Když nakoupíš akcie, mince se **odečtou z tvého zůstatku**\n" +
-			"• Investované mince jsou \"zamčené\" v portfoliu jako akcie\n" +
-			"• **Nemůžeš je utratit** - musíš nejdřív prodat investice\n" +
-			"• Tvůj zůstatek = pouze volné mince (ne hodnota portfolia)\n\n" +
-			"**Účel:** Vyzkoušej si investování s herními mincemi a uč se o důsledcích investičních rozhodnutí v bezpečném prostředí!\n\n" +
-			"**⚠️ Upozornění:** Používáš své skutečné mince z ekonomiky bota. Buď opatrný!"
-		)
-		.addFields(
-			{
-				name: "📋 Dostupné příkazy",
-				value: "\u200B",
-				inline: false,
-			},
-			{
-				name: "💰 /invest buy",
-				value: "Kup akcie nebo kryptoměny za své mince\n*Minimální investice: 100 mincí (ne 100 akcií!)*\n*Příklad: 100 mincí koupí část BTC, ne 100 celých BTC*",
-				inline: false,
-			},
-			{
-				name: "💸 /invest sell",
-				value: "Prodej své akcie nebo kryptoměny\n*Prodej vše, konkrétní množství nebo procenta*",
-				inline: false,
-			},
-			{
-				name: "📊 /invest portfolio",
-				value: "Zobraz své investiční portfolio\n*Uvidíš všechny své pozice a celkový zisk/ztrátu*",
-				inline: false,
-			},
-			{
-				name: "🏢 /invest assets",
-				value: "Seznam dostupných aktiv k investici\n*Filtruj podle typu nebo hledej konkrétní symbol*",
-				inline: false,
-			},
-			{
-				name: "ℹ️ /invest info",
-				value: "Detailní informace o konkrétním aktivu\n*Zobrazí aktuální cenu, 24h změnu a další detaily*",
-				inline: false,
-			},
-			{
-				name: "📜 /invest history",
-				value: "Tvoje historie transakcí\n*Zobraz své nákupy a prodeje s detaily*",
-				inline: false,
-			},
-			{
-				name: "🏆 /invest leaderboard",
-				value: "Investiční žebříček\n*Porovnej se s ostatními investory*",
-				inline: false,
-			},
-		)
-		.addFields(
-			{
-				name: "\u200B",
-				value: "**💡 Tipy:**\n" +
-					"• Ceny se aktualizují v **00:00, 04:00, 08:00, 12:00, 16:00, 20:00** UTC\n" +
-					"• Každá transakce má **1.5% poplatek** (celkem 3% při koupi + prodeji)\n" +
-					"• Diverzifikuj své portfolio pro nižší riziko\n" +
-					"• Sleduj 24h změny před nákupem",
-				inline: false,
-			}
+			"**1.** Podívej se co můžeš koupit: `/invest assets`\n" +
+			"**2.** Vyber si a kup: `/invest buy symbol:AAPL coins:1000`\n" +
+			"   *(AAPL = Apple, BTC = Bitcoin, atd.)*\n" +
+			"**3.** Sleduj své portfolio: `/invest portfolio`\n" +
+			"**4.** Když chceš prodat: `/invest sell symbol:AAPL type:All`\n\n" +
+
+			"**Jak to funguje?**\n" +
+			"Kupuješ skutečné akcie a krypto za herní mince. " +
+			"Ceny se mění podle reálného trhu. " +
+			"Cena vzroste + prodáš = zisk. Cena klesne + prodáš = ztráta.\n\n" +
+
+			"**Důležité:**\n" +
+			"• Min. investice: **100 mincí** (kupuješ za mince, ne za kusy akcií!)\n" +
+			"• Poplatek: **1.5%** za každý nákup i prodej\n" +
+			"• Ceny se aktualizují **každé 4 hodiny**\n" +
+			"• 1 mince = 1 CZK, 1 USD = 25 CZK"
 		);
 
-	// FAQ embed with common questions from users
-	const faqEmbed = createInvestmentEmbed("Často kladené otázky (FAQ)")
+	// Embed 2: Commands - Condensed reference
+	const commandsEmbed = createInvestmentEmbed("Příkazy")
 		.setDescription(
-			"**❓ Investoval jsem 100k a mám jen +4k zisk. Proč tak málo?**\n" +
-			"Tvůj zisk závisí na **procentuální změně ceny**, ne na tom kolik jsi investoval. " +
-			"Pokud akcie vyrostla o 3%, tvých 100k ti vydělá 3k (3% ze 100k). " +
-			"Kdybys investoval 1M a akcie vyrostla o 3%, měl bys +30k.\n\n" +
+			"`/invest buy` - Nakoupit akcie/krypto\n" +
+			"`/invest sell` - Prodat (vše, množství, nebo %)\n" +
+			"`/invest portfolio` - Tvoje pozice a zisk/ztráta\n" +
+			"`/invest assets` - Seznam dostupných aktiv\n" +
+			"`/invest info` - Detail konkrétního aktiva\n" +
+			"`/invest history` - Historie transakcí\n" +
+			"`/invest leaderboard` - Žebříček investorů"
+		);
 
-			"**❓ Co znamená procento u mého portfolia?**\n" +
-			"Procento ukazuje **nerealizovaný zisk/ztrátu** = rozdíl mezi tvou nákupní cenou a aktuální cenou.\n" +
-			"• 🟢 +5% = akcie je o 5% dražší než když jsi koupil\n" +
-			"• 🔴 -3% = akcie je o 3% levnější než když jsi koupil\n" +
-			"Zisk/ztráta se \"realizuje\" až když **prodáš**.\n\n" +
+	// Embed 3: FAQ - Common confusions with real investing terms
+	const faqEmbed = createInvestmentEmbed("Časté dotazy")
+		.setDescription(
+			"**Investoval jsem 100k a mám jen +3k. Proč?**\n" +
+			"Zisk = procentuální změna ceny. Akcie +3% = tvých 100k × 0.03 = 3k.\n\n" +
 
-			"**❓ Jak vydělám peníze?**\n" +
-			"Jediný způsob jak vydělat: **koupit levně, prodat draze**.\n" +
-			"1. Koupíš akcie za 1000 mincí\n" +
-			"2. Cena akcie vzroste o 10%\n" +
-			"3. Prodáš za 1100 mincí (minus poplatky)\n" +
-			"4. Zisk = ~85 mincí (100 - 15 na poplatcích)\n\n" +
+			"**Co znamená % v portfoliu?**\n" +
+			"To je tvůj **unrealized gain/loss** (nerealizovaný zisk/ztráta) - rozdíl mezi nákupní a aktuální cenou.\n" +
+			"🟢 +5% = akcie zdražila o 5% od nákupu\n" +
+			"🔴 -3% = akcie zlevnila o 3% od nákupu\n" +
+			"Zisk se **realizuje** až když prodáš.\n\n" +
 
-			"**❓ Co je shorting? Můžu ho použít?**\n" +
-			"Shorting = sázka na pokles ceny. **Nepodporujeme to.** " +
-			"Zde můžeš pouze klasicky investovat (long) - kupuješ a doufáš v růst.\n\n" +
+			"**Kupoval jsem víckrát za různé ceny. Jak se počítá %?**\n" +
+			"Z **average cost** (průměrné nákupní ceny). Koupíš za 100, pak za 80, pak za 120 = průměr 100. " +
+			"Aktuální cena 110 = +10%. Tomuhle se říká **DCA** (Dollar-Cost Averaging) - rozložení nákupů v čase snižuje riziko.\n\n" +
 
-			"**❓ Co znamená 24h změna u aktiva?**\n" +
-			"Ukazuje o kolik % se cena změnila za posledních 24 hodin na reálném trhu. " +
-			"**Pozor:** Nesouvisí s tvým ziskem! Tvůj zisk se počítá od tvé nákupní ceny.\n\n" +
+			"**Co je 24h změna u aktiva?**\n" +
+			"Změna ceny na trhu za 24h. **Není to tvůj zisk!** Tvůj zisk se počítá od tvé nákupní ceny.\n\n" +
 
-			"**❓ Proč se ceny neaktualizují v reálném čase?**\n" +
-			"API pro reálné ceny stojí peníze. Aktualizujeme každé 4 hodiny, což je dostačující " +
-			"pro dlouhodobé investování. Pro day trading (denní obchodování) to není ideální, ale to ani není účel.\n\n" +
+			"**Můžu shortovat?**\n" +
+			"**Short** = sázka na pokles ceny. Ne, nepodporujeme. Máme pouze **long** pozice - kupuješ a doufáš v růst.\n\n" +
 
-			"**❓ Kdy je nejlepší čas koupit/prodat?**\n" +
-			"To nikdo neví! Kdyby to šlo předpovědět, všichni bychom byli miliardáři. " +
-			"Můžeš sledovat trendy, ale **nikdy nevíš jistě** jestli cena půjde nahoru nebo dolů.\n\n" +
+			"**Kdy je nejlepší koupit/prodat?**\n" +
+			"Nikdo neví. Kdyby šlo předpovědět trh, všichni bychom byli miliardáři. " +
+			"Proto existuje DCA - místo časování trhu nakupuješ pravidelně."
+		);
 
-			"**❓ Koupil jsem víckrát za různé ceny. Jak se počítá zisk?**\n" +
-			"Systém počítá **průměrnou nákupní cenu** ze všech tvých nákupů:\n" +
-			"• Koupíš 1 akcii za 100 mincí\n" +
-			"• Cena klesne, koupíš další za 80 mincí\n" +
-			"• Cena vzroste, koupíš další za 120 mincí\n" +
-			"• Průměrná cena = (100+80+120)/3 = **100 mincí**\n" +
-			"• Pokud aktuální cena je 110, tvůj zisk je +10% (od průměru)\n" +
-			"Tomuto se říká **DCA** (Dollar-Cost Averaging) - rozložení nákupů v čase."
+	// Embed 4: Investing lessons and tips
+	const tipsEmbed = createInvestmentEmbed("Investiční pojmy a tipy")
+		.setDescription(
+			"**Diverzifikace** - Nedávej všechno do jedné akcie. " +
+			"Když jedna padne, ostatní tě zachrání. Rozlož riziko mezi více aktiv.\n\n" +
+
+			"**Volatilita** - Jak moc cena skáče nahoru/dolů. " +
+			"Krypto (BTC, ETH) = vysoká volatilita, velké zisky i ztráty. " +
+			"**Blue chips** = velké stabilní firmy (AAPL, MSFT) - menší výkyvy, menší riziko.\n\n" +
+
+			"**Bull market** 🐂 = trh roste, všichni jsou optimističtí.\n" +
+			"**Bear market** 🐻 = trh padá, pesimismus. Dobří investoři nakupují v bear marketu.\n\n" +
+
+			"**ATH (All-Time High)** - Nejvyšší cena v historii. " +
+			"Pozor na FOMO (Fear Of Missing Out) - nekupuj jen proto, že cena láme rekordy.\n\n" +
+
+			"**HODL** - \"Hold On for Dear Life\" - držet i když trh padá. " +
+			"Panický prodej při poklesu = realizovaná ztráta. Trpělivost se vyplácí.\n\n" +
+
+			"**ROI (Return on Investment)** - Tvůj celkový výnos v %. " +
+			"ROI 50% = z 1000 máš 1500. Sleduj v `/invest portfolio`."
 		)
-		.setFooter({ text: "Investice nesou riziko ztráty. Investuj zodpovědně!" })
-		.setTimestamp();
+		.setFooter({ text: "Investice nesou riziko ztráty. Investuj zodpovědně!" });
 
-	await interaction.editReply({ embeds: [mainEmbed, faqEmbed] });
+	await interaction.editReply({ embeds: [quickStartEmbed, commandsEmbed, faqEmbed, tipsEmbed] });
 }
 
 /**

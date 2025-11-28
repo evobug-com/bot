@@ -17,6 +17,14 @@ import { generateITSupportStory } from "../util/storytelling/it-support.ts";
 import { generateRevealCheatingStory } from "../util/storytelling/reveal-cheating.ts";
 import { generateVideoConferenceStory } from "../util/storytelling/video-conference.ts";
 import { generateChristmasPartyStory } from "../util/storytelling/christmas-party.ts";
+import { generateCoffeeMachineStory } from "../util/storytelling/coffee-machine.ts";
+import { generateJobInterviewStory } from "../util/storytelling/job-interview.ts";
+import { generateServerRoomStory } from "../util/storytelling/server-room.ts";
+import { generateElevatorStuckStory } from "../util/storytelling/elevator-stuck.ts";
+import { generateLunchThiefStory } from "../util/storytelling/lunch-thief.ts";
+import { generateFridayDeployStory } from "../util/storytelling/friday-deploy.ts";
+import { generateClientMeetingStory } from "../util/storytelling/client-meeting.ts";
+import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
 export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
@@ -311,6 +319,38 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			generator: generateChristmasPartyStory,
 			title: "🎄 Příběh vánočního večírku",
 		},
+		"coffee-machine-adventure": {
+			generator: generateCoffeeMachineStory,
+			title: "☕ Příběh kávovaru",
+		},
+		"job-interview-conductor": {
+			generator: generateJobInterviewStory,
+			title: "📋 Příběh pohovoru",
+		},
+		"server-room-adventure": {
+			generator: generateServerRoomStory,
+			title: "🖥️ Příběh serverovny",
+		},
+		"elevator-stuck": {
+			generator: generateElevatorStuckStory,
+			title: "🛗 Příběh výtahu",
+		},
+		"lunch-thief-investigation": {
+			generator: generateLunchThiefStory,
+			title: "🍱 Příběh zloděje obědů",
+		},
+		"friday-deploy-yolo": {
+			generator: generateFridayDeployStory,
+			title: "🚀 Příběh pátečního deploye",
+		},
+		"client-meeting-important": {
+			generator: generateClientMeetingStory,
+			title: "💼 Příběh schůzky s klientem",
+		},
+		"hackathon-participant": {
+			generator: generateHackathonStory,
+			title: "🏆 Příběh hackathonu",
+		},
 	};
 
 	const storytellingConfig = storytellingActivities[activity.id];
@@ -535,5 +575,240 @@ const workActivities = [
 		id: "office-prank",
 		title: "🎉 Kancelářský žertík",
 		activity: "Děláš kolegovi žertík s jeho počítačem... (příběh pokračuje níže)",
+	},
+	{
+		id: "printer-jam",
+		title: "🖨️ Tiskárnový technik",
+		activity: "Strávili jste hodinu opravováním zaseknuté tiskárny. Nakonec jste zjistili, že někdo tam nacpal sendvič.",
+	},
+	{
+		id: "excel-wizard",
+		title: "📊 Excel Čaroděj",
+		activity: "Vytvořili jste v Excelu tak složitou tabulku s makry, že ani vy sami nevíte, jak funguje. Kolegové vás teď uctívají jako boha.",
+	},
+	{
+		id: "parking-lot-drama",
+		title: "🚗 Parkovací diplomacie",
+		activity: "Někdo vám zabral místo na parkování. Po dvouhodinovém vyjednávání jste dosáhli mírové dohody a teď máte nového nejlepšího přítele.",
+	},
+	{
+		id: "email-chain",
+		title: "📧 E-mailový maraton",
+		activity: "Odpověděli jste na e-mail, který měl 47 lidí v kopii. Teď máte ve schránce 200 odpovědí 'Díky!' a 'Souhlasím'.",
+	},
+	{
+		id: "office-plant-care",
+		title: "🌱 Kancelářský zahradník",
+		activity: "Ujali jste se umírající kancelářské rostliny. Po týdnu péče zjistila, že je to plastová květina. Stejně jste na ni hrdí.",
+	},
+	{
+		id: "keyboard-cleaning",
+		title: "⌨️ Archeologický průzkum",
+		activity: "Vyčistili jste klávesnici. Pod klávesami jste našli drobky z roku 2019, tři kancelářské sponky a jeden zub.",
+	},
+	{
+		id: "air-conditioning-war",
+		title: "❄️ Klimatický válečník",
+		activity: "Vyhráli jste bitvu o termostat. Nastavili jste 23°C a teď hlídáte ovladač jako poklad. Kolegové plánují převrat.",
+	},
+	{
+		id: "zoom-background",
+		title: "🏝️ Virtuální cestovatel",
+		activity: "Strávili jste celý den hledáním perfektního pozadí pro videohovory. Nakonec jste zvolili pláž na Bali, i když jste nikdy nebyli dál než v Brně.",
+	},
+	{
+		id: "password-reset",
+		title: "🔐 Bezpečnostní specialista",
+		activity: "Resetovali jste heslo potřetí tento týden. Nové heslo je 'UzSiToZapomatnuZase123!' a napsali jste si ho na lísteček pod klávesnici.",
+	},
+	{
+		id: "standing-desk",
+		title: "🧍 Ergonomický průkopník",
+		activity: "Přesvědčili jste firmu, že potřebujete stojací stůl pro zdraví. Teď u něj stojíte přesně 5 minut denně a zbytek sedíte na židli vedle.",
+	},
+	{
+		id: "slack-status",
+		title: "💬 Statusový umělec",
+		activity: "Strávili jste půl hodiny vybíráním perfektního emoji pro váš Slack status. Zvolili jste 🔥, protože dnes jste prostě on fire.",
+	},
+	{
+		id: "meeting-notes",
+		title: "📝 Zapisovatel legend",
+		activity: "Psali jste zápis ze schůzky. Z dvouhodinového jednání jste vytvořili tři body a jeden z nich je 'další schůzka příští týden'.",
+	},
+	{
+		id: "office-fridge-cleanup",
+		title: "🧊 Ledničkový archeolog",
+		activity: "Vyčistili jste firemní ledničku. Našli jste jogurt z roku 2022, který už měl vlastní ekosystém a zřejmě i volební právo.",
+	},
+	{
+		id: "cable-management",
+		title: "🔌 Kabelový architekt",
+		activity: "Organizovali jste kabely pod stolem. Po třech hodinách vypadají perfektně. Za týden budou zase jako špagety.",
+	},
+	{
+		id: "microwave-incident",
+		title: "💥 Mikrovlnný incident",
+		activity: "Ohřáli jste si oběd v mikrovlnce. Rybí curry teď voní celá kancelář a kolegové vám věnují vražedné pohledy.",
+	},
+	{
+		id: "elevator-pitch",
+		title: "🛗 Výtahový řečník",
+		activity: "Potkali jste CEO ve výtahu a on se zeptal, na čem pracujete. Odpověděli jste 'věci' a vystoupili o tři patra dřív.",
+	},
+	{
+		id: "documentation-writer",
+		title: "📚 Dokumentační hrdina",
+		activity: "Napsali jste dokumentaci k projektu. Je to první dokumentace za 5 let a kolegové se na vás dívají jako na zachránce lidstva.",
+	},
+	{
+		id: "wifi-troubleshooter",
+		title: "📶 Wi-Fi šaman",
+		activity: "Opravili jste Wi-Fi v zasedačce. Tajemství? Restartovali jste router. Teď vás všichni považují za technického génia.",
+	},
+	{
+		id: "birthday-cake",
+		title: "🎂 Oslavenec dne",
+		activity: "Koupili jste dort pro kolegu, který má narozeniny. Snědli jste tři kousky 'na ochutnávku' cestou do práce.",
+	},
+	{
+		id: "desk-neighbor-drama",
+		title: "🎧 Sluchátkový diplomat",
+		activity: "Váš soused u stolu celý den telefonuje nahlas. Nasadili jste sluchátka a teď předstíráte, že pracujete, zatímco posloucháte podcast.",
+	},
+	{
+		id: "office-supplies-heist",
+		title: "🖊️ Zásobovací agent",
+		activity: "Vzali jste si z kanceláře domů pár propisek. A sešívačku. A bločky. A toner. V podstatě jste vykradli sklad.",
+	},
+	{
+		id: "monday-motivation",
+		title: "📅 Pondělní válečník",
+		activity: "Přežili jste pondělí. To je úspěch sám o sobě. Odměnili jste se třetí kávou a pátou návštěvou automatu.",
+	},
+	{
+		id: "friday-countdown",
+		title: "🕐 Páteční odpočítávač",
+		activity: "Je pátek odpoledne. Sledujete hodiny a počítáte minuty do konce pracovní doby. Produktivita: přibližně nula.",
+	},
+	{
+		id: "team-building-survivor",
+		title: "🏕️ Teambuilding veterán",
+		activity: "Přežili jste firemní teambuilding. Hráli jste hry na důvěru a teď víte, že kolegům rozhodně nedůvěřujete.",
+	},
+	{
+		id: "code-review-marathon",
+		title: "👀 Code Review mistr",
+		activity: "Dělali jste code review kolegovi. Napsali jste 47 komentářů, z toho 45 bylo 'přidej mezeru tady'. Jste hrdý strážce kvality.",
+	},
+	{
+		id: "git-merge-conflict",
+		title: "🔀 Merge Conflict válečník",
+		activity: "Řešili jste merge conflict hodinu. Nakonec jste smazali oba soubory a napsali to znovu. Čistý start je nejlepší řešení.",
+	},
+	{
+		id: "production-deployment",
+		title: "🚀 Deploy hrdina",
+		activity: "Deployovali jste na produkci v pátek v 16:59. Všichni kolem křičeli 'NE!', ale vy jste to udělali. A fungovalo to. Tentokrát.",
+	},
+	{
+		id: "standup-meeting",
+		title: "🧍‍♂️ Standup přeživší",
+		activity: "Byli jste na standupě, který trval 45 minut místo 15. Diskutovali jste o úkolu, který jste měli dokončit včera. Dokončíte ho zítra.",
+	},
+	{
+		id: "stackoverflow-hero",
+		title: "🦸 StackOverflow hrdina",
+		activity: "Odpověděli jste na otázku na StackOverflow. Dostali jste -3 body, protože to prý byl duplicitní dotaz z roku 2009.",
+	},
+	{
+		id: "vpn-troubles",
+		title: "🔒 VPN bojovník",
+		activity: "Bojovali jste s VPN půl hodiny. Nakonec jste zjistili, že jste měli Caps Lock zapnutý. Heslo fungovalo celou dobu.",
+	},
+	{
+		id: "legacy-code-archaeologist",
+		title: "🦕 Legacy Code archeolog",
+		activity: "Našli jste v kódu komentář 'TODO: opravit - 2015'. Netkli jste se toho. Některé věci je lepší nechat být.",
+	},
+	{
+		id: "hotfix-hero",
+		title: "🔧 Hotfix záchranář",
+		activity: "Opravili jste kritický bug v produkci. Trvalo to 5 minut. Tři hodiny předtím jste hledali, kde je problém. Klasika.",
+	},
+	{
+		id: "daily-scrum-master",
+		title: "🎭 Scrum Performer",
+		activity: "Na daily standupu jste řekli 'včera jsem pracoval na tom samém, dnes budu pokračovat'. Nikdo se neptal na detaily. Úspěch.",
+	},
+	{
+		id: "jira-ticket-creator",
+		title: "🎫 JIRA Umělec",
+		activity: "Vytvořili jste JIRA ticket. Popis: 'Opravit to'. Priorita: Kritická. Řešení: Nikdy nebude hotovo, ale ticket existuje.",
+	},
+	{
+		id: "docker-container-wrangler",
+		title: "🐳 Docker krotitel",
+		activity: "Spustili jste Docker kontejnery. Po třech pokusech a dvou restartů počítače to konečně běží. Nevíte proč, ale běží to.",
+	},
+	{
+		id: "npm-install-meditation",
+		title: "📦 NPM Install meditace",
+		activity: "Spustili jste npm install a čekali 10 minut. Během čekání jste přemýšleli o smyslu života a závislostí JavaScriptu.",
+	},
+	{
+		id: "regex-wizard",
+		title: "🧙 Regex čaroděj",
+		activity: "Napsali jste regulární výraz. Funguje. Nevíte jak. Nikdy se toho nedotknete, protože by se rozbil. Je to magie.",
+	},
+	{
+		id: "tech-debt-collector",
+		title: "💳 Tech Debt vymahač",
+		activity: "Slíbili jste, že příští sprint opravíte technický dluh. Oba víte, že se to nestane. Ale máte to v backlogu. To se počítá.",
+	},
+	{
+		id: "localhost-works",
+		title: "💻 Localhost fenomén",
+		activity: "'Na mém počítači to funguje' jste řekli třikrát dnes. Kolegové vás nenávidí. Ale máte pravdu. U vás to fakt funguje.",
+	},
+	{
+		id: "coffee-machine-adventure",
+		title: "☕ Kávový dobrodruh",
+		activity: "Pokoušíš se ovládnout nový super-automatický kávovar... (příběh pokračuje níže)",
+	},
+	{
+		id: "job-interview-conductor",
+		title: "📋 Personalista",
+		activity: "Vedeš pohovor s kandidátem na pozici junior developera... (příběh pokračuje níže)",
+	},
+	{
+		id: "server-room-adventure",
+		title: "🖥️ Serverovnový průzkumník",
+		activity: "Vstupuješ do serverovny opravit blikající server... (příběh pokračuje níže)",
+	},
+	{
+		id: "elevator-stuck",
+		title: "🛗 Pasažér výtahu",
+		activity: "Zasekl ses ve výtahu s někým zajímavým... (příběh pokračuje níže)",
+	},
+	{
+		id: "lunch-thief-investigation",
+		title: "🍱 Detektiv obědů",
+		activity: "Někdo ti ukradl oběd z ledničky! Čas na vyšetřování... (příběh pokračuje níže)",
+	},
+	{
+		id: "friday-deploy-yolo",
+		title: "🚀 Páteční deployer",
+		activity: "Je pátek odpoledne a ty mačkáš DEPLOY... (příběh pokračuje níže)",
+	},
+	{
+		id: "client-meeting-important",
+		title: "💼 Account manager",
+		activity: "Máš důležitou schůzku s potenciálním klientem... (příběh pokračuje níže)",
+	},
+	{
+		id: "hackathon-participant",
+		title: "🏆 Hackathonista",
+		activity: "Účastníš se 48hodinového hackathonu... (příběh pokračuje níže)",
 	}
 ];

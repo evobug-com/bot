@@ -4,16 +4,17 @@ import { createErrorEmbed, createInfoEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";
 import { createCeskyStatistickyUradEmbed } from "../util/messages/embedBuilders.ts";
 
+// Investment metrics removed - use /invest leaderboard for investment rankings
 const METRICS: Record<string, MetricConfig> = {
 	coins: {
 		emoji: "🪙",
 		label: "Mince",
-		formatValue: (value) => `🪙 ${value}`,
+		formatValue: (value) => `🪙 ${value.toLocaleString()}`,
 	},
 	xp: {
 		emoji: "✨",
 		label: "XP",
-		formatValue: (value) => `✨ ${value}`,
+		formatValue: (value) => `✨ ${value.toLocaleString()}`,
 	},
 	level: {
 		emoji: "📊",
@@ -72,13 +73,7 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction }: CommandContext): Promise<void> => {
 	await interaction.deferReply();
 
-	const metric = (interaction.options.getString("metric") || "coins") as
-		| "coins"
-		| "xp"
-		| "level"
-		| "dailystreak"
-		| "maxdailystreak"
-		| "workcount";
+	const metric = (interaction.options.getString("metric") || "coins") as MetricKey;
 	const limit = interaction.options.getInteger("limit") || 10;
 
 	// Get top users
@@ -159,6 +154,14 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 
 	await interaction.editReply({ embeds: [embed] });
 };
+
+type MetricKey =
+	| "coins"
+	| "xp"
+	| "level"
+	| "dailystreak"
+	| "maxdailystreak"
+	| "workcount";
 
 type MetricConfig = {
 	emoji: string;

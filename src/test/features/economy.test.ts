@@ -160,9 +160,15 @@ describe("Economy System Tests", () => {
 
 			const workResponse = generateAllVariations(schemas.stats.claimWorkOutput)[0];
 			if (workResponse) {
+				// Set boost values that will trigger boost field display
 				workResponse.claimStats.boostMultiplier = 1.5;
 				workResponse.claimStats.boostCoinsBonus = 50;
 				workResponse.claimStats.boostXpBonus = 25;
+				// Ensure total values are reasonable (must be >= boost values)
+				workResponse.claimStats.earnedTotalCoins = 150;
+				workResponse.claimStats.earnedTotalXp = 75;
+				workResponse.claimStats.baseCoins = 100;
+				workResponse.claimStats.baseXp = 50;
 				mockClient.setCustomResponse("users.stats.work.claim", workResponse);
 			}
 
@@ -172,11 +178,15 @@ describe("Economy System Tests", () => {
 			});
 
 			const response = boostInteraction.getLastResponse();
-			// The structure can be either embed.fields or embed.data.fields
+			// The structure is embed.data.fields where each field has .data.name (EmbedBuilder wrapping)
 			const embed = response.embeds[0];
-			const fields = embed.fields || embed.data?.fields || [];
-			// Fields can have either f.name or f.data.name
-			expect(fields.some((f: { name?: string; data?: { name?: string } }) => (f.name || f.data?.name || "").includes("Boost"))).toBe(true);
+			const fields = embed.data?.fields || embed.fields || [];
+			// Fields have structure { data: { name, value, inline } } from EmbedBuilder
+			const hasBoostField = fields.some((f: { name?: string; data?: { name?: string } }) => {
+				const fieldName = f.data?.name || f.name || "";
+				return fieldName.includes("Boost");
+			});
+			expect(hasBoostField).toBe(true);
 		});
 
 		it("should test all possible work activities", async () => {

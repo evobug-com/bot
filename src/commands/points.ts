@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/client";
 import { ChatInputCommandBuilder, type Guild, MessageFlags } from "discord.js";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed, createProgressBar } from "../util";
+import { getProfitLossEmoji } from "../util/bot/investment-helpers.ts";
 import { type CommandContext, getCommand } from "../util/commands.ts";
 import { createCeskyStatistickyUradEmbed } from "../util/messages/embedBuilders.ts";
 
@@ -24,7 +25,8 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction }: CommandContext) => {
 	const targetUser = interaction.options.getUser("user") || interaction.user;
 
-	const [error, result] = await orpc.users.stats.user({
+	// Use the new endpoint that includes investment data
+	const [error, result] = await orpc.users.stats.userWithInvestments({
 		discordId: targetUser.id,
 	});
 
@@ -41,25 +43,37 @@ export const execute = async ({ interaction }: CommandContext) => {
 		return;
 	}
 
-	const { stats, levelProgress } = result;
+	const { stats, levelProgress, investments, totalWealth } = result;
 
 	// Create progress bar for XP
 	const progressBar = createProgressBar(levelProgress.xpProgress, levelProgress.xpNeeded);
 
+	// State now considers total wealth (coins + investment value)
 	function getState() {
-		if (stats.coinsCount >= 1_000_000) {
+		if (totalWealth >= 1_000_000) {
 			return "Kryptobaron";
 		}
-		if (stats.coinsCount >= 70_000) {
+		if (totalWealth >= 70_000) {
 			return "Pracující";
 		}
-		if (stats.coinsCount >= 30_000) {
+		if (totalWealth >= 30_000) {
 			return "Brigádník";
 		}
-		if (stats.coinsCount >= 10_000) {
+		if (totalWealth >= 10_000) {
 			return "Student";
 		}
 		return "Na dávkách";
+	}
+
+	// Build investment info string
+	const hasInvestments = investments.holdingsCount > 0;
+	let investmentInfo = "";
+	if (hasInvestments) {
+		const profitEmoji = getProfitLossEmoji(investments.totalProfit);
+		const profitSign = investments.totalProfit >= 0 ? "+" : "";
+		investmentInfo = `${investments.currentValue.toLocaleString()} mincí\n${profitEmoji} ${profitSign}${investments.totalProfit.toLocaleString()} (${profitSign}${investments.profitPercent.toFixed(1)}%)`;
+	} else {
+		investmentInfo = "Žádné investice";
 	}
 
 	const embed = createCeskyStatistickyUradEmbed()
@@ -87,11 +101,24 @@ export const execute = async ({ interaction }: CommandContext) => {
 				inline: true,
 			},
 			{
+				name: "📈 Investice",
+				value: investmentInfo,
+				inline: true,
+			},
+			{
+				name: "💎 Celkové bohatství",
+				value: `${totalWealth.toLocaleString()} mincí`,
+				inline: true,
+			},
+		)
+		.addFields(
+			{
 				name: "✨ XP",
 				value: `${stats.xpCount.toLocaleString()}`,
 				inline: true,
 			},
 			{ name: "⭐ Úroveň", value: `${levelProgress.currentLevel}`, inline: true },
+			{ name: "", value: "", inline: true },
 			{
 				name: "📊 Postup na další úroveň",
 				value: `${progressBar}\n${levelProgress.xpProgress}/${levelProgress.xpNeeded} XP`,

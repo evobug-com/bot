@@ -691,15 +691,9 @@ async function handleAssets(
 		}
 	} else {
 		// Regular detailed view with pagination
-		const totalAssets = allAssets.length;
-		const totalPages = Math.ceil(totalAssets / ASSETS_PER_PAGE);
-		const currentPage = Math.min(page, totalPages);
-		const startIndex = (currentPage - 1) * ASSETS_PER_PAGE;
-		const endIndex = startIndex + ASSETS_PER_PAGE;
+		const { pageItems, currentPage, totalPages, totalItems } = paginateItems(allAssets, page, ASSETS_PER_PAGE);
 
-		const pageAssets = allAssets.slice(startIndex, endIndex);
-
-		if (pageAssets.length === 0) {
+		if (pageItems.length === 0) {
 			const embed = createInvestmentEmbed(typeLabel)
 				.setDescription(`**Stránka ${page} neexistuje**\n\nCelkem je k dispozici ${totalPages} ${totalPages === 1 ? "stránka" : totalPages < 5 ? "stránky" : "stránek"}.`)
 				.setFooter(createInvestmentHelpFooter())
@@ -709,7 +703,7 @@ async function handleAssets(
 			return;
 		}
 
-		const assetList = pageAssets
+		const assetList = pageItems
 			.map((item: AssetWithPrice) => {
 				const price = item.currentPrice ? formatPrice(item.currentPrice) : "N/A";
 				const change = item.changePercent24h !== null ? formatPercentageChange(item.changePercent24h) : "";
@@ -720,8 +714,8 @@ async function handleAssets(
 			.join("\n\n");
 
 		const pageInfo = totalPages > 1
-			? `Stránka ${currentPage}/${totalPages} (celkem ${totalAssets} aktiv)`
-			: `Zobrazeno ${totalAssets} aktiv`;
+			? `Stránka ${currentPage}/${totalPages} (celkem ${totalItems} aktiv)`
+			: `Zobrazeno ${totalItems} aktiv`;
 
 		const embed = createInvestmentEmbed(typeLabel)
 			.setDescription(assetList)
@@ -1157,6 +1151,32 @@ function createInvestmentHelpFooter(additionalText?: string): { text: string } {
 		return { text: `${additionalText} • ${helpText}` };
 	}
 	return { text: helpText };
+}
+
+/**
+ * Utility function to paginate an array of items
+ * Returns the slice of items for the requested page along with pagination metadata
+ */
+export function paginateItems<T>(
+	items: T[],
+	page: number,
+	itemsPerPage: number,
+): { pageItems: T[]; currentPage: number; totalPages: number; totalItems: number; startIndex: number; endIndex: number } {
+	const totalItems = items.length;
+	const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+	const currentPage = Math.max(1, Math.min(page, totalPages));
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+	const pageItems = items.slice(startIndex, endIndex);
+
+	return {
+		pageItems,
+		currentPage,
+		totalPages,
+		totalItems,
+		startIndex,
+		endIndex,
+	};
 }
 
 /**

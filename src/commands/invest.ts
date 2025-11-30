@@ -740,7 +740,7 @@ async function handleInfo(
 	// Get all assets and find the one with matching symbol
 	const [error, result] = await orpc.users.investments.assets({
 		assetType: "all",
-		limit: 200, // Get more to increase chance of finding the symbol
+		limit: 100, // Max allowed by API
 		offset: 0,
 	});
 

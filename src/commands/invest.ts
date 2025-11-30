@@ -144,6 +144,14 @@ export const data = new ChatInputCommandBuilder()
 					.setNameLocalizations({ cs: "kompaktní" })
 					.setDescription("Show only symbols in compact format")
 					.setDescriptionLocalizations({ cs: "Zobrazit pouze symboly v kompaktním formátu" }),
+			)
+			.addIntegerOptions((option) =>
+				option
+					.setName("page")
+					.setNameLocalizations({ cs: "stránka" })
+					.setDescription("Page number (15 assets per page)")
+					.setDescriptionLocalizations({ cs: "Číslo stránky (15 aktiv na stránku)" })
+					.setMinValue(1),
 			),
 	)
 	// Info subcommand
@@ -571,8 +579,10 @@ async function handleAssets(
 	const assetType = (interaction.options.getString("type") || "all") as "stock_us" | "stock_intl" | "crypto" | "all";
 	const search = interaction.options.getString("search");
 	const compact = interaction.options.getBoolean("compact") ?? false;
+	const page = interaction.options.getInteger("page") ?? 1;
+	const ASSETS_PER_PAGE = 15;
 
-	// Fetch assets - if compact mode, fetch all assets using pagination
+	// Fetch assets - if compact mode or page specified, fetch all assets using pagination
 	type AssetWithPrice = {
 		asset: {
 			id: number;
@@ -597,38 +607,16 @@ async function handleAssets(
 	};
 	let allAssets: AssetWithPrice[] = [];
 
-	if (compact) {
-		// Fetch ALL assets using pagination
-		let offset = 0;
-		const limit = 100; // Max limit per API request
-		let hasMore = true;
+	// Fetch ALL assets using pagination (needed for compact mode, page navigation, and search)
+	let offset = 0;
+	const limit = 100; // Max limit per API request
+	let hasMore = true;
 
-		while (hasMore) {
-			const [error, result] = await orpc.users.investments.assets({
-				assetType,
-				limit,
-				offset,
-			});
-
-			if (error) {
-				console.error("Error fetching assets:", error);
-				const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se načíst aktiva.");
-				await interaction.editReply({ embeds: [errorEmbed] });
-				return;
-			}
-
-			allAssets.push(...result.assets);
-
-			// Check if there are more assets to fetch
-			hasMore = result.assets.length === limit;
-			offset += limit;
-		}
-	} else {
-		// Regular mode: fetch limited assets
+	while (hasMore) {
 		const [error, result] = await orpc.users.investments.assets({
 			assetType,
-			limit: 25,
-			offset: 0,
+			limit,
+			offset,
 		});
 
 		if (error) {
@@ -638,7 +626,11 @@ async function handleAssets(
 			return;
 		}
 
-		allAssets = result.assets;
+		allAssets.push(...result.assets);
+
+		// Check if there are more assets to fetch
+		hasMore = result.assets.length === limit;
+		offset += limit;
 	}
 
 	// Filter by search if provided (search in symbol, name, and description)
@@ -698,9 +690,20 @@ async function handleAssets(
 			await interaction.followUp({ embeds: [followUpEmbed] });
 		}
 	} else {
-		// Regular detailed view (existing behavior)
-		const assetList = allAssets
-			.slice(0, 15)
+		// Regular detailed view with pagination
+		const { pageItems, currentPage, totalPages, totalItems } = paginateItems(allAssets, page, ASSETS_PER_PAGE);
+
+		if (pageItems.length === 0) {
+			const embed = createInvestmentEmbed(typeLabel)
+				.setDescription(`**Stránka ${page} neexistuje**\n\nCelkem je k dispozici ${totalPages} ${totalPages === 1 ? "stránka" : totalPages < 5 ? "stránky" : "stránek"}.`)
+				.setFooter(createInvestmentHelpFooter())
+				.setTimestamp();
+
+			await interaction.editReply({ embeds: [embed] });
+			return;
+		}
+
+		const assetList = pageItems
 			.map((item: AssetWithPrice) => {
 				const price = item.currentPrice ? formatPrice(item.currentPrice) : "N/A";
 				const change = item.changePercent24h !== null ? formatPercentageChange(item.changePercent24h) : "";
@@ -710,9 +713,13 @@ async function handleAssets(
 			})
 			.join("\n\n");
 
+		const pageInfo = totalPages > 1
+			? `Stránka ${currentPage}/${totalPages} (celkem ${totalItems} aktiv)`
+			: `Zobrazeno ${totalItems} aktiv`;
+
 		const embed = createInvestmentEmbed(typeLabel)
 			.setDescription(assetList)
-			.setFooter(createInvestmentHelpFooter(`Zobrazeno ${Math.min(allAssets.length, 15)} aktiv`))
+			.setFooter(createInvestmentHelpFooter(pageInfo))
 			.setTimestamp();
 
 		await interaction.editReply({ embeds: [embed] });
@@ -1154,6 +1161,32 @@ function createInvestmentHelpFooter(additionalText?: string): { text: string } {
 		return { text: `${additionalText} • ${helpText}` };
 	}
 	return { text: helpText };
+}
+
+/**
+ * Utility function to paginate an array of items
+ * Returns the slice of items for the requested page along with pagination metadata
+ */
+export function paginateItems<T>(
+	items: T[],
+	page: number,
+	itemsPerPage: number,
+): { pageItems: T[]; currentPage: number; totalPages: number; totalItems: number; startIndex: number; endIndex: number } {
+	const totalItems = items.length;
+	const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+	const currentPage = Math.max(1, Math.min(page, totalPages));
+	const startIndex = (currentPage - 1) * itemsPerPage;
+	const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+	const pageItems = items.slice(startIndex, endIndex);
+
+	return {
+		pageItems,
+		currentPage,
+		totalPages,
+		totalItems,
+		startIndex,
+		endIndex,
+	};
 }
 
 /**

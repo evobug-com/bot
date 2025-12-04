@@ -100,15 +100,37 @@ export function createAchievementTestSetup(): AchievementTestSetup {
 		user: { id: "test-user-id", username: "TestUser" },
 	});
 
-	// Set up members
+	// Mock user.fetch to return user with primaryGuild data
+	const mockUserFetch = mock().mockImplementation(async () => {
+		return testMember.user;
+	});
+	(testMember.user as any).fetch = mockUserFetch;
+
+	// Set up members - fetch can be called with a discordId string or no args
 	const membersMap = new Map();
 	membersMap.set("test-user-id", testMember);
+	const membersFetchMock = mock().mockImplementation(async (idOrOptions?: string | object) => {
+		if (typeof idOrOptions === "string") {
+			// Called with a specific discordId - return the member if found
+			if (idOrOptions === "test-user-id") {
+				return testMember;
+			}
+			throw new Error("Member not found");
+		}
+		// Called without args or with options - return all members
+		return membersMap;
+	});
 	mockGuild.members = {
 		cache: membersMap,
-		fetch: mock().mockResolvedValue(undefined),
+		fetch: membersFetchMock,
 	};
 
-	// Set up premium subscriber role (booster role) with members
+	// Set up default response for getAllDiscordIds
+	orpcMock.setCustomResponse("users.getAllDiscordIds", [
+		{ id: 123, discordId: "test-user-id" },
+	]);
+
+	// Set up premium subscriber role (booster role) with members - kept for backwards compatibility
 	const boosterMembersMap = new Map();
 	boosterMembersMap.set("test-user-id", testMember);
 	const premiumSubscriberRole = {

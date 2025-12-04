@@ -140,7 +140,7 @@ describe("VirtualVoiceChannels Privacy Feature", () => {
 
 	describe("Error Handling", () => {
 		it("should handle DM send failures gracefully", async () => {
-			const mockSend = mock(async () => {
+			const mockSend = mock(async (_options: unknown) => {
 				throw new Error("Cannot send messages to this user");
 			});
 
@@ -173,9 +173,9 @@ describe("VirtualVoiceChannels Privacy Feature", () => {
 
 	describe("Ownership Verification Logic", () => {
 		it("should compare user ID with owner ID for ownership check", () => {
-			const ownerId = "user-123";
-			const requestingUserId = "user-123";
-			const differentUserId = "user-456";
+			const ownerId: string = "user-123";
+			const requestingUserId: string = "user-123";
+			const differentUserId: string = "user-456";
 
 			expect(ownerId === requestingUserId).toBe(true);
 			expect(ownerId === differentUserId).toBe(false);
@@ -236,7 +236,7 @@ describe("VirtualVoiceChannels Privacy Feature", () => {
 			// Mock permission overwrite with ViewChannel not denied
 			const mockOverwrite = {
 				deny: {
-					has: () => false,
+					has: (_perm: unknown) => false,
 				},
 			};
 

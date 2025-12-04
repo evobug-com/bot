@@ -17,15 +17,21 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
+	ActionRowBuilder,
 	type BaseChannel,
 	ChannelType,
 	type Client,
 	type Collection,
 	Events,
 	type Guild,
+	type GuildMember,
+	type Interaction,
+	MessageFlags,
 	type OverwriteResolvable,
 	OverwriteType,
 	PermissionFlagsBits,
+	PrimaryButtonBuilder,
+	SecondaryButtonBuilder,
 	type VoiceChannel,
 	type VoiceState,
 } from "discord.js";
@@ -91,6 +97,7 @@ export const handleVirtualVoiceChannels = async (client: Client<true>) => {
 	await loadExistingChannels(client);
 	client.on(Events.VoiceStateUpdate, handleVoiceStateUpdate);
 	client.on(Events.ChannelUpdate, handleChannelUpdate);
+	client.on(Events.InteractionCreate, handleVoiceButtonInteraction);
 };
 
 /**
@@ -487,6 +494,9 @@ async function createVirtualVoiceChannel(state: VoiceState) {
 		await member.voice.setChannel(virtualChannel);
 
 		log("info", `Created virtual voice channel: ${channelName}`);
+
+		// Send DM with privacy control buttons
+		await sendPrivacyControlsDM(member, virtualChannel);
 	} catch (error) {
 		log("error", "Failed to create virtual voice channel:", error);
 	}
@@ -653,6 +663,258 @@ async function deleteVirtualVoiceChannel(channel: VoiceChannel) {
 		log("error", "Failed to delete virtual voice channel:", error);
 	}
 }
+
+// ============================================================================
+// Privacy Controls DM
+// ============================================================================
+
+/**
+ * Send a DM to the user with privacy control buttons for their new channel
+ *
+ * @param member - Guild member who created the channel
+ * @param channel - The created voice channel
+ */
+async function sendPrivacyControlsDM(member: GuildMember, channel: VoiceChannel): Promise<void> {
+	try {
+		const privateButton = new PrimaryButtonBuilder()
+			.setCustomId(`voice_private_${channel.id}`)
+			.setLabel("Soukromý")
+			.setEmoji({ name: "🔒" });
+
+		const publicButton = new SecondaryButtonBuilder()
+			.setCustomId(`voice_public_${channel.id}`)
+			.setLabel("Veřejný")
+			.setEmoji({ name: "🔓" });
+
+		const row = new ActionRowBuilder().addComponents(privateButton, publicButton);
+
+		await member.send({
+			content: [
+				`Vytvořil jsi hlasový kanál **${channel.name}**!`,
+				"",
+				"Použij tlačítka níže nebo příkazy:",
+				"• `/voice private` - Skrýt kanál (pouze ty ho uvidíš)",
+				"• `/voice public` - Zviditelnit kanál (ověření uživatelé ho uvidí)",
+				"• `/voice invite @user` - Pozvat uživatele do soukromého kanálu",
+				"• `/voice kick @user` - Vyhodit uživatele z kanálu",
+			].join("\n"),
+			components: [row.toJSON()],
+		});
+	} catch {
+		// User has DMs disabled - that's fine, they can use slash commands
+		log("debug", `Could not send DM to ${member.user.username} (DMs disabled)`);
+	}
+}
+
+// ============================================================================
+// Button Interaction Handler
+// ============================================================================
+
+/**
+ * Handle button interactions for voice channel privacy controls
+ *
+ * Button custom IDs:
+ * - voice_private_{channelId} - Make channel private
+ * - voice_public_{channelId} - Make channel public
+ *
+ * @param interaction - Discord interaction
+ */
+async function handleVoiceButtonInteraction(interaction: Interaction): Promise<void> {
+	if (!interaction.isButton()) return;
+	if (!interaction.customId.startsWith("voice_")) return;
+
+	const parts = interaction.customId.split("_");
+	if (parts.length < 3) return;
+
+	const action = parts[1];
+	const channelId = parts[2];
+
+	if (!channelId || !interaction.guildId) {
+		await interaction.reply({
+			content: "❌ Neplatná interakce.",
+			flags: MessageFlags.Ephemeral,
+		});
+		return;
+	}
+
+	// Get the channel
+	const channel = interaction.client.channels.cache.get(channelId);
+
+	if (!channel || !channel.isVoiceBased()) {
+		await interaction.reply({
+			content: "❌ Kanál už neexistuje.",
+			flags: MessageFlags.Ephemeral,
+		});
+		return;
+	}
+
+	// Verify ownership
+	const ownerId = getChannelOwner(interaction.guildId, channelId);
+	if (ownerId !== interaction.user.id) {
+		await interaction.reply({
+			content: "❌ Nejsi vlastníkem tohoto kanálu.",
+			flags: MessageFlags.Ephemeral,
+		});
+		return;
+	}
+
+	const voiceChannel = channel as VoiceChannel;
+
+	try {
+		if (action === "private") {
+			await makeChannelPrivate(voiceChannel);
+			await interaction.reply({
+				content: "🔒 Kanál je nyní soukromý. Ostatní ověření uživatelé ho nevidí.",
+				flags: MessageFlags.Ephemeral,
+			});
+		} else if (action === "public") {
+			await makeChannelPublic(voiceChannel);
+			await interaction.reply({
+				content: "🔓 Kanál je nyní veřejný. Všichni ověření uživatelé ho vidí.",
+				flags: MessageFlags.Ephemeral,
+			});
+		}
+	} catch (error) {
+		log("error", "Failed to handle voice button interaction:", error);
+		await interaction.reply({
+			content: "❌ Něco se pokazilo. Zkus to prosím znovu.",
+			flags: MessageFlags.Ephemeral,
+		});
+	}
+}
+
+// ============================================================================
+// Privacy Control Functions
+// ============================================================================
+
+/**
+ * Get the owner ID of a virtual voice channel
+ *
+ * @param guildId - Guild ID containing the channel
+ * @param channelId - Channel ID to check
+ * @returns Owner user ID or null if not a virtual voice channel
+ */
+export function getChannelOwner(guildId: string, channelId: string): string | null {
+	const guildChannels = virtualVoiceChannelsByGuild.get(guildId);
+	if (!guildChannels) return null;
+
+	const channelData = guildChannels.get(channelId);
+	return channelData?.ownerId ?? null;
+}
+
+/**
+ * Check if a virtual voice channel is private (VERIFIED role cannot view)
+ *
+ * @param channel - Voice channel to check
+ * @returns True if the channel is private
+ */
+export async function isChannelPrivate(channel: VoiceChannel): Promise<boolean> {
+	const verifiedRole = await RoleManager.getRole(channel.guild, "VERIFIED");
+	if (!verifiedRole) return false;
+
+	const overwrite = channel.permissionOverwrites.cache.get(verifiedRole.id);
+	if (!overwrite) return true; // No overwrite = private (only @everyone deny exists)
+
+	// Check if ViewChannel is explicitly denied
+	return overwrite.deny.has(PermissionFlagsBits.ViewChannel);
+}
+
+/**
+ * Make a virtual voice channel private (deny VERIFIED role access)
+ *
+ * @param channel - Voice channel to make private
+ */
+export async function makeChannelPrivate(channel: VoiceChannel): Promise<void> {
+	const verifiedRole = await RoleManager.getRole(channel.guild, "VERIFIED");
+	if (!verifiedRole) {
+		throw new Error("Verified role not found");
+	}
+
+	await channel.permissionOverwrites.edit(verifiedRole.id, {
+		ViewChannel: false,
+		Connect: false,
+	});
+
+	log("info", `Made channel private: ${channel.name}`);
+}
+
+/**
+ * Make a virtual voice channel public (allow VERIFIED role access)
+ *
+ * @param channel - Voice channel to make public
+ */
+export async function makeChannelPublic(channel: VoiceChannel): Promise<void> {
+	const verifiedRole = await RoleManager.getRole(channel.guild, "VERIFIED");
+	if (!verifiedRole) {
+		throw new Error("Verified role not found");
+	}
+
+	await channel.permissionOverwrites.edit(verifiedRole.id, {
+		ViewChannel: true,
+		Connect: true,
+		Stream: true,
+		Speak: true,
+	});
+
+	log("info", `Made channel public: ${channel.name}`);
+}
+
+/**
+ * Invite a user to a private virtual voice channel
+ *
+ * @param channel - Voice channel to invite to
+ * @param userId - User ID to invite
+ */
+export async function inviteUserToChannel(channel: VoiceChannel, userId: string): Promise<void> {
+	await channel.permissionOverwrites.edit(userId, {
+		ViewChannel: true,
+		Connect: true,
+		Stream: true,
+		Speak: true,
+	});
+
+	log("info", `Invited user ${userId} to channel: ${channel.name}`);
+}
+
+/**
+ * Kick a user from a virtual voice channel (move them out)
+ *
+ * @param channel - Voice channel to kick from
+ * @param member - Guild member to kick
+ */
+export async function kickUserFromChannel(
+	channel: VoiceChannel,
+	member: { voice: { setChannel: (channel: null) => Promise<unknown> }; id: string },
+): Promise<void> {
+	// Move user out of the channel
+	await member.voice.setChannel(null);
+
+	// Remove their permission overwrite if they had one (from invite)
+	const overwrite = channel.permissionOverwrites.cache.get(member.id);
+	if (overwrite) {
+		await channel.permissionOverwrites.delete(member.id);
+	}
+
+	log("info", `Kicked user ${member.id} from channel: ${channel.name}`);
+}
+
+/**
+ * Check if a channel is a virtual voice channel
+ *
+ * @param guildId - Guild ID containing the channel
+ * @param channelId - Channel ID to check
+ * @returns True if the channel is a virtual voice channel
+ */
+export function isVirtualVoiceChannel(guildId: string, channelId: string): boolean {
+	const guildChannels = virtualVoiceChannelsByGuild.get(guildId);
+	if (!guildChannels) return false;
+
+	return guildChannels.has(channelId);
+}
+
+// ============================================================================
+// Interfaces
+// ============================================================================
 
 /**
  * Data structure for tracking virtual voice channels

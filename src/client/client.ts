@@ -6,7 +6,7 @@ import type { router } from "../../../api/src/contract/router.ts";
 import { reportError } from "../util";
 
 const link = new RPCLink({
-	url: "http://localhost:3001",
+	url: process.env.ORPC_API_URL || "http://localhost:3001",
 });
 
 const client: RouterClient<typeof router> = createORPCClient(link);

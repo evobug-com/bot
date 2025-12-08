@@ -25,11 +25,40 @@ import { generateLunchThiefStory } from "../util/storytelling/lunch-thief.ts";
 import { generateFridayDeployStory } from "../util/storytelling/friday-deploy.ts";
 import { generateClientMeetingStory } from "../util/storytelling/client-meeting.ts";
 import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
+
+// IDs of activities that have story follow-ups
+const storyActivityIds = new Set([
+	"stolen-money",
+	"elections-candidate",
+	"office-prank",
+	"it-support",
+	"network-engineer",
+	"reveal-cheating",
+	"video-conference",
+	"christmas-party",
+	"coffee-machine-adventure",
+	"job-interview-conductor",
+	"server-room-adventure",
+	"elevator-stuck",
+	"lunch-thief-investigation",
+	"friday-deploy-yolo",
+	"client-meeting-important",
+	"hackathon-participant",
+]);
+
 export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
 	.setDescription("Work to earn XP and coins")
-	.setDescriptionLocalizations({ cs: "Pracujte a vydělávejte XP a mince" });
+	.setDescriptionLocalizations({ cs: "Pracujte a vydělávejte XP a mince" })
+	.addBooleanOptions((option) =>
+		option
+			.setName("story")
+			.setNameLocalizations({ cs: "příběh" })
+			.setDescription("Include story activities with follow-up narratives")
+			.setDescriptionLocalizations({ cs: "Zahrnout příběhové aktivity s pokračujícím vyprávěním" })
+			.setRequired(false)
+	);
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
 	if (interaction.guild) {
 		const commandsRoom = ChannelManager.getChannel(interaction.guild, "COMMANDS");
@@ -146,12 +175,23 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
+	// Get story mode option (default: false - no stories)
+	const storyMode = interaction.options.getBoolean("story") ?? false;
+
+	// Filter activities based on story mode
+	const availableActivities = storyMode
+		? workActivities
+		: workActivities.filter((act) => {
+				const actId = typeof act === "function" ? null : act.id;
+				return actId === null || !storyActivityIds.has(actId);
+		  });
+
 	// Select work activity using crypto for better randomness (bias-free)
 	// Generate a random float between 0 and 1 using crypto
 	const randomBytes = crypto.getRandomValues(new Uint8Array(4));
 	const randomFloat = (randomBytes[0]! * 0x1000000 + randomBytes[1]! * 0x10000 + randomBytes[2]! * 0x100 + randomBytes[3]!) / 0x100000000;
-	const randomIndex = Math.floor(randomFloat * workActivities.length);
-	const _activity = workActivities[randomIndex];
+	const randomIndex = Math.floor(randomFloat * availableActivities.length);
+	const _activity = availableActivities[randomIndex];
 	if (!_activity) {
 		await interaction.editReply({
 			content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",

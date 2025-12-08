@@ -10,12 +10,12 @@ jobs:
 
     steps:
       - name: Checkout bot repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: bot
 
       - name: Checkout API repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: evobug-com/api
           path: api

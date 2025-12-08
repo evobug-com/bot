@@ -676,13 +676,15 @@ async function deleteVirtualVoiceChannel(channel: VoiceChannel) {
  */
 async function sendPrivacyControlsDM(member: GuildMember, channel: VoiceChannel): Promise<void> {
 	try {
+		const guildId = channel.guild.id;
+
 		const privateButton = new PrimaryButtonBuilder()
-			.setCustomId(`voice_private_${channel.id}`)
+			.setCustomId(`voice_private_${guildId}_${channel.id}`)
 			.setLabel("Soukromý")
 			.setEmoji({ name: "🔒" });
 
 		const publicButton = new SecondaryButtonBuilder()
-			.setCustomId(`voice_public_${channel.id}`)
+			.setCustomId(`voice_public_${guildId}_${channel.id}`)
 			.setLabel("Veřejný")
 			.setEmoji({ name: "🔓" });
 
@@ -714,8 +716,8 @@ async function sendPrivacyControlsDM(member: GuildMember, channel: VoiceChannel)
  * Handle button interactions for voice channel privacy controls
  *
  * Button custom IDs:
- * - voice_private_{channelId} - Make channel private
- * - voice_public_{channelId} - Make channel public
+ * - voice_private_{guildId}_{channelId} - Make channel private
+ * - voice_public_{guildId}_{channelId} - Make channel public
  *
  * @param interaction - Discord interaction
  */
@@ -724,12 +726,13 @@ async function handleVoiceButtonInteraction(interaction: Interaction): Promise<v
 	if (!interaction.customId.startsWith("voice_")) return;
 
 	const parts = interaction.customId.split("_");
-	if (parts.length < 3) return;
+	if (parts.length < 4) return;
 
 	const action = parts[1];
-	const channelId = parts[2];
+	const guildId = parts[2];
+	const channelId = parts[3];
 
-	if (!channelId || !interaction.guildId) {
+	if (!channelId || !guildId) {
 		await interaction.reply({
 			content: "❌ Neplatná interakce.",
 			flags: MessageFlags.Ephemeral,
@@ -749,7 +752,7 @@ async function handleVoiceButtonInteraction(interaction: Interaction): Promise<v
 	}
 
 	// Verify ownership
-	const ownerId = getChannelOwner(interaction.guildId, channelId);
+	const ownerId = getChannelOwner(guildId, channelId);
 	if (ownerId !== interaction.user.id) {
 		await interaction.reply({
 			content: "❌ Nejsi vlastníkem tohoto kanálu.",

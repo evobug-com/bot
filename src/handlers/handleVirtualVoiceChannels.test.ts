@@ -11,29 +11,31 @@ import { describe, expect, it, mock } from "bun:test";
 describe("VirtualVoiceChannels Privacy Feature", () => {
 	describe("Button Custom ID Parsing", () => {
 		it("should correctly parse voice_private customId", () => {
-			const customId = "voice_private_123456789";
+			const customId = "voice_private_111111111_123456789";
 			const parts = customId.split("_");
 
-			expect(parts).toHaveLength(3);
+			expect(parts).toHaveLength(4);
 			expect(parts[0]).toBe("voice");
 			expect(parts[1]).toBe("private");
-			expect(parts[2]).toBe("123456789");
+			expect(parts[2]).toBe("111111111");
+			expect(parts[3]).toBe("123456789");
 		});
 
 		it("should correctly parse voice_public customId", () => {
-			const customId = "voice_public_987654321";
+			const customId = "voice_public_222222222_987654321";
 			const parts = customId.split("_");
 
-			expect(parts).toHaveLength(3);
+			expect(parts).toHaveLength(4);
 			expect(parts[0]).toBe("voice");
 			expect(parts[1]).toBe("public");
-			expect(parts[2]).toBe("987654321");
+			expect(parts[2]).toBe("222222222");
+			expect(parts[3]).toBe("987654321");
 		});
 
 		it("should identify voice button customIds", () => {
 			const voiceButtonIds = [
-				"voice_private_123",
-				"voice_public_456",
+				"voice_private_111_123",
+				"voice_public_222_456",
 			];
 
 			const otherButtonIds = [
@@ -52,10 +54,11 @@ describe("VirtualVoiceChannels Privacy Feature", () => {
 		});
 
 		it("should handle long channel IDs", () => {
-			const customId = "voice_private_1234567890123456789";
+			const customId = "voice_private_111111111111111111_1234567890123456789";
 			const parts = customId.split("_");
 
-			expect(parts[2]).toBe("1234567890123456789");
+			expect(parts[2]).toBe("111111111111111111");
+			expect(parts[3]).toBe("1234567890123456789");
 		});
 	});
 

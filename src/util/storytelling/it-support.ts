@@ -173,7 +173,7 @@ export async function generateITSupportStory(
 
 		const penalty = randomInt(800, 1500);
 		events.push({
-			description: `💥 **Pokazil jsi to ještě víc!** ${isNetworkEngineer ? "Celá firma je offline. Všechny servery padly. CEO volá krizovou schůzku" : "Smazal jsi důležitá data kolegi. IT tým musí pracovat přes noc na obnově ze záloh"}. Zaplatil jsi pokutu **${penalty}** mincí.`,
+			description: `💥 **Pokazil jsi to ještě víc!** ${isNetworkEngineer ? "Celá firma je offline. Všechny servery padly. CEO volá krizovou schůzku" : "Smazal jsi důležitá data kolegy. IT tým musí pracovat přes noc na obnově ze záloh"}. Zaplatil jsi pokutu **${penalty}** mincí.`,
 			coinsChange: -penalty,
 		});
 

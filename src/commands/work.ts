@@ -1,6 +1,7 @@
 import {ChatInputCommandBuilder, type GuildMember, MessageFlags} from "discord.js";
 import { orpc } from "../client/client.ts";
 import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
+import { getSecureRandomIndex } from "../utils/random.ts";
 import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-cheat-handler.ts";
 import {
 	addLevelProgressField,
@@ -186,11 +187,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				return actId === null || !storyActivityIds.has(actId);
 		  });
 
-	// Select work activity using crypto for better randomness (bias-free)
-	// Generate a random float between 0 and 1 using crypto
-	const randomBytes = crypto.getRandomValues(new Uint8Array(4));
-	const randomFloat = (randomBytes[0]! * 0x1000000 + randomBytes[1]! * 0x10000 + randomBytes[2]! * 0x100 + randomBytes[3]!) / 0x100000000;
-	const randomIndex = Math.floor(randomFloat * availableActivities.length);
+	// Select work activity using crypto with rejection sampling for unbiased randomness
+	const randomIndex = getSecureRandomIndex(availableActivities.length);
 	const _activity = availableActivities[randomIndex];
 	if (!_activity) {
 		await interaction.editReply({

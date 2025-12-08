@@ -30,7 +30,7 @@ export async function generateAiResponse(
 				"json",
 				"--max-turns",
 				"1",
-				`"${prompt.replace(/"/g, '\\"')}"`,
+				`"${prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`,
 			],
 			{
 				env: { ...process.env },

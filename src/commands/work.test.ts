@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { getSecureRandomIndex } from "../utils/random.ts";
 
 describe("Work command random selection", () => {
 	it("should produce uniform distribution without modulo bias", () => {
@@ -8,11 +9,8 @@ describe("Work command random selection", () => {
 
 		// Simulate the random selection logic from work.ts
 		for (let i = 0; i < iterations; i++) {
-			const randomBytes = crypto.getRandomValues(new Uint8Array(4));
-			const randomFloat =
-				(randomBytes[0]! * 0x1000000 + randomBytes[1]! * 0x10000 + randomBytes[2]! * 0x100 + randomBytes[3]!) /
-				0x100000000;
-			distribution[Math.floor(randomFloat * activitiesCount)]!++;
+			const randomIndex = getSecureRandomIndex(activitiesCount);
+			distribution[randomIndex]!++;
 		}
 
 		// Expected value per bucket
@@ -47,11 +45,7 @@ describe("Work command random selection", () => {
 			const sequence: number[] = [];
 
 			for (let i = 0; i < 4; i++) {
-				const randomBytes = crypto.getRandomValues(new Uint8Array(4));
-				const randomFloat =
-					(randomBytes[0]! * 0x1000000 + randomBytes[1]! * 0x10000 + randomBytes[2]! * 0x100 + randomBytes[3]!) /
-					0x100000000;
-				const randomIndex = Math.floor(randomFloat * activitiesCount);
+				const randomIndex = getSecureRandomIndex(activitiesCount);
 				sequence.push(randomIndex);
 			}
 
@@ -72,11 +66,7 @@ describe("Work command random selection", () => {
 		const iterations = 1000;
 
 		for (let i = 0; i < iterations; i++) {
-			const randomBytes = crypto.getRandomValues(new Uint8Array(4));
-			const randomFloat =
-				(randomBytes[0]! * 0x1000000 + randomBytes[1]! * 0x10000 + randomBytes[2]! * 0x100 + randomBytes[3]!) /
-				0x100000000;
-			const randomIndex = Math.floor(randomFloat * activitiesCount);
+			const randomIndex = getSecureRandomIndex(activitiesCount);
 
 			expect(randomIndex).toBeGreaterThanOrEqual(0);
 			expect(randomIndex).toBeLessThan(activitiesCount);

@@ -9,6 +9,13 @@ import {
 	type TextChannel,
 } from "discord.js";
 
+/** Generate a cryptographically secure random ID for mocks */
+function generateMockId(): string {
+	const array = new Uint8Array(8);
+	crypto.getRandomValues(array);
+	return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export interface MockUserOptions {
 	id?: string;
 	username?: string;
@@ -52,7 +59,7 @@ export class MockUser {
 	tag: string;
 
 	constructor(options: MockUserOptions = {}) {
-		this.id = options.id ?? Math.random().toString(36).substring(2, 15);
+		this.id = options.id ?? generateMockId();
 		this.username = options.username ?? `User${this.id}`;
 		this.discriminator = options.discriminator ?? "0001";
 		this.bot = options.bot ?? false;
@@ -108,7 +115,7 @@ export class MockTextChannel {
 
 	async send(options: any): Promise<any> {
 		return Promise.resolve({
-			id: Math.random().toString(36).substring(2, 15),
+			id: generateMockId(),
 			content: options.content ?? "",
 			embeds: options.embeds ?? [],
 		});
@@ -138,9 +145,9 @@ export class MockGuild {
 	roles: any;
 
 	constructor(options: MockGuildOptions = {}) {
-		this.id = options.id ?? Math.random().toString(36).substring(2, 15);
+		this.id = options.id ?? generateMockId();
 		this.name = options.name ?? `Guild${this.id}`;
-		this.ownerId = options.ownerId ?? Math.random().toString(36).substring(2, 15);
+		this.ownerId = options.ownerId ?? generateMockId();
 
 		const channelsCache = options.channels ?? new Map();
 		this.channels = {
@@ -193,9 +200,9 @@ export class MockChatInputCommandInteraction {
 	private responses: any[] = [];
 
 	constructor(options: MockInteractionOptions = {}) {
-		this.id = Math.random().toString(36).substring(2, 15);
-		this.guildId = options.guildId ?? Math.random().toString(36).substring(2, 15);
-		this.channelId = options.channelId ?? Math.random().toString(36).substring(2, 15);
+		this.id = generateMockId();
+		this.guildId = options.guildId ?? generateMockId();
+		this.channelId = options.channelId ?? generateMockId();
 		this.user = new MockUser(options.user);
 		this.commandName = options.commandName ?? "test";
 
@@ -244,7 +251,7 @@ export class MockChatInputCommandInteraction {
 		}
 		this.responses.push(response);
 		return Promise.resolve({
-			id: Math.random().toString(36).substring(2, 15),
+			id: generateMockId(),
 			...response,
 		});
 	}
@@ -274,7 +281,7 @@ export class MockChatInputCommandInteraction {
 		}
 		this.responses.push(response);
 		return Promise.resolve({
-			id: Math.random().toString(36).substring(2, 15),
+			id: generateMockId(),
 			...response,
 		});
 	}

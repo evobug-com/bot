@@ -221,6 +221,14 @@ process.on('uncaughtException', async (error, origin) => {
 		return;
 	}
 
+	// Ignore harmless discord.js packet parsing error
+	const isDiscordPacketError = error.message?.includes("evaluating 'packet.t'") ||
+		error.message?.includes("evaluating 'packet.d'");
+	if (isDiscordPacketError) {
+		log("warn", "Ignoring harmless discord.js packet error:", error.message);
+		return;
+	}
+
 	log("error", "Uncaught exception:", {
 		message: error.message,
 		name: error.name,

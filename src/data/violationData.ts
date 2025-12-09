@@ -438,6 +438,22 @@ export function getSeverityColor(severity: ViolationSeverity): number {
 // ============================================================================
 
 /**
+ * Check if a violation was issued by AI (system)
+ * EXPORTED FOR TESTING
+ */
+export function isAiDetectedViolation(violation: Violation): boolean {
+	// issuedBy = 0 or null means system/AI
+	if (violation.issuedBy === 0 || violation.issuedBy === null) {
+		return true;
+	}
+	// Also check context for AI-detected marker
+	if (violation.context?.includes("AI-detected")) {
+		return true;
+	}
+	return false;
+}
+
+/**
  * Create a violation notification card for DM
  */
 export function createViolationDMCard(violation: Violation): ContainerBuilder {
@@ -462,13 +478,33 @@ export function createViolationDMCard(violation: Violation): ContainerBuilder {
 
 	const expirationText = violation.expiresAt ? `Vyprší: ${violation.expiresAt.toLocaleDateString("cs-CZ")}` : "Trvalé";
 
-	return new ContainerBuilder()
+	// Check if this was AI-detected
+	const isAiDetected = isAiDetectedViolation(violation);
+
+	const container = new ContainerBuilder()
 		.setAccentColor(getSeverityColor(violation.severity))
 		.addTextDisplayComponents((display) =>
 			display.setContent(
 				`# ⚠️ Porušení pravidel serveru\n\n` + `Obdržel jsi varování za porušení pravidel serveru **Allcom**.`,
 			),
-		)
+		);
+
+	// Add AI detection notice if applicable
+	if (isAiDetected) {
+		container
+			.addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(SeparatorSpacingSize.Small))
+			.addTextDisplayComponents((display) =>
+				display.setContent(
+					`## 🤖 Automatická detekce\n\n` +
+						`Toto porušení bylo detekováno **automaticky pomocí AI**.\n\n` +
+						`Pokud si myslíš, že jde o chybu, můžeš požádat o přezkoumání.\n` +
+						`Moderátoři tvou žádost prověří a v případě omylu porušení zruší.\n\n` +
+						`**Pro odvolání použij příkaz:**\n\`/review violation_id:${violation.id} reason:Tvůj důvod\``,
+				),
+			);
+	}
+
+	container
 		.addSeparatorComponents((separator) => separator.setDivider(true).setSpacing(SeparatorSpacingSize.Small))
 		.addTextDisplayComponents((display) =>
 			display.setContent(
@@ -488,6 +524,8 @@ export function createViolationDMCard(violation: Violation): ContainerBuilder {
 					`💡 **Tip:** Klikni na odkaz výše pro podrobné vysvětlení pravidla.`,
 			),
 		);
+
+	return container;
 }
 
 /**

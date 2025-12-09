@@ -1,4 +1,5 @@
 import { type Client, Events, type Message, type TextChannel, userMention } from "discord.js";
+import { formatPunishmentForAlert, processAutoPunishment } from "../services/autoPunishment/index.ts";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../util/config/channels.ts";
 import { DISCORD_ROLES } from "../util/config/roles.ts";
 import { type ContextMessage, type ModerationContext, type ModerationOptions, moderateMessage } from "../utils/openrouter.ts";
@@ -199,11 +200,18 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 			return;
 		}
 
-		// If message is flagged, notify moderators
+		// If message is flagged, process auto-punishment and notify moderators
 		if (moderationResult.isFlagged) {
 			console.log(
 				`[Message Moderation] Flagged ${isEdit ? "edited " : ""}message from ${message.author.tag} in <#${message.channel.id}>`,
 			);
+
+			// Process auto-punishment
+			const punishmentResult = await processAutoPunishment(message.client as Client<true>, {
+				message,
+				moderationResult,
+				guildId: message.guild.id,
+			});
 
 			// Create the alert message with role mentions
 			const moderatorRoleMentions = [
@@ -212,46 +220,54 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 				`<@&${DISCORD_ROLES.MANAGER.id}>`,
 			];
 
+			// Determine alert color based on punishment status
+			let alertColor = isEdit ? 0xffa500 : 0xff0000;
+			if (punishmentResult.flaggedForReview) {
+				alertColor = 0xff00ff; // Purple for manual review
+			}
+
 			const alertEmbed = {
-				color: isEdit ? 0xffa500 : 0xff0000,
-				title: `⚠️ Potenciálně problematická ${isEdit ? "upravená " : ""}zpráva`,
-				description: `AI Moderátor označil tuto ${isEdit ? "upravenou " : ""}zprávu jako potenciálně problematickou.`,
+				color: alertColor,
+				title: punishmentResult.flaggedForReview
+					? `🔔 VYŽADUJE MANUÁLNÍ PŘEZKOUMÁNÍ ${isEdit ? "(upravená zpráva)" : ""}`
+					: `⚠️ Automaticky potrestáno ${isEdit ? "(upravená zpráva)" : ""}`,
+				description: punishmentResult.flaggedForReview
+					? `AI Moderátor označil tuto zprávu a **vyžaduje manuální přezkoumání** (příliš mnoho porušení).`
+					: `AI Moderátor označil tuto zprávu a automaticky aplikoval trest.`,
 				fields: [
 					{
 						name: "Kategorie porušení",
 						value: moderationResult.categories.length > 0 ? moderationResult.categories.join(", ") : "Nespecifikováno",
 						inline: false,
 					},
+					{
+						name: "Automatický trest",
+						value: formatPunishmentForAlert(punishmentResult),
+						inline: false,
+					},
 				],
 				timestamp: new Date().toISOString(),
 				footer: {
-					text: "AI Moderation System",
+					text: "AI Auto-Punishment System",
 				},
 			};
 
 			if (moderationResult.reason) {
 				alertEmbed.fields.push({
-					name: "Důvod",
+					name: "Důvod AI",
 					value: moderationResult.reason,
 					inline: false,
 				});
 			}
 
-			// Reply directly to the flagged message
-			try {
-				await message.reply({
-					content: `${moderatorRoleMentions.join(" ")} - Automatická kontrola zpráv detekovala potenciální problém`,
-					embeds: [alertEmbed],
-				});
-			} catch (error) {
-				console.error("[Message Moderation] Error replying to message:", error);
-
-				// Fallback: if we can't reply (message deleted, no permissions), send to BOT_LOG channel
+			// Skip reply if message was deleted (HIGH+ severity)
+			if (punishmentResult.messageDeleted) {
+				// Log to BOT_LOG channel since message was deleted
 				const botLogResult = getChannelByConfig(message.guild, DISCORD_CHANNELS.BOT_LOG);
 				if (botLogResult) {
 					const botLogChannel = botLogResult.channel as TextChannel;
 					await botLogChannel.send({
-						content: `${moderatorRoleMentions.join(" ")} - Automatická kontrola zpráv detekovala potenciální problém (nelze odpovědět na původní zprávu)`,
+						content: `${moderatorRoleMentions.join(" ")} - Zpráva byla automaticky smazána a uživatel potrestán`,
 						embeds: [
 							{
 								...alertEmbed,
@@ -267,25 +283,64 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 										inline: true,
 									},
 									{
-										name: "Zpráva",
-										value: message.content.substring(0, 1024),
+										name: "Smazaná zpráva",
+										value: message.content.substring(0, 1024) || "(prázdná)",
 										inline: false,
 									},
 									...alertEmbed.fields,
-									{
-										name: "Odkaz na zprávu",
-										value: `[Přejít na zprávu](${message.url})`,
-										inline: false,
-									},
 								],
 							},
 						],
 					});
 				}
-			}
+			} else {
+				// Reply directly to the flagged message
+				try {
+					await message.reply({
+						content: `${moderatorRoleMentions.join(" ")} - ${punishmentResult.punished ? "Automatický trest byl aplikován" : "Automatická kontrola zpráv detekovala potenciální problém"}`,
+						embeds: [alertEmbed],
+					});
+				} catch (error) {
+					console.error("[Message Moderation] Error replying to message:", error);
 
-			// Optionally, you can also delete the message or timeout the user
-			// For now, we'll just flag it for manual review
+					// Fallback: if we can't reply (message deleted, no permissions), send to BOT_LOG channel
+					const botLogResult = getChannelByConfig(message.guild, DISCORD_CHANNELS.BOT_LOG);
+					if (botLogResult) {
+						const botLogChannel = botLogResult.channel as TextChannel;
+						await botLogChannel.send({
+							content: `${moderatorRoleMentions.join(" ")} - ${punishmentResult.punished ? "Automatický trest byl aplikován" : "Automatická kontrola"} (nelze odpovědět na původní zprávu)`,
+							embeds: [
+								{
+									...alertEmbed,
+									fields: [
+										{
+											name: "Autor",
+											value: `${userMention(message.author.id)} (${message.author.tag})`,
+											inline: true,
+										},
+										{
+											name: "Kanál",
+											value: `<#${message.channel.id}>`,
+											inline: true,
+										},
+										{
+											name: "Zpráva",
+											value: message.content.substring(0, 1024) || "(prázdná)",
+											inline: false,
+										},
+										...alertEmbed.fields,
+										{
+											name: "Odkaz na zprávu",
+											value: `[Přejít na zprávu](${message.url})`,
+											inline: false,
+										},
+									],
+								},
+							],
+						});
+					}
+				}
+			}
 		}
 	} catch (error) {
 		console.error("[Message Moderation] Error moderating message:", error);

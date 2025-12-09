@@ -1,7 +1,84 @@
 import { type Client, Events, type Message, type TextChannel, userMention } from "discord.js";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../util/config/channels.ts";
 import { DISCORD_ROLES } from "../util/config/roles.ts";
-import { moderateMessage } from "../utils/openrouter.ts";
+import { type ContextMessage, type ModerationContext, type ModerationOptions, moderateMessage } from "../utils/openrouter.ts";
+
+// Moderation options - enable reasoning for better accuracy
+const MODERATION_OPTIONS: ModerationOptions = {
+	useReasoning: true,
+	reasoningEffort: "low", // minimal overhead, still improves accuracy
+	excludeReasoning: true, // don't return reasoning tokens, saves cost
+};
+
+// Rolling buffer of last 5 messages per channel for context
+// Simple Map: channelId -> array of {author, content}
+export const channelContextCache = new Map<string, ContextMessage[]>();
+export const MAX_CONTEXT_MESSAGES = 5;
+
+/** Add a message to the channel context cache */
+export function addToContextCache(message: Message): void {
+	const channelId = message.channel.id;
+	const cache = channelContextCache.get(channelId) ?? [];
+
+	cache.push({
+		author: message.author.displayName || message.author.username,
+		content: message.content.substring(0, 500),
+	});
+
+	// Keep only last N messages
+	if (cache.length > MAX_CONTEXT_MESSAGES) {
+		cache.shift();
+	}
+
+	channelContextCache.set(channelId, cache);
+}
+
+/** Get previous messages from cache (excludes the message we just added) */
+export function getPreviousMessages(channelId: string): ContextMessage[] {
+	const cache = channelContextCache.get(channelId);
+	if (!cache || cache.length <= 1) return [];
+
+	// Return all except the last one (which is the current message)
+	return cache.slice(0, -1);
+}
+
+/** Get the referenced message if this is a reply */
+async function getReplyContext(message: Message): Promise<ContextMessage | undefined> {
+	if (!message.reference?.messageId) return undefined;
+
+	try {
+		const channel = message.channel;
+		if (!("messages" in channel)) return undefined;
+
+		const referencedMessage = await channel.messages.fetch(message.reference.messageId);
+		if (!referencedMessage || referencedMessage.author.bot) return undefined;
+
+		return {
+			author: referencedMessage.author.displayName || referencedMessage.author.username,
+			content: referencedMessage.content.substring(0, 500),
+		};
+	} catch {
+		// Message might be deleted - silently ignore
+		return undefined;
+	}
+}
+
+/** Build moderation context for a message */
+async function buildModerationContext(message: Message): Promise<ModerationContext> {
+	const context: ModerationContext = {};
+
+	const previousMessages = getPreviousMessages(message.channel.id);
+	if (previousMessages.length > 0) {
+		context.previousMessages = previousMessages;
+	}
+
+	const replyTo = await getReplyContext(message);
+	if (replyTo) {
+		context.replyTo = replyTo;
+	}
+
+	return context;
+}
 
 // Comprehensive Discord message sanitizer for moderation
 const sanitizeForModeration = (content: string) => {
@@ -85,7 +162,10 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 		return;
 	}
 
-	// Skip messages from moderators and admins
+	// Always add to context cache (even for mods) so we have conversation context
+	addToContextCache(message);
+
+	// Skip messages from moderators and admins for moderation checks
 	const member = message.member;
 	if (member) {
 		// Check if user has MODERATOR, LEAD_MODERATOR, or MANAGER roles
@@ -110,7 +190,9 @@ async function processMessage(message: Message, isEdit = false): Promise<void> {
 	}
 
 	try {
-		const moderationResult = await moderateMessage(sanitizedContent);
+		// Build context from previous messages and reply info
+		const context = await buildModerationContext(message);
+		const moderationResult = await moderateMessage(sanitizedContent, context, MODERATION_OPTIONS);
 
 		// If OpenRouter is not configured or no result, skip
 		if (!moderationResult) {

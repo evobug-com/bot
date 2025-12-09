@@ -21,6 +21,8 @@ describe("top command", () => {
 				"dailystreak",
 				"maxdailystreak",
 				"workcount",
+				"activityweekly",
+				"activitylifetime",
 			];
 
 			// Investment metrics that should NOT be present
@@ -49,6 +51,8 @@ describe("top command", () => {
 				"dailystreak",
 				"maxdailystreak",
 				"workcount",
+				"activityweekly",
+				"activitylifetime",
 			];
 
 			for (const metric of requiredMetrics) {
@@ -56,8 +60,8 @@ describe("top command", () => {
 			}
 		});
 
-		it("should have exactly 6 metric choices", () => {
-			expect(metricChoices).toHaveLength(6);
+		it("should have exactly 8 metric choices", () => {
+			expect(metricChoices).toHaveLength(8);
 		});
 	});
 

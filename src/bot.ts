@@ -1,6 +1,6 @@
 import {Client, Events, GatewayIntentBits, MessageFlags} from "discord.js";
 import { handleAchievements } from "./handlers/handleAchievements.ts";
-import { handleActivityPoints } from "./handlers/handleActivityPoints.ts";
+import { handleActivityPoints, trackCommandUsage } from "./handlers/handleActivityPoints.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
 import { handleChangelog } from "./handlers/handleChangelog.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
@@ -157,6 +157,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			interaction,
 			dbUser: result.user,
 		});
+
+		// Track command usage for activity points (fire and forget, don't block command execution)
+		void trackCommandUsage(interaction.user.id, result.user.id);
 	} catch (error) {
 		log("error", `Error executing command ${interaction.commandName}:`, error);
 

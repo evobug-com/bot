@@ -63,6 +63,9 @@ const reactionDebounce = new Map<string, number>();
 // Thread creation debounce (1 per 5 minutes per user)
 const threadDebounce = new Map<string, number>();
 
+// Command usage debounce (1 per 5 minutes per user)
+const commandDebounce = new Map<string, number>();
+
 /**
  * Get ISO week number and year for a date
  * Week 1 is the week containing January 4th (ISO 8601)
@@ -343,6 +346,32 @@ async function handleThreadCreate(thread: ThreadChannel, newlyCreated: boolean):
 
 	const dbUser = await getDbUser(guild, ownerId);
 	await trackPoints(dbUser.id, "thread_created");
+}
+
+/**
+ * Track activity points for command usage
+ * Can be called from command handlers to award points for using commands
+ * Uses the same 5-minute debounce as messages
+ *
+ * @param discordUserId - Discord user ID
+ * @param dbUserId - Database user ID
+ * @returns true if points were awarded, false if on cooldown
+ */
+export async function trackCommandUsage(discordUserId: string, dbUserId: number): Promise<boolean> {
+	const now = Date.now();
+	const lastCommand = commandDebounce.get(discordUserId);
+
+	// Check cooldown
+	if (lastCommand && now - lastCommand < ACTIVITY_COOLDOWN_MS) {
+		return false;
+	}
+
+	// Update debounce
+	commandDebounce.set(discordUserId, now);
+
+	// Track as message activity (commands count as engagement)
+	await trackPoints(dbUserId, "message");
+	return true;
 }
 
 /**

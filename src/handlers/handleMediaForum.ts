@@ -55,7 +55,32 @@ const config = {
 			description: "přidal fotku jídla",
 		},
 	},
+	/** Title format validation */
+	titleValidation: {
+		/** Pattern: [Title/Game Name] Description (requires non-whitespace in description) */
+		pattern: /^\[.+\]\s*\S.*/,
+		/** Warning message sent when title doesn't match the pattern */
+		warningMessage:
+			"⚠️ **Nesprávný formát titulku**\n\n" +
+			"Tvůj příspěvek nemá správný formát názvu. Prosím, uprav název podle vzoru:\n" +
+			"`[Název hry/Titulku] Popis`\n\n" +
+			"**Příklady:**\n" +
+			"• `[R.E.P.O.] Podívejte se na tohle!`\n" +
+			"• `[Minecraft] Můj epický build`\n" +
+			"• `[GTA V] Funny moment`\n\n" +
+			"Prosím, uprav název svého příspěvku. Díky! 🙏",
+	},
 } as const;
+
+/**
+ * Validates if a thread title matches the required format: [Title/Game Name] Description
+ *
+ * @param title - The thread title to validate
+ * @returns true if the title matches the pattern, false otherwise
+ */
+export function isValidMediaTitle(title: string): boolean {
+	return config.titleValidation.pattern.test(title);
+}
 
 /**
  * Initialize the media forum handler
@@ -153,6 +178,13 @@ async function handleThreadCreate(thread: AnyThreadChannel) {
 			filter: (m) => m.author.id === threadOwner.id,
 			errors: ["time"],
 		});
+
+		// Validate thread title format when a tag is present
+		if (!isValidMediaTitle(thread.name)) {
+			log("info", `Invalid title format for thread: ${thread.name}`);
+			await thread.send(config.titleValidation.warningMessage);
+			// Still continue to send notification, but warn the user
+		}
 
 		// Send notification with Components V2
 		await sendMediaNotification(

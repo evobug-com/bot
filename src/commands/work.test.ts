@@ -19,11 +19,11 @@ function getActivityId(activity: WorkActivity): string | null {
 // story=false → ONLY non-story activities (0% chance of story)
 function filterActivitiesByStoryMode(storyMode: boolean): WorkActivity[] {
 	return storyMode
-		? (workActivities as WorkActivity[]).filter((act) => {
+		? (workActivities as readonly WorkActivity[]).filter((act) => {
 				const actId = getActivityId(act);
 				return actId !== null && storyActivityIds.has(actId);
 		  })
-		: (workActivities as WorkActivity[]).filter((act) => {
+		: (workActivities as readonly WorkActivity[]).filter((act) => {
 				const actId = getActivityId(act);
 				return actId === null || !storyActivityIds.has(actId);
 		  });

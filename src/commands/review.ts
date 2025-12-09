@@ -59,7 +59,7 @@ export const execute = async ({ interaction }: CommandContext) => {
 
 	// Fetch the violation - convert string ID to number
 	const [violationError, violationResponse] = await orpc.moderation.violations.get({
-		violationId: parseInt(violationId, 10),
+		violationId: Number.parseInt(violationId, 10),
 	});
 
 	if (violationError) {

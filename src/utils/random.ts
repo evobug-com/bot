@@ -13,7 +13,7 @@ export function getSecureRandomIndex(length: number): number {
 	let randomValue: number;
 	do {
 		crypto.getRandomValues(array);
-		randomValue = array[0]!;
+		randomValue = array[0] ?? 0;
 	} while (randomValue >= limit);
 	return randomValue % length;
 }

@@ -118,7 +118,7 @@ export class ChannelManager {
 		message: string | MessageCreateOptions | MessagePayload,
 	): Promise<boolean> {
 		try {
-			const channel = await ChannelManager.getTextChannel(guild, channelKey);
+			const channel = ChannelManager.getTextChannel(guild, channelKey);
 			if (!channel) {
 				throw new Error(`Channel ${channelKey} not found or not a text channel`);
 			}

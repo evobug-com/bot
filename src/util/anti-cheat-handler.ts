@@ -115,7 +115,7 @@ export async function checkUserBeforeCommand(
 		}
 
 		return result;
-	} catch (error) {
+	} catch {
 		// Anti-cheat system not available - fail open
 		console.warn("[ANTICHEAT] Anti-cheat system not available, allowing command");
 		return {
@@ -227,7 +227,7 @@ export async function recordCommandCompletion(context: CommandExecutionContext):
 			delta: +1,
 			reason: `Successful ${commandName} command`,
 		});
-	} catch (error) {
+	} catch {
 		// Silently fail if anti-cheat not available
 		// This is expected in test environments
 	}

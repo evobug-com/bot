@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop, @typescript-eslint/promise-function-async -- Tests require sequential execution; generator wrappers return promises */
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { generateElectionsCandidateStory } from "./elections-candidate.ts";
 import { generateOfficePrankStory } from "./office-prank.ts";

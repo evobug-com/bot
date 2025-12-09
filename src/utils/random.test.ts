@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- Test file uses non-null assertions for array index increment */
 import { describe, expect, it } from "bun:test";
 import { getSecureRandomIndex } from "./random.ts";
 
@@ -27,8 +28,7 @@ describe("getSecureRandomIndex", () => {
 		const distribution: number[] = Array(length).fill(0);
 
 		for (let i = 0; i < iterations; i++) {
-			const index = getSecureRandomIndex(length);
-			distribution[index]!++;
+			distribution[getSecureRandomIndex(length)]!++;
 		}
 
 		const expectedPerBucket = iterations / length;

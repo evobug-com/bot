@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/promise-function-async, @typescript-eslint/no-misused-spread, @typescript-eslint/await-thenable -- Test patterns with mocks */
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Guild, GuildBasedChannel, TextChannel, VoiceChannel } from "discord.js";
 import { ChannelType } from "discord.js";
@@ -65,6 +66,7 @@ describe("ChannelManager Core Logic", () => {
 
 		it("should find channel by name when ID doesn't match", () => {
 			// Change channel to have different ID but same name
+			// eslint-disable-next-line @typescript-eslint/no-misused-spread
 			const channelWithNewId = {
 				...mockTextChannel,
 				id: "new-channel-id-12345",
@@ -109,6 +111,7 @@ describe("ChannelManager Core Logic", () => {
 			const message = "Test message";
 			await mockTextChannel.send(message);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockTextChannel.send).toHaveBeenCalledWith(message);
 		});
 
@@ -119,13 +122,14 @@ describe("ChannelManager Core Logic", () => {
 			};
 			await mockTextChannel.send(message);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockTextChannel.send).toHaveBeenCalledWith(message);
 		});
 
 		it("should handle send failures", async () => {
 			mockTextChannel.send = mock(() => Promise.reject(new Error("No permission to send")));
 
-			await expect(mockTextChannel.send("Test")).rejects.toThrow("No permission to send");
+			await expect(Promise.resolve().then(() => mockTextChannel.send("Test"))).rejects.toThrow("No permission to send");
 		});
 	});
 });

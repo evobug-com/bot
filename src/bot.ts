@@ -98,19 +98,18 @@ client.on(Events.Error, async (error) => {
 	});
 
 	// Report critical errors to bot-info channel in all guilds
-	for (const guild of client.guilds.cache.values()) {
-		await reportError(
-			guild,
-			"Discord.js Client Error",
-			error.message,
-			{
-				errorName: error.name,
-				stack: error.stack?.substring(0, 1000), // Limit stack trace length
+	await Promise.all(
+		[...client.guilds.cache.values()].map(async (guild) => {
+			try {
+				await reportError(guild, "Discord.js Client Error", error.message, {
+					errorName: error.name,
+					stack: error.stack?.substring(0, 1000), // Limit stack trace length
+				});
+			} catch (reportErr) {
+				log("error", "Failed to report error to guild:", reportErr);
 			}
-		).catch((reportErr) => {
-			log("error", "Failed to report error to guild:", reportErr);
-		});
-	}
+		})
+	);
 });
 
 // Register commands per each guild and when bot is added to a guild
@@ -142,11 +141,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			// Send error message to user
 			const errorContent = `❌ Nepodařilo se ověřit uživatele: ${result.error}`;
 			if (interaction.deferred || interaction.replied) {
-				await interaction.editReply({ content: errorContent }).catch((err) => {
+				await interaction.editReply({ content: errorContent }).catch((err: unknown) => {
 					log("error", "Failed to send user verification error message:", err);
 				});
 			} else {
-				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral }).catch((err) => {
+				await interaction.reply({ content: errorContent, flags: MessageFlags.Ephemeral }).catch((err: unknown) => {
 					log("error", "Failed to send user verification error message:", err);
 				});
 			}
@@ -202,20 +201,19 @@ process.on('unhandledRejection', async (reason, promise) => {
 
 	// Report to all guilds if client is ready
 	if (client.isReady()) {
-		for (const guild of client.guilds.cache.values()) {
-			await reportError(
-				guild,
-				"Unhandled Promise Rejection",
-				error.message,
-				{
-					errorName: error.name,
-					stack: error.stack?.substring(0, 1000),
-					reason: reasonString.substring(0, 500),
+		await Promise.all(
+			[...client.guilds.cache.values()].map(async (guild) => {
+				try {
+					await reportError(guild, "Unhandled Promise Rejection", error.message, {
+						errorName: error.name,
+						stack: error.stack?.substring(0, 1000),
+						reason: reasonString.substring(0, 500),
+					});
+				} catch (reportErr) {
+					log("error", "Failed to report unhandled rejection to guild:", reportErr);
 				}
-			).catch((reportErr) => {
-				log("error", "Failed to report unhandled rejection to guild:", reportErr);
-			});
-		}
+			})
+		);
 	}
 });
 
@@ -243,20 +241,22 @@ process.on('uncaughtException', async (error, origin) => {
 
 	// Report to all guilds if client is ready
 	if (client.isReady()) {
-		const reportPromises = Array.from(client.guilds.cache.values()).map((guild) =>
-			reportError(
-				guild,
-				"Uncaught Exception",
-				error.message,
-				{
-					errorName: error.name,
-					stack: error.stack?.substring(0, 1000),
-					origin,
-				}
-			).catch((reportErr) => {
+		const reportPromises = Array.from(client.guilds.cache.values()).map(async (guild) => {
+			try {
+				await reportError(
+					guild,
+					"Uncaught Exception",
+					error.message,
+					{
+						errorName: error.name,
+						stack: error.stack?.substring(0, 1000),
+						origin,
+					}
+				);
+			} catch (reportErr) {
 				log("error", "Failed to report uncaught exception to guild:", reportErr);
-			})
-		);
+			}
+		});
 
 		// Wait for all error reports to complete (with timeout)
 		await Promise.race([

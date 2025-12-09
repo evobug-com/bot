@@ -241,7 +241,7 @@ async function handleQuizSelectAnswer(interaction: StringSelectMenuInteraction) 
 		// Parse custom ID: quiz_select_userId_questionIndex
 		const parts = interaction.customId.split("_");
 		const userId = parts[2];
-		const questionIndex = parseInt(parts[3] || "0", 10);
+		const questionIndex = Number.parseInt(parts[3] || "0", 10);
 
 		const session = activeSessions.get(userId || "");
 

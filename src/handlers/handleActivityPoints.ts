@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Sequential processing required for voice channel members */
 /**
  * Activity Points Handler
  *
@@ -426,9 +427,7 @@ async function checkVoiceTime(
 	// Award points for every 10 minutes
 	const intervals = Math.floor(minutesSinceLastCheck / 10);
 	if (intervals >= 1) {
-		for (let i = 0; i < intervals; i++) {
-			await trackPoints(userData.userId, "voice_time");
-		}
+		await Promise.all(Array.from({ length: intervals }, async () => trackPoints(userData.userId, "voice_time")));
 		// Update last checked time
 		userData.lastCheckedAt = new Date(userData.lastCheckedAt.getTime() + intervals * 10 * 60 * 1000);
 	}
@@ -465,6 +464,7 @@ function ensureVoiceIntervalRunning(client: Client<true>): void {
 				continue;
 			}
 
+			// eslint-disable-next-line no-await-in-loop -- Sequential processing for rate limiting
 			await checkVoiceTime(member, userData);
 		}
 	}, 10 * 60 * 1000); // Check every 10 minutes
@@ -480,7 +480,7 @@ export const handleActivityPoints = async (client: Client<true>): Promise<void> 
 	client.on(Events.MessageCreate, handleMessageCreate);
 	client.on(Events.MessageReactionAdd, handleReactionAdd);
 	client.on(Events.ThreadCreate, handleThreadCreate);
-	client.on(Events.VoiceStateUpdate, (oldState, newState) => handleVoiceStateUpdate(oldState, newState, client));
+	client.on(Events.VoiceStateUpdate, async (oldState, newState) => handleVoiceStateUpdate(oldState, newState, client));
 
 	// Initialize voice tracking for users already in voice
 	const guild = client.guilds.cache.first();

@@ -78,9 +78,9 @@ Bot je už **kompletně přepsaný**, takže je **snadné** přidávat novinky. 
 		},
 	] satisfies Array<InteractionReplyOptions>;
 
-	for (let i = 0; i < messages.length; i++) {
-		const message = messages[i] as Required<(typeof messages)[number]>;
-		if (i === 0) await interaction.reply(message);
-		else await interaction.followUp(message);
-	}
+	await messages.reduce(async (prev, message, i) => {
+		await prev;
+		if (i === 0) await interaction.reply(message as Required<typeof message>);
+		else await interaction.followUp(message as Required<typeof message>);
+	}, Promise.resolve());
 };

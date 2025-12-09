@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/promise-function-async -- Mock functions intentionally return promises without async */
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type {
 	ChatInputCommandInteraction,
@@ -26,8 +27,8 @@ describe("Captcha Generation", () => {
 
 						if (match) {
 							const [, a, operator, b] = match;
-							const numA = parseInt(a as string);
-							const numB = parseInt(b as string);
+							const numA = Number.parseInt(a as string);
+							const numB = Number.parseInt(b as string);
 
 							// Easy mode should have numbers 1-10
 							expect(numA).toBeGreaterThanOrEqual(1);
@@ -61,8 +62,8 @@ describe("Captcha Generation", () => {
 
 						if (match) {
 							const [, a, , b] = match;
-							const numA = parseInt(a as string);
-							const numB = parseInt(b as string);
+							const numA = Number.parseInt(a as string);
+							const numB = Number.parseInt(b as string);
 
 							// Medium mode should have larger numbers
 							expect(numA).toBeGreaterThanOrEqual(5);
@@ -92,10 +93,10 @@ describe("Captcha Generation", () => {
 				const captcha = generateCaptcha("easy");
 
 				if (captcha.type === "math") {
-					const correctNum = parseInt(captcha.correctAnswer);
+					const correctNum = Number.parseInt(captcha.correctAnswer);
 
 					for (const option of captcha.options) {
-						const optionNum = parseInt(option);
+						const optionNum = Number.parseInt(option);
 						// Wrong answers should be within reasonable range
 						expect(Math.abs(optionNum - correctNum)).toBeLessThanOrEqual(10);
 						// No negative numbers in options

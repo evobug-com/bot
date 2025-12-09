@@ -58,6 +58,7 @@ describe("Error Reporting Logic", () => {
 
 			await mockChannel.send(errorMessage);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockChannel.send).toHaveBeenCalledWith(errorMessage);
 		});
 

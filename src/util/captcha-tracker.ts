@@ -143,7 +143,11 @@ class CaptchaTracker {
 
 		if (!state) {
 			void this.getUserInterval(userId); // Initialize state if missing
-			state = this.userStates.get(userId)!;
+			state = this.userStates.get(userId);
+			if (!state) {
+				// State should exist after getUserInterval, but handle edge case
+				return;
+			}
 		}
 
 		state.lastCaptchaAtClaim = claimCount;

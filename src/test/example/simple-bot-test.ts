@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- Test file uses non-null assertions for test data */
 import { beforeEach, describe, expect, it } from "bun:test";
 import { z } from "zod";
 import { UserFactory, UserStatsFactory } from "../factories/user.factory.ts";

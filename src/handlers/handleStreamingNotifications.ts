@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Sequential processing required for cleanup operations with dependent state */
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {

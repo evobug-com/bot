@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- Test file uses non-null assertions after expect().toBeDefined() checks */
+
 import { describe, expect, it } from "bun:test";
 import type { GuildMember } from "discord.js";
 import { getSecureRandomIndex } from "../utils/random.ts";
@@ -142,8 +144,7 @@ describe("Work command random selection", () => {
 
 		// Simulate the random selection logic from work.ts
 		for (let i = 0; i < iterations; i++) {
-			const randomIndex = getSecureRandomIndex(activitiesCount);
-			distribution[randomIndex]!++;
+			distribution[getSecureRandomIndex(activitiesCount)]!++;
 		}
 
 		// Expected value per bucket

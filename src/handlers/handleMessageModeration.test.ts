@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- Test file uses non-null assertions after cache lookups */
 import { beforeEach, describe, expect, it } from "bun:test";
 import type { Message } from "discord.js";
 import {

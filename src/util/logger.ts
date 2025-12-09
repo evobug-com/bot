@@ -48,15 +48,17 @@ const logToDiscord = async (module: string, level: string, message: string, args
 		const details = args.length > 0 ? { args } : undefined;
 
 		// Use the existing reportError function for all guilds
-		for (const guild of discordClient.guilds.cache.values()) {
-			try {
-				await reportError(guild, errorType, message, details);
-			} catch (error) {
-				// Silently fail for individual guilds to prevent spam
-				// Don't log this error to avoid infinite loops
-				console.error(`[Logger] Failed to send log to guild ${guild.name}:`, error);
-			}
-		}
+		await Promise.all(
+			[...discordClient.guilds.cache.values()].map(async (guild) => {
+				try {
+					await reportError(guild, errorType, message, details);
+				} catch (error: unknown) {
+					// Silently fail for individual guilds to prevent spam
+					// Don't log this error to avoid infinite loops
+					console.error(`[Logger] Failed to send log to guild ${guild.name}:`, error);
+				}
+			})
+		);
 	} catch (error) {
 		// Silently fail to prevent infinite loops
 		console.error("[Logger] Failed to send log to Discord:", error);

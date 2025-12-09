@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Paginated API fetching requires sequential requests */
 import {
 	ChatInputCommandBuilder,
 } from "discord.js";

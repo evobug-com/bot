@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Sequential channel deletion required for cleanup */
 /**
  * Virtual Voice Channels Handler
  *
@@ -309,7 +310,7 @@ async function loadExistingChannels(client: Client<true>) {
 									id: channel.id,
 									guildId: guild.id,
 									ownerId: channel.members.first()?.id || "",
-									channelNumber: parseInt(match[1] as string, 10),
+									channelNumber: Number.parseInt(match[1] as string, 10),
 									createdAt: new Date(),
 								});
 								needsSave = true;
@@ -544,7 +545,7 @@ async function calculateChannelPosition(guild: Guild, parentId: string | null, c
 
 		const match = channel.name.match(new RegExp(`^${config.channelPrefix}(\\d+)︱`));
 		if (match) {
-			const existingNumber = parseInt(match[1] as string, 10);
+			const existingNumber = Number.parseInt(match[1] as string, 10);
 			numberedChannels.push({ channel, number: existingNumber });
 		}
 	}
@@ -590,7 +591,7 @@ function findAvailableNumber(guild: Guild): number {
 		if (channel.isVoiceBased() && channel.name.startsWith(config.channelPrefix)) {
 			const match = channel.name.match(new RegExp(`^${config.channelPrefix}(\\d+)︱`));
 			if (match) {
-				usedNumbers.add(parseInt(match[1] as string, 10));
+				usedNumbers.add(Number.parseInt(match[1] as string, 10));
 			}
 		}
 	});

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/promise-function-async, @typescript-eslint/no-misused-spread -- Test patterns with mocks */
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Collection, Guild, GuildMember, Role } from "discord.js";
 
@@ -76,6 +77,7 @@ describe("RoleManager Core Logic", () => {
 
 		it("should find role by name when ID doesn't match", () => {
 			// Change role to have different ID but same name
+			// eslint-disable-next-line @typescript-eslint/no-misused-spread
 			const roleWithNewId = {
 				...mockRole,
 				id: "new-role-id-12345",
@@ -107,6 +109,7 @@ describe("RoleManager Core Logic", () => {
 
 			await mockMember.roles.add(mockRole);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockMember.roles.add).toHaveBeenCalledWith(mockRole);
 			expect(mockMember.roles.cache.has(mockRole.id)).toBe(true);
 		});
@@ -119,6 +122,7 @@ describe("RoleManager Core Logic", () => {
 			// Then remove it
 			await mockMember.roles.remove(mockRole);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockMember.roles.remove).toHaveBeenCalledWith(mockRole);
 			expect(mockMember.roles.cache.has(mockRole.id)).toBe(false);
 		});

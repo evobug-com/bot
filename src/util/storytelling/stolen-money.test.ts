@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Tests require sequential execution for deterministic results */
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { generateStolenMoneyStory } from "./stolen-money.ts";
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/unbound-method, @typescript-eslint/await-thenable -- Test patterns */
 import { afterEach, beforeEach, describe, expect, it, mock, type Mock } from "bun:test";
 import type { Client, EmbedBuilder, Guild, TextChannel } from "discord.js";
 import { handleChangelog } from "./handleChangelog.ts";
@@ -100,6 +101,7 @@ describe("Changelog Handler", () => {
 
 			await handleChangelog(mockClient);
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mockChannel.send).toHaveBeenCalled();
 			expect(mockWriteFileSync).toHaveBeenCalled();
 		});
@@ -113,8 +115,8 @@ describe("Changelog Handler", () => {
 				execSync: mockExecSync,
 			}));
 
-			// Should not throw
-			await expect(handleChangelog(mockClient)).resolves.toBeUndefined();
+			// Should not throw - wrapped in Promise.resolve to satisfy await-thenable
+			await expect(Promise.resolve(handleChangelog(mockClient))).resolves.toBeUndefined();
 		});
 	});
 

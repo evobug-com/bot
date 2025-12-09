@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/promise-function-async -- Mock functions intentionally return promises without async */
 import { mock } from "bun:test";
 import type { Client, Guild, GuildMember } from "discord.js";
 import { DISCORD_CHANNELS } from "../../util";

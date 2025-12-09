@@ -83,7 +83,7 @@ const handleInteractionCreate = async (interaction: Interaction) => {
 		} catch (error) {
 			log("error", "Error sending embed message:", error);
 			await interaction.reply({
-				content: `Error: ${error}`,
+				content: `Error: ${error instanceof Error ? error.message : String(error)}`,
 				flags: MessageFlags.Ephemeral,
 			});
 		}

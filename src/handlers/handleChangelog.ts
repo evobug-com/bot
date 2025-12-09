@@ -184,29 +184,31 @@ async function sendChangelog(client: Client<true>): Promise<void> {
 	log("info", `Found ${commits.length} new commits to report`);
 
 	// Send to each guild's bot-news channel
-	for (const guild of client.guilds.cache.values()) {
-		const result = getChannelByConfig(guild, DISCORD_CHANNELS.BOT_NEWS);
+	const embed = createChangelogEmbed(commits);
+	await Promise.all(
+		[...client.guilds.cache.values()].map(async (guild) => {
+			const result = getChannelByConfig(guild, DISCORD_CHANNELS.BOT_NEWS);
 
-		if (!result) {
-			log("warn", `Bot news channel not found in guild: ${guild.name}`);
-			continue;
-		}
+			if (!result) {
+				log("warn", `Bot news channel not found in guild: ${guild.name}`);
+				return;
+			}
 
-		const { channel } = result;
+			const { channel } = result;
 
-		if (!channel.isSendable()) {
-			log("warn", `Cannot send to bot news channel in guild: ${guild.name}`);
-			continue;
-		}
+			if (!channel.isSendable()) {
+				log("warn", `Cannot send to bot news channel in guild: ${guild.name}`);
+				return;
+			}
 
-		try {
-			const embed = createChangelogEmbed(commits);
-			await channel.send({ embeds: [embed] });
-			log("info", `Changelog sent to guild: ${guild.name}`);
-		} catch (error) {
-			log("error", `Error sending changelog to guild ${guild.name}:`, error);
-		}
-	}
+			try {
+				await channel.send({ embeds: [embed] });
+				log("info", `Changelog sent to guild: ${guild.name}`);
+			} catch (error) {
+				log("error", `Error sending changelog to guild ${guild.name}:`, error);
+			}
+		})
+	);
 
 	// Update last changelog data
 	writeLastChangelog({

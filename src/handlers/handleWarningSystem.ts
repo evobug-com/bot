@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop -- Sequential processing required for violation expiration and member sync */
 /**
  * Warning System Handler
  *
@@ -553,7 +554,7 @@ async function handleSuspension(client: Client<true>, userId: string, guildId: s
 		// Create suspension record via API
 		// Note: This needs proper DB user ID lookup
 		const [suspensionError] = await orpc.moderation.suspensions.create({
-			userId: parseInt(userId, 10), // Assuming this is already a DB user ID
+			userId: Number.parseInt(userId, 10), // Assuming this is already a DB user ID
 			guildId,
 			reason: "Automatic suspension - Account standing reached SUSPENDED",
 			issuedBy: 0, // System user
@@ -583,7 +584,7 @@ async function getUserViolations(userId: string, guildId: string): Promise<Viola
 		// Note: This function needs to be refactored to accept Guild parameter
 		// For now, we'll fetch without caching
 		const [violationsError, response] = await orpc.moderation.violations.list({
-			userId: parseInt(userId, 10), // Assuming this is already a DB user ID
+			userId: Number.parseInt(userId, 10), // Assuming this is already a DB user ID
 			guildId,
 			includeExpired: true,
 		});
@@ -618,7 +619,7 @@ async function getUserViolations(userId: string, guildId: string): Promise<Viola
 /**
  * Check and expire violations
  */
-async function checkAndExpireViolations(client: Client<true>): Promise<void> {
+async function _checkAndExpireViolations(client: Client<true>): Promise<void> {
 	try {
 		const now = new Date();
 		let expiredCount = 0;
@@ -642,7 +643,7 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
 					expiredCount++;
 
 					// Get Discord ID to remove restrictions
-					const [userError, dbUser] = await orpc.users.get({ id: parseInt(userId, 10) });
+					const [userError, dbUser] = await orpc.users.get({ id: Number.parseInt(userId, 10) });
 					if (!userError && dbUser?.discordId) {
 						// Remove associated restrictions using Discord ID
 						const userRestrictions = activeRestrictions.get(dbUser.discordId);
@@ -680,10 +681,10 @@ async function checkAndExpireViolations(client: Client<true>): Promise<void> {
 /**
  * Handle message restrictions
  */
-async function handleMessageRestrictions(message: Message): Promise<void> {
+async function _handleMessageRestrictions(message: Message): Promise<void> {
 	// Check for null/undefined parameters
 	if (!message) {
-		log("warn", "handleMessageRestrictions called with null/undefined message");
+		log("warn", "_handleMessageRestrictions called with null/undefined message");
 		return;
 	}
 	if (message.author.bot) return;
@@ -872,10 +873,10 @@ async function handleMessageRestrictions(message: Message): Promise<void> {
 /**
  * Handle voice restrictions
  */
-async function handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceState): Promise<void> {
+async function _handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceState): Promise<void> {
 	// Check for null/undefined parameters
 	if (!_oldState || !newState) {
-		log("warn", "handleVoiceRestrictions called with null/undefined parameters", {
+		log("warn", "_handleVoiceRestrictions called with null/undefined parameters", {
 			oldState: !!_oldState,
 			newState: !!newState,
 		});
@@ -905,7 +906,7 @@ async function handleVoiceRestrictions(_oldState: VoiceState, newState: VoiceSta
 /**
  * Handle interaction restrictions
  */
-async function handleInteractionRestrictions(interaction: Interaction): Promise<void> {
+async function _handleInteractionRestrictions(interaction: Interaction): Promise<void> {
 	// Sometimes the interaction is null/undefined, catch it here
 	if (interaction == null) return;
 
@@ -925,13 +926,13 @@ async function handleInteractionRestrictions(interaction: Interaction): Promise<
 /**
  * Handle nickname change restrictions
  */
-async function handleNicknameRestrictions(
+async function _handleNicknameRestrictions(
 	oldMember: GuildMember | PartialGuildMember,
 	newMember: GuildMember,
 ): Promise<void> {
 	// Check for null/undefined parameters
 	if (!oldMember || !newMember) {
-		log("warn", "handleNicknameRestrictions called with null/undefined parameters", {
+		log("warn", "_handleNicknameRestrictions called with null/undefined parameters", {
 			oldMember: !!oldMember,
 			newMember: !!newMember,
 		});
@@ -953,7 +954,7 @@ async function handleNicknameRestrictions(
 /**
  * Handle button interactions for warning system
  */
-async function handleButtonInteractions(interaction: Interaction): Promise<void> {
+async function _handleButtonInteractions(interaction: Interaction): Promise<void> {
 	// Sometimes the interaction is null/undefined, catch it here
 	if (interaction == null) return;
 

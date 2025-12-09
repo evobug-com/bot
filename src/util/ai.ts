@@ -55,7 +55,7 @@ export async function generateAiResponse(
 		}, timeoutMs);
 
 		// Wait for the process to complete
-		const exitCode = await new Promise((resolve) => {
+		const exitCode = await new Promise<number>((resolve) => {
 			claudeProcess.on("close", (code) => {
 				clearTimeout(timeoutId);
 				resolve(code || 0);

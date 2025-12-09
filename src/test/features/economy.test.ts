@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- Test file uses non-null assertions for test data */
+/* eslint-disable no-await-in-loop -- Tests require sequential execution for deterministic results */
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { execute as executeDaily } from "../../commands/daily.ts";
 import { execute as executeWork } from "../../commands/work.ts";

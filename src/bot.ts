@@ -1,5 +1,6 @@
 import {Client, Events, GatewayIntentBits, MessageFlags} from "discord.js";
 import { handleAchievements } from "./handlers/handleAchievements.ts";
+import { handleActivityPoints } from "./handlers/handleActivityPoints.ts";
 import { handleAntibotRooms } from "./handlers/handleAntibotRooms.ts";
 import { handleChangelog } from "./handlers/handleChangelog.ts";
 import { handleCommandsForRoom } from "./handlers/handleCommandsForRoom.ts";
@@ -60,6 +61,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 		handleMessageLogging(readyClient),
 		handleMessageModeration(readyClient),
 		handleAchievements(readyClient),
+		handleActivityPoints(readyClient),
 		handleSendingEmbedMessages(readyClient),
 		handleNewsEmbeds(readyClient),
 		handleStreamingNotifications(readyClient),

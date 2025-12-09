@@ -95,6 +95,12 @@ export class UserStatsFactory {
 			suspiciousBehaviorScore: 0,
 			lastSuspiciousActivityAt: null,
 			economyBannedUntil: null,
+			// Activity Points System
+			activityPointsLifetime: faker.number.int({ min: 0, max: 10000 }),
+			activityPointsWeekly: faker.number.int({ min: 0, max: 500 }),
+			activityPointsDailyCount: faker.number.int({ min: 0, max: 100 }),
+			lastActivityPointsDay: faker.date.recent({ days: 1 }),
+			lastActivityPointsReset: faker.date.recent({ days: 7 }),
 			updatedAt: now,
 		};
 	}

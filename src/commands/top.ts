@@ -36,6 +36,16 @@ const METRICS: Record<string, MetricConfig> = {
 		label: "Počet prací",
 		formatValue: (value) => `💼 ${value}x`,
 	},
+	activityweekly: {
+		emoji: "📅",
+		label: "Týdenní aktivita",
+		formatValue: (value) => `📅 ${value.toLocaleString()} bodů`,
+	},
+	activitylifetime: {
+		emoji: "🌟",
+		label: "Celoživotní aktivita",
+		formatValue: (value) => `🌟 ${value.toLocaleString()} bodů`,
+	},
 };
 
 export const data = new ChatInputCommandBuilder()
@@ -161,7 +171,9 @@ type MetricKey =
 	| "level"
 	| "dailystreak"
 	| "maxdailystreak"
-	| "workcount";
+	| "workcount"
+	| "activityweekly"
+	| "activitylifetime";
 
 type MetricConfig = {
 	emoji: string;

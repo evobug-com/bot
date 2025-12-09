@@ -28,7 +28,7 @@ import { generateClientMeetingStory } from "../util/storytelling/client-meeting.
 import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
 
 // IDs of activities that have story follow-ups
-const storyActivityIds = new Set([
+export const storyActivityIds = new Set([
 	"stolen-money",
 	"elections-candidate",
 	"office-prank",
@@ -180,8 +180,13 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	const storyMode = interaction.options.getBoolean("story") ?? false;
 
 	// Filter activities based on story mode
+	// story=true → ONLY story activities (100% chance of story)
+	// story=false → ONLY non-story activities (0% chance of story)
 	const availableActivities = storyMode
-		? workActivities
+		? workActivities.filter((act) => {
+				const actId = typeof act === "function" ? null : act.id;
+				return actId !== null && storyActivityIds.has(actId);
+		  })
 		: workActivities.filter((act) => {
 				const actId = typeof act === "function" ? null : act.id;
 				return actId === null || !storyActivityIds.has(actId);
@@ -434,7 +439,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	});
 };
 
-const workActivities = [
+export const workActivities = [
 	{
 		id: "wolt-delivery",
 		title: "<:SIOVINA:1385697830718673076> Kurýr",

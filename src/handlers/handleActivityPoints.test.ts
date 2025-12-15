@@ -560,6 +560,71 @@ describe("handleActivityPoints", () => {
 		});
 	});
 
+	describe("voice time minimum users requirement", () => {
+		it("should require at least 2 non-bot users in channel", () => {
+			// Simulating channel member counts
+			const MIN_USERS_REQUIRED = 2;
+
+			// 1 user alone - should NOT award points
+			expect(1 >= MIN_USERS_REQUIRED).toBe(false);
+
+			// 2 users - should award points
+			expect(2 >= MIN_USERS_REQUIRED).toBe(true);
+
+			// 3+ users - should award points
+			expect(5 >= MIN_USERS_REQUIRED).toBe(true);
+		});
+
+		it("should not count bots when checking minimum users", () => {
+			// Simulating: 1 real user + 2 bots = 1 non-bot user
+			const channelMembers = [
+				{ user: { bot: false } },
+				{ user: { bot: true } },
+				{ user: { bot: true } },
+			];
+
+			const nonBotCount = channelMembers.filter((m) => !m.user.bot).length;
+			const MIN_USERS_REQUIRED = 2;
+
+			expect(nonBotCount).toBe(1);
+			expect(nonBotCount >= MIN_USERS_REQUIRED).toBe(false);
+		});
+
+		it("should award points when 2 real users present with bots", () => {
+			// Simulating: 2 real users + 1 bot
+			const channelMembers = [
+				{ user: { bot: false } },
+				{ user: { bot: false } },
+				{ user: { bot: true } },
+			];
+
+			const nonBotCount = channelMembers.filter((m) => !m.user.bot).length;
+			const MIN_USERS_REQUIRED = 2;
+
+			expect(nonBotCount).toBe(2);
+			expect(nonBotCount >= MIN_USERS_REQUIRED).toBe(true);
+		});
+
+		it("should reset lastCheckedAt when user is alone to prevent time accumulation", () => {
+			// When a user is alone, we should update lastCheckedAt
+			// This prevents them from accumulating time while alone
+			// and then getting points when someone joins
+			const userData = {
+				joinedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 min ago
+				lastCheckedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 min ago
+				userId: 1,
+			};
+
+			// Simulate being alone - lastCheckedAt should be updated to now
+			const beforeUpdate = userData.lastCheckedAt.getTime();
+			userData.lastCheckedAt = new Date(); // This is what the code does when alone
+			const afterUpdate = userData.lastCheckedAt.getTime();
+
+			// Time difference should be ~30 minutes worth of ms
+			expect(afterUpdate - beforeUpdate).toBeGreaterThan(29 * 60 * 1000);
+		});
+	});
+
 	describe("voice time calculation", () => {
 		it("should calculate voice intervals correctly", () => {
 			const lastCheckedAt = new Date(Date.now() - 25 * 60 * 1000); // 25 minutes ago

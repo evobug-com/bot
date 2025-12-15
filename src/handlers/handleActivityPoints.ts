@@ -402,8 +402,8 @@ async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState
 		const userData = voiceUsers.get(member.id);
 		if (!userData) return;
 
-		// Award points for remaining time
-		await checkVoiceTime(member, userData);
+		// Award points for remaining time (pass oldState.channel since member.voice.channel is null)
+		await checkVoiceTime(member, userData, oldState.channel);
 		voiceUsers.delete(member.id);
 
 		// Stop interval if no users in voice
@@ -416,11 +416,27 @@ async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState
 
 /**
  * Check and award voice time points
+ * @param member - The guild member to check
+ * @param userData - Voice tracking data for the user
+ * @param channel - The voice channel to check (needed for leave events where member.voice.channel is null)
  */
 async function checkVoiceTime(
 	member: GuildMember,
 	userData: { joinedAt: Date; lastCheckedAt: Date; userId: number },
+	channel?: VoiceState["channel"],
 ): Promise<void> {
+	// Get the voice channel (use passed channel for leave events, or member's current channel)
+	const voiceChannel = channel ?? member.voice.channel;
+	if (!voiceChannel) return;
+
+	// Require at least 2 non-bot users in the channel to prevent solo farming
+	const nonBotMembers = voiceChannel.members.filter((m) => !m.user.bot);
+	if (nonBotMembers.size < 2) {
+		// Still update lastCheckedAt to prevent accumulating time while alone
+		userData.lastCheckedAt = new Date();
+		return;
+	}
+
 	const now = new Date();
 	const minutesSinceLastCheck = Math.floor((now.getTime() - userData.lastCheckedAt.getTime()) / 1000 / 60);
 

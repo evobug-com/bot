@@ -158,7 +158,7 @@ export async function moderateMessage(
 
 		// Build request parameters
 		const requestParams = {
-			model: "openai/gpt-5-nano",
+			model: "openai/gpt-5-mini",
 			messages: [
 				{
 					role: "system" as const,

@@ -29,9 +29,9 @@ import type {
 	User,
 	VoiceState,
 } from "discord.js";
-import { Events } from "discord.js";
+import { Events, PermissionFlagsBits } from "discord.js";
 import { dbUserExists, getDbUser, orpc } from "../client/client.ts";
-import { DISCORD_CHANNELS } from "../util";
+import { DISCORD_CHANNELS, DISCORD_ROLES } from "../util";
 import { createKancelarPrezidentaRepubliky } from "../util/messages/embedBuilders.ts";
 
 // Activity point values (defined in API, referenced here for documentation)
@@ -422,6 +422,38 @@ async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState
 }
 
 /**
+ * Check if a voice channel is public (VERIFIED role has access and no member limit)
+ */
+function isPublicVoiceChannel(voiceChannel: NonNullable<VoiceState["channel"]>): boolean {
+	// Check if channel has a member limit (0 = no limit = public)
+	if (voiceChannel.userLimit > 0) {
+		return false;
+	}
+
+	// Check if VERIFIED role can view the channel
+	const verifiedRolePermissions = voiceChannel.permissionOverwrites.cache.get(DISCORD_ROLES.VERIFIED.id);
+
+	// If there's no specific override for VERIFIED, check if @everyone can view
+	// (which would mean VERIFIED inherits access)
+	if (!verifiedRolePermissions) {
+		const everyonePermissions = voiceChannel.permissionOverwrites.cache.get(voiceChannel.guild.id);
+		// If @everyone is denied VIEW_CHANNEL, it's private
+		if (everyonePermissions?.deny.has(PermissionFlagsBits.ViewChannel)) {
+			return false;
+		}
+		return true;
+	}
+
+	// If VERIFIED is explicitly denied VIEW_CHANNEL, it's private
+	if (verifiedRolePermissions.deny.has(PermissionFlagsBits.ViewChannel)) {
+		return false;
+	}
+
+	// If VERIFIED can view (either explicitly allowed or not denied), it's public
+	return true;
+}
+
+/**
  * Check and award voice time points
  * @param member - The guild member to check
  * @param userData - Voice tracking data for the user
@@ -435,6 +467,13 @@ async function checkVoiceTime(
 	// Get the voice channel (use passed channel for leave events, or member's current channel)
 	const voiceChannel = channel ?? member.voice.channel;
 	if (!voiceChannel) return;
+
+	// Only award points in public voice channels (VERIFIED can access, no member limit)
+	if (!isPublicVoiceChannel(voiceChannel)) {
+		// Still update lastCheckedAt to prevent accumulating time in private rooms
+		userData.lastCheckedAt = new Date();
+		return;
+	}
 
 	// Require at least 2 non-bot users in the channel to prevent solo farming
 	const nonBotMembers = voiceChannel.members.filter((m) => !m.user.bot);

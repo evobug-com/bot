@@ -26,6 +26,8 @@ import { generateLunchThiefStory } from "../util/storytelling/lunch-thief.ts";
 import { generateFridayDeployStory } from "../util/storytelling/friday-deploy.ts";
 import { generateClientMeetingStory } from "../util/storytelling/client-meeting.ts";
 import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
+import { WORK_CONFIG } from "../services/work/config.ts";
+import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
 
 // ============================================================================
 // TYPES
@@ -70,15 +72,7 @@ export const data = new ChatInputCommandBuilder()
 	.setName("work")
 	.setNameLocalizations({ cs: "práce" })
 	.setDescription("Work to earn XP and coins")
-	.setDescriptionLocalizations({ cs: "Pracujte a vydělávejte XP a mince" })
-	.addBooleanOptions((option) =>
-		option
-			.setName("story")
-			.setNameLocalizations({ cs: "příběh" })
-			.setDescription("Include story activities with follow-up narratives")
-			.setDescriptionLocalizations({ cs: "Zahrnout příběhové aktivity s pokračujícím vyprávěním" })
-			.setRequired(false)
-	);
+	.setDescriptionLocalizations({ cs: "Pracujte a vydělávejte XP a mince" });
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
 	if (interaction.guild) {
 		const commandsRoom = ChannelManager.getChannel(interaction.guild, "COMMANDS");
@@ -195,13 +189,16 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
-	// Get story mode option (default: false - no stories)
-	const storyMode = interaction.options.getBoolean("story") ?? false;
+	// Determine if this work triggers a story (chance-based if enabled)
+	// Check: global setting enabled AND user setting enabled AND chance roll succeeds
+	const userStoryEnabled = isStoryWorkEnabled(interaction.user.id);
+	const shouldTriggerStory =
+		WORK_CONFIG.storyWorkEnabled &&
+		userStoryEnabled &&
+		getSecureRandomIndex(100) < WORK_CONFIG.storyChancePercent;
 
-	// Filter activities based on story mode
-	// story=true → ONLY story activities (100% chance of story)
-	// story=false → ONLY non-story activities (0% chance of story)
-	const availableActivities = storyMode
+	// Filter activities based on story trigger
+	const availableActivities = shouldTriggerStory
 		? workActivities.filter((act) => {
 				const actId = typeof act === "function" ? null : act.id;
 				return actId !== null && storyActivityIds.has(actId);

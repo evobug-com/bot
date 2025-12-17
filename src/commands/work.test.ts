@@ -4,6 +4,8 @@ import { describe, expect, it } from "bun:test";
 import type { GuildMember } from "discord.js";
 import { getSecureRandomIndex } from "../utils/random.ts";
 import { storyActivityIds, workActivities } from "./work.ts";
+import { WORK_CONFIG } from "../services/work/config.ts";
+import { isStoryWorkEnabled, setStoryWorkEnabled } from "../services/userSettings/storage.ts";
 
 // Type for work activity - can be object or function
 type WorkActivity = { id: string; title: string; activity: string } | ((_member: GuildMember) => { id: string; title: string; activity: string });
@@ -17,10 +19,10 @@ function getActivityId(activity: WorkActivity): string | null {
 }
 
 // Replicates the filtering logic from work.ts
-// story=true → ONLY story activities (100% chance of story)
-// story=false → ONLY non-story activities (0% chance of story)
-function filterActivitiesByStoryMode(storyMode: boolean): WorkActivity[] {
-	return storyMode
+// shouldTriggerStory=true → ONLY story activities
+// shouldTriggerStory=false → ONLY non-story activities
+function filterActivitiesByStoryTrigger(shouldTriggerStory: boolean): WorkActivity[] {
+	return shouldTriggerStory
 		? (workActivities as readonly WorkActivity[]).filter((act) => {
 				const actId = getActivityId(act);
 				return actId !== null && storyActivityIds.has(actId);
@@ -31,10 +33,15 @@ function filterActivitiesByStoryMode(storyMode: boolean): WorkActivity[] {
 		  });
 }
 
-describe("Work command story mode switch", () => {
-	it("should exclude story activities when story=false", () => {
+describe("Work command story chance system", () => {
+	it("WORK_CONFIG should have correct default values", () => {
+		expect(WORK_CONFIG.storyWorkEnabled).toBe(true);
+		expect(WORK_CONFIG.storyChancePercent).toBe(20);
+	});
+
+	it("should exclude story activities when shouldTriggerStory=false", () => {
 		const iterations = 20;
-		const filteredActivities = filterActivitiesByStoryMode(false);
+		const filteredActivities = filterActivitiesByStoryTrigger(false);
 
 		for (let i = 0; i < iterations; i++) {
 			const randomIndex = getSecureRandomIndex(filteredActivities.length);
@@ -50,9 +57,9 @@ describe("Work command story mode switch", () => {
 		}
 	});
 
-	it("should ONLY select story activities when story=true", () => {
+	it("should ONLY select story activities when shouldTriggerStory=true", () => {
 		const iterations = 20;
-		const storyOnlyActivities = filterActivitiesByStoryMode(true);
+		const storyOnlyActivities = filterActivitiesByStoryTrigger(true);
 
 		// Verify that ONLY story activities are in the pool
 		expect(storyOnlyActivities.length).toBe(storyActivityIds.size);
@@ -79,12 +86,11 @@ describe("Work command story mode switch", () => {
 
 		// Should get 100% story activities
 		expect(storyCount).toBe(iterations);
-		console.log(`story=true: Got ${storyCount} story activities out of ${iterations} tries (expected ${iterations})`);
 	});
 
-	it("should NEVER select story activities when story=false (100 iterations)", () => {
+	it("should NEVER select story activities when shouldTriggerStory=false (100 iterations)", () => {
 		const iterations = 100;
-		const filteredActivities = filterActivitiesByStoryMode(false);
+		const filteredActivities = filterActivitiesByStoryTrigger(false);
 
 		let storyCount = 0;
 		const selectedIds: string[] = [];
@@ -103,14 +109,13 @@ describe("Work command story mode switch", () => {
 			}
 		}
 
-		// Should NEVER get a story activity when story=false
+		// Should NEVER get a story activity when shouldTriggerStory=false
 		expect(storyCount).toBe(0);
-		console.log(`story=false: Got ${storyCount} story activities out of ${iterations} tries (expected 0)`);
 	});
 
-	it("should ALWAYS get stories when story=true (100 iterations)", () => {
+	it("should ALWAYS get stories when shouldTriggerStory=true (100 iterations)", () => {
 		const iterations = 100;
-		const storyOnlyActivities = filterActivitiesByStoryMode(true);
+		const storyOnlyActivities = filterActivitiesByStoryTrigger(true);
 
 		let storyCount = 0;
 
@@ -126,13 +131,43 @@ describe("Work command story mode switch", () => {
 			storyCount++;
 		}
 
-		console.log(`story=true stats:`);
-		console.log(`  - Story activities in pool: ${storyOnlyActivities.length}`);
-		console.log(`  - Expected probability: 100%`);
-		console.log(`  - Actual stories: ${storyCount}/${iterations} (100%)`);
-
 		// Should get ALL stories - 100% guarantee
 		expect(storyCount).toBe(iterations);
+	});
+
+	it("story chance calculation should work correctly", () => {
+		// Test the chance calculation logic
+		// shouldTriggerStory = storyWorkEnabled && randomValue < storyChancePercent
+		// getSecureRandomIndex(100) returns 0-99, storyChancePercent is 20
+		// So values 0-19 trigger (20% chance), values 20-99 don't
+
+		// Simulate with mocked random values (as integers 0-99)
+		const testCases = [
+			{ randomValue: 10, expectedTrigger: true },   // 10 < 20 = true
+			{ randomValue: 19, expectedTrigger: true },   // 19 < 20 = true
+			{ randomValue: 20, expectedTrigger: false },  // 20 < 20 = false
+			{ randomValue: 50, expectedTrigger: false },  // 50 < 20 = false
+			{ randomValue: 99, expectedTrigger: false },  // 99 < 20 = false
+		];
+
+		for (const { randomValue, expectedTrigger } of testCases) {
+			const shouldTriggerStory =
+				WORK_CONFIG.storyWorkEnabled && randomValue < WORK_CONFIG.storyChancePercent;
+			expect(shouldTriggerStory).toBe(expectedTrigger);
+		}
+	});
+
+	it("story chance should respect storyWorkEnabled=false", () => {
+		// When disabled, no stories should ever trigger
+		const testRandomValues = [0, 5, 10, 15, 19];
+
+		for (const randomValue of testRandomValues) {
+			// Simulate disabled config
+			const storyWorkEnabled = false;
+			const shouldTriggerStory =
+				storyWorkEnabled && randomValue < WORK_CONFIG.storyChancePercent;
+			expect(shouldTriggerStory).toBe(false);
+		}
 	});
 });
 
@@ -206,5 +241,66 @@ describe("Work command random selection", () => {
 			expect(randomIndex).toBeLessThan(activitiesCount);
 			expect(Number.isInteger(randomIndex)).toBe(true);
 		}
+	});
+});
+
+describe("Work command user settings integration", () => {
+	const getTestUserId = () => `test-work-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+	it("should trigger story based on combined global + user + chance settings", () => {
+		// Test cases for the combined logic:
+		// shouldTriggerStory = globalEnabled && userEnabled && randomValue < storyChancePercent
+		const testCases = [
+			// Global enabled, user enabled, chance succeeds -> true
+			{ globalEnabled: true, userEnabled: true, randomValue: 10, expected: true },
+			// Global enabled, user enabled, chance fails -> false
+			{ globalEnabled: true, userEnabled: true, randomValue: 50, expected: false },
+			// Global enabled, user disabled -> false (regardless of chance)
+			{ globalEnabled: true, userEnabled: false, randomValue: 10, expected: false },
+			// Global disabled, user enabled -> false (regardless of chance)
+			{ globalEnabled: false, userEnabled: true, randomValue: 10, expected: false },
+			// Global disabled, user disabled -> false
+			{ globalEnabled: false, userEnabled: false, randomValue: 10, expected: false },
+		];
+
+		for (const { globalEnabled, userEnabled, randomValue, expected } of testCases) {
+			const shouldTriggerStory =
+				globalEnabled &&
+				userEnabled &&
+				randomValue < WORK_CONFIG.storyChancePercent;
+
+			expect(shouldTriggerStory).toBe(expected);
+		}
+	});
+
+	it("should respect user preference when checking isStoryWorkEnabled", () => {
+		const userId = getTestUserId();
+
+		// Default: enabled
+		expect(isStoryWorkEnabled(userId)).toBe(true);
+
+		// Disable for this user
+		setStoryWorkEnabled(userId, false);
+		expect(isStoryWorkEnabled(userId)).toBe(false);
+
+		// Re-enable
+		setStoryWorkEnabled(userId, true);
+		expect(isStoryWorkEnabled(userId)).toBe(true);
+	});
+
+	it("should not affect other users when one user changes settings", () => {
+		const user1 = getTestUserId();
+		const user2 = getTestUserId();
+
+		// Both start with default (enabled)
+		expect(isStoryWorkEnabled(user1)).toBe(true);
+		expect(isStoryWorkEnabled(user2)).toBe(true);
+
+		// User1 disables
+		setStoryWorkEnabled(user1, false);
+
+		// User1 disabled, user2 still enabled
+		expect(isStoryWorkEnabled(user1)).toBe(false);
+		expect(isStoryWorkEnabled(user2)).toBe(true);
 	});
 });

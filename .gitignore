@@ -17,4 +17,4 @@ dist/
 
 # Generated files are committed for easier CI/CD
 # Uncomment the line below if you prefer not to commit them
-# packages/shared/src/generated/
+# packages/shared/src/generated/data/

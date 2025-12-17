@@ -3,7 +3,7 @@
  * Activity Points Handler
  *
  * Tracks user engagement across multiple activities and awards points:
- * - Messages sent: 1 point
+ * - Messages sent: 2 points
  * - Thread replies: 2 points
  * - Reactions added: 1 point
  * - Threads created: 10 points
@@ -51,9 +51,9 @@ const voiceUsers = new Map<string, { joinedAt: Date; lastCheckedAt: Date; userId
 let voiceCheckInterval: NodeJS.Timeout | null = null;
 
 // Universal cooldown for all activities (except voice which has its own 10-min interval)
-const ACTIVITY_COOLDOWN_MS = 5 * 60_000; // 5 minutes
+const ACTIVITY_COOLDOWN_MS = 1 * 60_000; // 1 minute
 
-// Message debounce map (1 message per 5 minutes per user)
+// Message debounce map (1 message per 1 minute per user)
 const messageDebounce = new Map<string, number>();
 
 // Reaction debounce: per-message + time-based
@@ -236,14 +236,17 @@ function scheduleWeeklyReset(client: Client<true>): void {
 
 /**
  * Track activity points for a user
+ * @param points - Optional override for default points (e.g., 2 for messages)
  */
 async function trackPoints(
 	userId: number,
 	activityType: "message" | "voice_time" | "reaction" | "thread_created" | "thread_reply",
+	points?: number,
 ): Promise<void> {
 	const [error] = await orpc.users.stats.activity.track({
 		userId,
 		activityType,
+		points,
 	});
 
 	if (error) {
@@ -259,7 +262,7 @@ async function handleMessageCreate(message: Message): Promise<void> {
 	// Skip bots, DMs, system messages
 	if (message.author.bot || !message.guild || message.system) return;
 
-	// Debounce: one message per 5 minutes per user
+	// Debounce: one message per 1 minute per user
 	const lastMessage = messageDebounce.get(message.author.id);
 	const now = Date.now();
 	if (lastMessage && now - lastMessage < ACTIVITY_COOLDOWN_MS) {
@@ -276,7 +279,8 @@ async function handleMessageCreate(message: Message): Promise<void> {
 	const isThreadReply = message.channel.isThread();
 	const activityType = isThreadReply ? "thread_reply" : "message";
 
-	await trackPoints(dbUser.id, activityType);
+	// Messages award 2 points, thread replies use default (also 2)
+	await trackPoints(dbUser.id, activityType, isThreadReply ? undefined : 2);
 }
 
 /**

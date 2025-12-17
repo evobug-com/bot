@@ -262,6 +262,9 @@ async function handleMessageCreate(message: Message): Promise<void> {
 	// Skip bots, DMs, system messages
 	if (message.author.bot || !message.guild || message.system) return;
 
+	// Skip messages from voice channel integrated text chat (only regular text channels count)
+	if (message.channel.isVoiceBased()) return;
+
 	// Debounce: one message per 1 minute per user
 	const lastMessage = messageDebounce.get(message.author.id);
 	const now = Date.now();

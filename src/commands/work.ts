@@ -10,7 +10,7 @@ import {
 	type RewardResponse,
 } from "../util/bot/rewards.ts";
 import type { CommandContext } from "../util/commands.ts";
-import { createUradPraceEmbed } from "../util/messages/embedBuilders.ts";
+import { createUradPraceEmbed, createInteraktivniPribehEmbed } from "../util/messages/embedBuilders.ts";
 import { generateStolenMoneyStory } from "../util/storytelling/stolen-money.ts";
 import { generateElectionsCandidateStory } from "../util/storytelling/elections-candidate.ts";
 import { generateOfficePrankStory } from "../util/storytelling/office-prank.ts";
@@ -28,6 +28,26 @@ import { generateClientMeetingStory } from "../util/storytelling/client-meeting.
 import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
 import { WORK_CONFIG } from "../services/work/config.ts";
 import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
+// Branching story imports
+import * as storyEngine from "../util/storytelling/engine";
+import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
+import { isDecisionNode } from "../util/storytelling/types";
+// Import branching stories to auto-register them
+import "../util/storytelling/stories/stolen-money-branching";
+import "../util/storytelling/stories/christmas-party-branching";
+import "../util/storytelling/stories/client-meeting-branching";
+import "../util/storytelling/stories/coffee-machine-branching";
+import "../util/storytelling/stories/elections-candidate-branching";
+import "../util/storytelling/stories/elevator-stuck-branching";
+import "../util/storytelling/stories/friday-deploy-branching";
+import "../util/storytelling/stories/hackathon-branching";
+import "../util/storytelling/stories/it-support-branching";
+import "../util/storytelling/stories/job-interview-branching";
+import "../util/storytelling/stories/lunch-thief-branching";
+import "../util/storytelling/stories/office-prank-branching";
+import "../util/storytelling/stories/reveal-cheating-branching";
+import "../util/storytelling/stories/server-room-branching";
+import "../util/storytelling/stories/video-conference-branching";
 
 // ============================================================================
 // TYPES
@@ -60,6 +80,8 @@ interface BaseActivity {
 	title: string;
 	activity: string;
 	story?: StoryConfig;
+	/** ID of branching story (Mass Effect-style interactive) */
+	branchingStoryId?: string;
 }
 
 /** Dynamic activity that generates based on member context */
@@ -338,8 +360,74 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		// Don't fail the whole command if achievement check fails
 	}
 
-	// Check if this activity has a story follow-up (now inline in activity definition)
-	if (activity.story) {
+	// Check if this activity has a branching story (Mass Effect-style interactive)
+	if (activity.branchingStoryId) {
+		try {
+			const storyId = activity.branchingStoryId;
+			const story = storyEngine.getStory(storyId);
+
+			if (!story) {
+				console.error(`Branching story not found: ${storyId}`);
+				// Fallback: just show the work reward, no story
+			} else {
+				// Start the branching story session
+				const storyResult = await storyEngine.startStory(storyId, {
+					discordUserId: interaction.user.id,
+					dbUserId: dbUser.id,
+					messageId: "", // Will be set after sending
+					channelId: interaction.channelId ?? "",
+					guildId: interaction.guildId ?? "",
+					userLevel: work.levelProgress.currentLevel,
+				});
+
+				// Get the first decision node for button labels
+				const context = storyEngine.getStoryContext(storyResult.session);
+				if (context && isDecisionNode(context.currentNode)) {
+					// Build the decision buttons
+					const buttons = buildDecisionButtons(
+						storyResult.session.storyId,
+						storyResult.session.sessionId,
+						context.currentNode.choices.choiceX.label,
+						context.currentNode.choices.choiceY.label,
+						storyResult.session.accumulatedCoins,
+					);
+
+					// Build the full narrative with intro + first decision
+					let fullNarrative = storyResult.narrative;
+					fullNarrative += `\n\n${context.currentNode.narrative}`;
+					fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
+					fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
+
+					// Create embed with proper styling
+					const storyEmbed = createInteraktivniPribehEmbed()
+						.setTitle(`${story.emoji} ${story.title}`)
+						.setDescription(fullNarrative)
+						.setFooter({ text: "Vyber si svou cestu..." });
+
+					// Send the story with buttons
+					await interaction.followUp({
+						embeds: [storyEmbed],
+						components: buttons.map((row) => row.toJSON()),
+					});
+				} else {
+					// Something went wrong, just show narrative without buttons
+					const storyEmbed = createInteraktivniPribehEmbed()
+						.setTitle(`${story.emoji} ${story.title}`)
+						.setDescription(storyResult.narrative);
+
+					await interaction.followUp({
+						embeds: [storyEmbed],
+					});
+				}
+			}
+		} catch (error) {
+			console.error(`Error starting branching story ${activity.branchingStoryId}:`, error);
+			// Don't fail the whole command if story fails
+			// User already got their base work reward
+		}
+	}
+	// Check if this activity has a linear story follow-up
+	else if (activity.story) {
 		try {
 			// Generate the story with all random events
 			const storyResult = await activity.story.generator(
@@ -520,6 +608,96 @@ export const workActivities = [
 		title: "💰 Zloděj",
 		activity: "Rozhodl jsi se ukrást peníze babičce... (příběh pokračuje níže)",
 		story: { generator: generateStolenMoneyStory, title: "💰 Příběh zloděje" },
+	},
+	{
+		id: "stolen-money-branching",
+		title: "💰 Interaktivní příběh",
+		activity: "Procházíš parkem, když si všimneš starší paní s peněženkou... (interaktivní příběh)",
+		branchingStoryId: "stolen_money_branching",
+	},
+	{
+		id: "christmas-party-branching",
+		title: "🎄 Interaktivní vánoční večírek",
+		activity: "Účastníš se vánočního večírku... (interaktivní příběh)",
+		branchingStoryId: "christmas_party_branching",
+	},
+	{
+		id: "client-meeting-branching",
+		title: "💼 Interaktivní schůzka",
+		activity: "Máš důležitou schůzku s potenciálním klientem... (interaktivní příběh)",
+		branchingStoryId: "client_meeting_branching",
+	},
+	{
+		id: "coffee-machine-branching",
+		title: "☕ Interaktivní kávovar",
+		activity: "Pokoušíš se ovládnout nový super-automatický kávovar... (interaktivní příběh)",
+		branchingStoryId: "coffee_machine_branching",
+	},
+	{
+		id: "elections-candidate-branching",
+		title: "🗳️ Interaktivní volby",
+		activity: "Kandiduješ ve volbách do parlamentu... (interaktivní příběh)",
+		branchingStoryId: "elections_candidate_branching",
+	},
+	{
+		id: "elevator-stuck-branching",
+		title: "🛗 Interaktivní výtah",
+		activity: "Zasekl ses ve výtahu s někým zajímavým... (interaktivní příběh)",
+		branchingStoryId: "elevator_stuck_branching",
+	},
+	{
+		id: "friday-deploy-branching",
+		title: "🚀 Interaktivní páteční deploy",
+		activity: "Je pátek odpoledne a ty mačkáš DEPLOY... (interaktivní příběh)",
+		branchingStoryId: "friday_deploy_branching",
+	},
+	{
+		id: "hackathon-branching",
+		title: "🏆 Interaktivní hackathon",
+		activity: "Účastníš se 48hodinového hackathonu... (interaktivní příběh)",
+		branchingStoryId: "hackathon_branching",
+	},
+	{
+		id: "it-support-branching",
+		title: "💻 Interaktivní IT podpora",
+		activity: "Pomáháš kolegovi s jeho počítačem... (interaktivní příběh)",
+		branchingStoryId: "it_support_branching",
+	},
+	{
+		id: "job-interview-branching",
+		title: "📋 Interaktivní pohovor",
+		activity: "Vedeš pohovor s kandidátem na pozici junior developera... (interaktivní příběh)",
+		branchingStoryId: "job_interview_branching",
+	},
+	{
+		id: "lunch-thief-branching",
+		title: "🍱 Interaktivní zloděj obědů",
+		activity: "Někdo ti ukradl oběd z ledničky! Čas na vyšetřování... (interaktivní příběh)",
+		branchingStoryId: "lunch_thief_branching",
+	},
+	{
+		id: "office-prank-branching",
+		title: "🎉 Interaktivní žertík",
+		activity: "Děláš kolegovi žertík s jeho počítačem... (interaktivní příběh)",
+		branchingStoryId: "office_prank_branching",
+	},
+	{
+		id: "reveal-cheating-branching",
+		title: "🕵️ Interaktivní detektiv",
+		activity: "Odhalil jsi podvádění na Discord příkazech... (interaktivní příběh)",
+		branchingStoryId: "reveal_cheating_branching",
+	},
+	{
+		id: "server-room-branching",
+		title: "🖥️ Interaktivní serverovna",
+		activity: "Vstupuješ do serverovny opravit blikající server... (interaktivní příběh)",
+		branchingStoryId: "server_room_branching",
+	},
+	{
+		id: "video-conference-branching",
+		title: "📡 Interaktivní videokonference",
+		activity: "Připojuješ se na videokonferenci s indickými kolegy... (interaktivní příběh)",
+		branchingStoryId: "video_conference_branching",
 	},
 	{
 		id: "wrong-elections",
@@ -815,8 +993,13 @@ export const workActivities = [
 ] as const satisfies readonly Activity[];
 
 // Derived from activities - no manual maintenance needed
+// Includes both linear stories and branching stories
 export const storyActivityIds = new Set(
 	(workActivities as readonly Activity[])
-		.filter((act): act is BaseActivity => typeof act !== "function" && "story" in act && act.story !== undefined)
+		.filter((act): act is BaseActivity =>
+			typeof act !== "function" &&
+			(("story" in act && act.story !== undefined) ||
+			("branchingStoryId" in act && act.branchingStoryId !== undefined))
+		)
 		.map((act) => act.id)
 );

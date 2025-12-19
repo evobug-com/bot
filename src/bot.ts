@@ -14,6 +14,7 @@ import { handleStreamingNotifications } from "./handlers/handleStreamingNotifica
 import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannels.ts";
 import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
+import { initStoryInteractions } from "./handlers/handleStoryInteractions.ts";
 import { ensureUserRegistered, reportError } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
 import { createLogger, setLoggerClient } from "./util/logger.ts";
@@ -51,6 +52,10 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 	// Initialize all handlers and wait for them to complete
 	log("info", "Initializing handlers...");
+
+	// Initialize synchronous handlers first
+	initStoryInteractions(readyClient);
+
 	await Promise.all([
 		handleChangelog(readyClient),
 		handleVirtualVoiceChannels(readyClient),

@@ -26,3 +26,12 @@ export const createKancelarPrezidentaRepubliky = () => {
 		icon_url: "https://www.hrad.cz/img/prezident/cs/logo.png",
 	});
 };
+
+export const createInteraktivniPribehEmbed = () => {
+	return new EmbedBuilder()
+		.setColor(0x2b2d31) // Dark/neutral color
+		.setAuthor({
+			name: "Interaktivní příběh",
+			icon_url: "https://cdn.discordapp.com/emojis/1326286362760187944.png", // 📖 book emoji or similar
+		});
+};

@@ -90,6 +90,7 @@ function rowToSession(row: StorySessionRow): StorySession {
 		channelId: row.channel_id,
 		guildId: row.guild_id,
 		userLevel: row.user_level,
+		resolvedNodeValues: {},
 	};
 }
 

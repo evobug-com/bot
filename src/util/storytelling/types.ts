@@ -189,6 +189,12 @@ export interface StorySession {
 	guildId: string;
 	/** User level at story start (for XP calculation) */
 	userLevel: number;
+	/**
+	 * Cached resolved values for dynamic node content.
+	 * Maps nodeId -> fieldName -> resolved value.
+	 * Ensures narrative and coinsChange use the same random values.
+	 */
+	resolvedNodeValues: Record<string, Record<string, string | number>>;
 }
 
 // =============================================================================

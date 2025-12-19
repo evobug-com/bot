@@ -49,6 +49,7 @@ void mock.module("../../services/storySession", () => ({
 			channelId: params.channelId ?? "",
 			guildId: params.guildId ?? "",
 			userLevel: params.userLevel ?? 10,
+			resolvedNodeValues: {},
 		};
 		mockSessions.set(session.sessionId, session);
 		return session;
@@ -405,6 +406,7 @@ describe("Story Engine", () => {
 				channelId: "",
 				guildId: "",
 				userLevel: 10,
+				resolvedNodeValues: {},
 			};
 
 			const context = engine.getStoryContext(session);
@@ -428,6 +430,7 @@ describe("Story Engine", () => {
 				channelId: "",
 				guildId: "",
 				userLevel: 10,
+				resolvedNodeValues: {},
 			};
 
 			const context = engine.getStoryContext(session);
@@ -449,6 +452,7 @@ describe("Story Engine", () => {
 				channelId: "",
 				guildId: "",
 				userLevel: 10,
+				resolvedNodeValues: {},
 			};
 
 			const context = engine.getStoryContext(session);
@@ -472,6 +476,7 @@ describe("Story Engine", () => {
 				channelId: "",
 				guildId: "",
 				userLevel: 10,
+				resolvedNodeValues: {},
 			};
 			mockSessions.set(session.sessionId, session);
 

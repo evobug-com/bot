@@ -9,6 +9,7 @@ import { orpc } from "../../client/client";
 import * as sessionManager from "../../services/storySession";
 import type {
 	BranchingStory,
+	DynamicValue,
 	StoryAction,
 	StoryActionResult,
 	StoryFinalResult,
@@ -99,6 +100,34 @@ function getNodeOrThrow(story: BranchingStory, nodeId: string): StoryNode {
 }
 
 /**
+ * Resolve a dynamic value for a node, caching the result in the session.
+ * This ensures that narrative and coinsChange use the same random values.
+ */
+export function resolveNodeValue<T extends string | number>(
+	session: StorySession,
+	nodeId: string,
+	field: string,
+	value: DynamicValue<T>,
+): T {
+	// Initialize the node's cache if needed
+	if (!session.resolvedNodeValues[nodeId]) {
+		session.resolvedNodeValues[nodeId] = {};
+	}
+
+	// Check if already resolved
+	const cached = session.resolvedNodeValues[nodeId][field];
+	if (cached !== undefined) {
+		return cached as T;
+	}
+
+	// Resolve and cache the value
+	const resolved = resolveDynamicValue(value);
+	session.resolvedNodeValues[nodeId][field] = resolved;
+
+	return resolved;
+}
+
+/**
  * Process an intro node - automatically advances to the first decision
  */
 function processIntroNode(
@@ -112,7 +141,7 @@ function processIntroNode(
 
 	// Apply any coin change from intro
 	if (node.coinsChange !== undefined) {
-		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
+		session.accumulatedCoins += resolveNodeValue(session, node.id, "coinsChange", node.coinsChange);
 	}
 
 	// Advance to the next node (usually first decision)
@@ -125,7 +154,7 @@ function processIntroNode(
 	return {
 		session,
 		currentNode: nextNode,
-		narrative: resolveDynamicValue(node.narrative),
+		narrative: resolveNodeValue(session, node.id, "narrative", node.narrative),
 		isComplete: false,
 	};
 }
@@ -178,7 +207,7 @@ async function processOutcomeNode(
 
 	// Apply any coin change from this node
 	if (node.coinsChange !== undefined) {
-		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
+		session.accumulatedCoins += resolveNodeValue(session, node.id, "coinsChange", node.coinsChange);
 	}
 
 	// Determine next node based on roll
@@ -188,7 +217,7 @@ async function processOutcomeNode(
 	sessionManager.updateSession(session);
 
 	const nextNode = getNodeOrThrow(story, nextNodeId);
-	const resolvedNarrative = resolveDynamicValue(node.narrative);
+	const resolvedNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
 
 	// Check if next node is terminal or another decision
 	if (isTerminalNode(nextNode)) {
@@ -220,7 +249,7 @@ async function processTerminalNode(
 
 	// Apply final coin change
 	if (node.coinsChange !== undefined) {
-		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
+		session.accumulatedCoins += resolveNodeValue(session, node.id, "coinsChange", node.coinsChange);
 	}
 
 	// Calculate final rewards
@@ -254,7 +283,7 @@ async function processTerminalNode(
 
 	// Build final narrative with summary
 	const coinSign = finalCoins >= 0 ? "+" : "";
-	const resolvedTerminalNarrative = resolveDynamicValue(node.narrative);
+	const resolvedTerminalNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
 	const narrative = `${precedingNarrative}\n\n${resolvedTerminalNarrative}\n\n**Celková bilance:** ${coinSign}${finalCoins} mincí, +${finalXP} XP`;
 
 	return {

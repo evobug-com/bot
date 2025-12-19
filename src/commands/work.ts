@@ -16,7 +16,7 @@ import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
-import { isDecisionNode, resolveDynamicValue } from "../util/storytelling/types";
+import { isDecisionNode } from "../util/storytelling/types";
 // Import branching stories to auto-register them
 import "../util/storytelling/stories/stolen-money-branching";
 import "../util/storytelling/stories/christmas-party-branching";
@@ -357,7 +357,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 					// Build the full narrative with intro + first decision
 					let fullNarrative = storyResult.narrative;
-					fullNarrative += `\n\n${resolveDynamicValue(context.currentNode.narrative)}`;
+					fullNarrative += `\n\n${storyEngine.resolveNodeValue(storyResult.session, context.currentNode.id, "narrative", context.currentNode.narrative)}`;
 					fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
 					fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
 

@@ -74,6 +74,7 @@ export function createSession(params: {
 		channelId: params.channelId,
 		guildId: params.guildId,
 		userLevel: params.userLevel,
+		resolvedNodeValues: {},
 	};
 
 	// Save to SQLite

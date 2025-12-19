@@ -84,6 +84,7 @@ function rowToSession(row: StorySessionRow): StorySession {
 		channelId: row.channel_id,
 		guildId: row.guild_id,
 		userLevel: row.user_level,
+		resolvedNodeValues: {},
 	};
 }
 
@@ -236,6 +237,7 @@ function createTestSession(overrides: Partial<StorySession> = {}): StorySession 
 		channelId: "channel-456",
 		guildId: "guild-789",
 		userLevel: 10,
+		resolvedNodeValues: {},
 		...overrides,
 	};
 }

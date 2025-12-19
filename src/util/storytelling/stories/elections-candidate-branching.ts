@@ -23,6 +23,7 @@
  */
 
 import type { BranchingStory, StoryNode } from "../types";
+import { randomInt } from "../types";
 
 const STORY_ID = "elections_candidate_branching";
 const STORY_TITLE = "Kandidát ve volbách";
@@ -104,7 +105,7 @@ Volební kampaň začíná. Jak povedeš svou kampaň?`,
 	decision_2a_legislative: {
 		id: "decision_2a_legislative",
 		type: "decision",
-		narrative: `🎉 **Gratulujeme! Získal jsi 4 500 hlasů a stal ses poslancem!**
+		narrative: () => `🎉 **Gratulujeme! Získal jsi ${randomInt(4001, 5000).toLocaleString("cs-CZ")} hlasů a stal ses poslancem!**
 
 Tvá pozitivní kampaň zaujala voliče. Teď musíš prosazovat zákony. Na čem se zaměříš?`,
 		coinsChange: 200,
@@ -134,7 +135,7 @@ Tvá pozitivní kampaň zaujala voliče. Teď musíš prosazovat zákony. Na če
 	decision_2b_lost_positive: {
 		id: "decision_2b_lost_positive",
 		type: "decision",
-		narrative: `😔 Získal jsi pouze 3 800 hlasů. **Bohužel jsi volby prohrál.**
+		narrative: () => `😔 Získal jsi pouze ${randomInt(3500, 4000).toLocaleString("cs-CZ")} hlasů. **Bohužel jsi volby prohrál.**
 
 Byl jsi blízko! Tvůj tým navrhuje přepočítání hlasů. Co uděláš?`,
 		choices: {
@@ -163,7 +164,7 @@ Byl jsi blízko! Tvůj tým navrhuje přepočítání hlasů. Co uděláš?`,
 	decision_2c_scandal: {
 		id: "decision_2c_scandal",
 		type: "decision",
-		narrative: `🎉 **Vyhrál jsi! Získal jsi 4 700 hlasů!**
+		narrative: () => `🎉 **Vyhrál jsi! Získal jsi ${randomInt(4001, 5000).toLocaleString("cs-CZ")} hlasů!**
 
 Tvá útočná kampaň fungovala. Ale teď noviny píšou o tvém starém korupčním skandálu...
 
@@ -195,7 +196,7 @@ Tvá útočná kampaň fungovala. Ale teď noviny píšou o tvém starém korup�
 	decision_2d_lost_attack: {
 		id: "decision_2d_lost_attack",
 		type: "decision",
-		narrative: `😔 Získal jsi pouze 2 800 hlasů. **Prohrál jsi volby.**
+		narrative: () => `😔 Získal jsi pouze ${randomInt(2000, 3500).toLocaleString("cs-CZ")} hlasů. **Prohrál jsi volby.**
 
 Tvá útočná kampaň se obrátila proti tobě. Ale někteří podporovatelé stále věří.`,
 		choices: {

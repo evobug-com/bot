@@ -21,6 +21,7 @@
  */
 
 import type { BranchingStory, StoryNode } from "../types";
+import { randomInt } from "../types";
 
 const STORY_ID = "christmas_party_branching";
 const STORY_TITLE = "Vánoční večírek";
@@ -158,7 +159,7 @@ Rozbaluješ ji před všemi. V krabičce je...`,
 	outcome_raffle: {
 		id: "outcome_raffle",
 		type: "outcome",
-		narrative: `🎟️ Účastníš se tomboly. Máš lístek číslo **${Math.floor(Math.random() * 100) + 1}**.
+		narrative: () => `🎟️ Účastníš se tomboly. Máš lístek číslo **${randomInt(1, 100)}**.
 
 Organizátor začíná losovat. Postupně vytahuje čísla...`,
 		successChance: 70,
@@ -258,14 +259,14 @@ Kontroluješ hodnotu - právě vyletěla nahoru! Prodáváš za **+1500 mincí**
 	terminal_big_prize: {
 		id: "terminal_big_prize",
 		type: "terminal",
-		narrative: `🎁 **HLAVNÍ VÝHRA!**
+		narrative: () => `🎁 **HLAVNÍ VÝHRA!**
 
-"A číslo **${Math.floor(Math.random() * 100) + 1}**!" volá organizátor.
+"A číslo **${randomInt(1, 100)}**!" volá organizátor.
 
 To je tvoje číslo! Vyhráváš hlavní cenu - **víkend pro dva v horském hotelu**!
 
-Prodáš poukaz kolegovi za **+500 mincí**. Štěstí přeje připraveným!`,
-		coinsChange: 500,
+Prodáš poukaz kolegovi za **+${randomInt(400, 600)} mincí**. Štěstí přeje připraveným!`,
+		coinsChange: () => randomInt(400, 600),
 		isPositiveEnding: true,
 		xpMultiplier: 1.5,
 	},

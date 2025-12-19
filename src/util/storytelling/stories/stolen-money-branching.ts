@@ -21,6 +21,7 @@
  */
 
 import type { BranchingStory, StoryNode } from "../types";
+import { randomInt } from "../types";
 
 const STORY_ID = "stolen_money_branching";
 const STORY_TITLE = "Ukradené peníze";
@@ -33,9 +34,9 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `💰 **${STORY_TITLE}**
+		narrative: () => `💰 **${STORY_TITLE}**
 
-Procházíš parkem, když si všimneš starší paní, která upustila peněženku. Rychle ji sebereš - je v ní **500 mincí**!
+Procházíš parkem, když si všimneš starší paní, která upustila peněženku. Rychle ji sebereš - je v ní **${randomInt(400, 600)} mincí**!
 
 Paní si ničeho nevšimla a pomalu odchází. Srdce ti buší... *co uděláš?*`,
 		nextNodeId: "decision_1",
@@ -86,10 +87,13 @@ Paní si ničeho nevšimla a pomalu odchází. Srdce ti buší... *co uděláš?
 	decision_2a_money: {
 		id: "decision_2a_money",
 		type: "decision",
-		narrative: `🍀 **Štěstí!** Utekl jsi bez problémů a nikdo tě neviděl.
+		narrative: () => {
+			const amount = randomInt(400, 600);
+			return `🍀 **Štěstí!** Utekl jsi bez problémů a nikdo tě neviděl.
 
-Teď máš **500 mincí** navíc. Co s nimi uděláš?`,
-		coinsChange: 500,
+Teď máš **${amount} mincí** navíc. Co s nimi uděláš?`;
+		},
+		coinsChange: () => randomInt(400, 600),
 		choices: {
 			choiceX: {
 				id: "choiceX",
@@ -193,9 +197,12 @@ Teď máš **500 mincí** navíc. Co s nimi uděláš?`,
 	decision_2c_reward: {
 		id: "decision_2c_reward",
 		type: "decision",
-		narrative: `😊 Paní se rozzáří vděčností. "Ach, děkuji vám mnohokrát! Jste tak hodný!"
+		narrative: () => {
+			const reward = randomInt(150, 250);
+			return `😊 Paní se rozzáří vděčností. "Ach, děkuji vám mnohokrát! Jste tak hodný!"
 
-Sahá do peněženky a nabízí ti **200 mincí** jako odměnu.`,
+Sahá do peněženky a nabízí ti **${reward} mincí** jako odměnu.`;
+		},
 		choices: {
 			choiceX: {
 				id: "choiceX",

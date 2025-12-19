@@ -19,7 +19,7 @@ import {
 import * as sessionManager from "../services/storySession";
 import * as storyEngine from "../util/storytelling/engine";
 import type { StoryAction } from "../util/storytelling/types";
-import { isDecisionNode } from "../util/storytelling/types";
+import { isDecisionNode, resolveDynamicValue } from "../util/storytelling/types";
 import { createLogger } from "../util/logger";
 import { createInteraktivniPribehEmbed } from "../util/messages/embedBuilders";
 
@@ -260,7 +260,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 			}
 
 			// Add the next decision narrative
-			fullNarrative += `\n\n${context.currentNode.narrative}`;
+			fullNarrative += `\n\n${resolveDynamicValue(context.currentNode.narrative)}`;
 
 			// Show choice descriptions
 			fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;

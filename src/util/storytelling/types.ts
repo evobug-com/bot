@@ -41,6 +41,27 @@ export interface StoryChoice {
 }
 
 /**
+ * Dynamic value type - can be a static value or a function that generates one
+ * Use functions for randomization (e.g., vote counts, variable rewards)
+ */
+export type DynamicValue<T> = T | (() => T);
+
+/**
+ * Helper to resolve a dynamic value (call if function, return if static)
+ */
+export function resolveDynamicValue<T>(value: DynamicValue<T>): T {
+	return typeof value === "function" ? (value as () => T)() : value;
+}
+
+/**
+ * Random integer generator for dynamic story content
+ * Use in narrative functions for random values (vote counts, amounts, etc.)
+ */
+export function randomInt(min: number, max: number): number {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
  * Base properties shared by all node types
  */
 interface BaseStoryNode {
@@ -48,10 +69,10 @@ interface BaseStoryNode {
 	id: string;
 	/** Node type determines behavior and available properties */
 	type: StoryNodeType;
-	/** Narrative text shown to player (supports markdown) */
-	narrative: string;
-	/** Immediate coin change when entering this node (optional) */
-	coinsChange?: number;
+	/** Narrative text shown to player (supports markdown). Can be a function for dynamic content. */
+	narrative: DynamicValue<string>;
+	/** Immediate coin change when entering this node (optional). Can be a function for randomization. */
+	coinsChange?: DynamicValue<number>;
 }
 
 /**

@@ -23,6 +23,7 @@
  */
 
 import type { BranchingStory, StoryNode } from "../types";
+import { randomInt } from "../types";
 
 const STORY_ID = "reveal_cheating_branching";
 const STORY_TITLE = "Odhalení podvádění";
@@ -184,9 +185,12 @@ Tvůj report byl odmítnut. Můžeš se pokusit získat víc důkazů, nebo to v
 	decision_2c_bribe: {
 		id: "decision_2c_bribe",
 		type: "decision",
-		narrative: `😰 **Podvodník panikuje.** "Hele, můžeme se domluvit, ne? Dám ti **800 mincí**, abys to nikomu neříkal."
+		narrative: () => {
+			const bribe = randomInt(600, 1000);
+			return `😰 **Podvodník panikuje.** "Hele, můžeme se domluvit, ne? Dám ti **${bribe} mincí**, abys to nikomu neříkal."
 
-Nabízí ti úplatek. Co uděláš?`,
+Nabízí ti úplatek. Co uděláš?`;
+		},
 		choices: {
 			choiceX: {
 				id: "choiceX",

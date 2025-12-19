@@ -11,27 +11,12 @@ import {
 } from "../util/bot/rewards.ts";
 import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed, createInteraktivniPribehEmbed } from "../util/messages/embedBuilders.ts";
-import { generateStolenMoneyStory } from "../util/storytelling/stolen-money.ts";
-import { generateElectionsCandidateStory } from "../util/storytelling/elections-candidate.ts";
-import { generateOfficePrankStory } from "../util/storytelling/office-prank.ts";
-import { generateITSupportStory } from "../util/storytelling/it-support.ts";
-import { generateRevealCheatingStory } from "../util/storytelling/reveal-cheating.ts";
-import { generateVideoConferenceStory } from "../util/storytelling/video-conference.ts";
-import { generateChristmasPartyStory } from "../util/storytelling/christmas-party.ts";
-import { generateCoffeeMachineStory } from "../util/storytelling/coffee-machine.ts";
-import { generateJobInterviewStory } from "../util/storytelling/job-interview.ts";
-import { generateServerRoomStory } from "../util/storytelling/server-room.ts";
-import { generateElevatorStuckStory } from "../util/storytelling/elevator-stuck.ts";
-import { generateLunchThiefStory } from "../util/storytelling/lunch-thief.ts";
-import { generateFridayDeployStory } from "../util/storytelling/friday-deploy.ts";
-import { generateClientMeetingStory } from "../util/storytelling/client-meeting.ts";
-import { generateHackathonStory } from "../util/storytelling/hackathon.ts";
 import { WORK_CONFIG } from "../services/work/config.ts";
 import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
-import { isDecisionNode } from "../util/storytelling/types";
+import { isDecisionNode, resolveDynamicValue } from "../util/storytelling/types";
 // Import branching stories to auto-register them
 import "../util/storytelling/stories/stolen-money-branching";
 import "../util/storytelling/stories/christmas-party-branching";
@@ -53,33 +38,11 @@ import "../util/storytelling/stories/video-conference-branching";
 // TYPES
 // ============================================================================
 
-/** Story result from generator */
-interface StoryResult {
-	story: string;
-	totalCoinsChange: number;
-	xpGranted: number;
-}
-
-/** Story generator function signature */
-type StoryGenerator = (
-	userId: number,
-	userLevel: number,
-	...args: boolean[]
-) => Promise<StoryResult>;
-
-/** Story configuration for activities with follow-up narratives */
-interface StoryConfig {
-	generator: StoryGenerator;
-	title: string;
-	args?: boolean[];
-}
-
 /** Base activity definition */
 interface BaseActivity {
 	id: string;
 	title: string;
 	activity: string;
-	story?: StoryConfig;
 	/** ID of branching story (Mass Effect-style interactive) */
 	branchingStoryId?: string;
 }
@@ -394,7 +357,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 					// Build the full narrative with intro + first decision
 					let fullNarrative = storyResult.narrative;
-					fullNarrative += `\n\n${context.currentNode.narrative}`;
+					fullNarrative += `\n\n${resolveDynamicValue(context.currentNode.narrative)}`;
 					fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
 					fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
 
@@ -423,39 +386,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		} catch (error) {
 			console.error(`Error starting branching story ${activity.branchingStoryId}:`, error);
 			// Don't fail the whole command if story fails
-			// User already got their base work reward
-		}
-	}
-	// Check if this activity has a linear story follow-up
-	else if (activity.story) {
-		try {
-			// Generate the story with all random events
-			const storyResult = await activity.story.generator(
-				dbUser.id,
-				work.levelProgress.currentLevel,
-				...(activity.story.args || []),
-			);
-
-			// Create a follow-up embed with the story
-			const storyEmbed = createUradPraceEmbed()
-				.setTitle(activity.story.title)
-				.setDescription(storyResult.story)
-				.setColor(storyResult.totalCoinsChange >= 0 ? 0x00ff00 : 0xff0000)
-				.setFooter(
-					createEconomyFooter(
-						work.updatedStats.coinsCount + storyResult.totalCoinsChange,
-						work.levelProgress.currentLevel,
-						work.updatedStats.workCount,
-					),
-				);
-
-			// Send the story as a follow-up message
-			await interaction.followUp({
-				embeds: [storyEmbed],
-			});
-		} catch (error) {
-			console.error(`Error generating ${activity.id} story:`, error);
-			// Don't fail the whole command if story generation fails
 			// User already got their base work reward
 		}
 	}
@@ -501,12 +431,6 @@ export const workActivities = [
 		activity: "Přezuli jste firemní auto",
 	},
 	{
-		id: "video-conference",
-		title: "📡 Mezinárodní komunikátor",
-		activity: "Připojuješ se na videokonferenci s indickými kolegy... (příběh pokračuje níže)",
-		story: { generator: generateVideoConferenceStory, title: "📡 Příběh videokonference" },
-	},
-	{
 		id: "desk-assembly",
 		title: "🪛 Montér nábytku",
 		activity: "Postavili jste novému kolegovi stůl",
@@ -520,12 +444,6 @@ export const workActivities = [
 		id: "team-lunch",
 		title: "🌯 Týmový kolega",
 		activity: "Zašli jste si s kolegy na obídek",
-	},
-	{
-		id: "christmas-party",
-		title: "👯 Párty účastník",
-		activity: "Účastníš se vánočního večírku... (příběh pokračuje níže)",
-		story: { generator: generateChristmasPartyStory, title: "🎄 Příběh vánočního večírku" },
 	},
 	{
 		id: "quarterly-goals",
@@ -569,12 +487,6 @@ export const workActivities = [
 		activity: "Klikli jste na [tento odkaz](https://www.youtube.com/watch?v=dQw4w9WgXcQ).",
 	},
 	{
-		id: "reveal-cheating",
-		title: "🕵️ Detektiv",
-		activity: "Odhalil jsi podvádění na Discord příkazech... (příběh pokračuje níže)",
-		story: { generator: generateRevealCheatingStory, title: "🕵️ Příběh detektiva" },
-	},
-	{
 		id: "bug-hunter",
 		title: "🐛 Bug Hunter",
 		activity: "Nahlásili jste chybu vývojářům bota.",
@@ -583,12 +495,6 @@ export const workActivities = [
 		id: "feature-suggester",
 		title: "💡 Inovátor",
 		activity: "Navrhli jste novou funkci pro bota.",
-	},
-	{
-		id: "elections-candidate",
-		title: "🗳️ Kandidát do parlamentu",
-		activity: "Kandidoval jsi ve volbách do parlamentu... (příběh pokračuje níže)",
-		story: { generator: generateElectionsCandidateStory, title: "🗳️ Příběh politika" },
 	},
 	{
 		id: "complaint-about-work",
@@ -602,12 +508,6 @@ export const workActivities = [
 			title: "🏳️‍🌈 Testovaný",
 			activity: "Absolvovali jste homosexuální test. Výsledek: " + outcome + ".",
 		}
-	},
-	{
-		id: "stolen-money",
-		title: "💰 Zloděj",
-		activity: "Rozhodl jsi se ukrást peníze babičce... (příběh pokračuje níže)",
-		story: { generator: generateStolenMoneyStory, title: "💰 Příběh zloděje" },
 	},
 	{
 		id: "stolen-money-branching",
@@ -725,27 +625,9 @@ export const workActivities = [
 		activity: "Vyplnili jste hromadu papírování.",
 	},
 	{
-		id: "it-support",
-		title: "💻 IT Podpora",
-		activity: "Pomáháš kolegovi s jeho počítačem... (příběh pokračuje níže)",
-		story: { generator: generateITSupportStory, title: "💻 Příběh IT supportu", args: [false] },
-	},
-	{
-		id: "network-engineer",
-		title: "🌐 Síťař",
-		activity: "Opravuješ firemní síť... (příběh pokračuje níže)",
-		story: { generator: generateITSupportStory, title: "🌐 Příběh síťaře", args: [true] },
-	},
-	{
 		id: "coffee-break",
 		title: "☕ Kávová pauza",
 		activity: "Dali jste si kávovou pauzu.",
-	},
-	{
-		id: "office-prank",
-		title: "🎉 Kancelářský žertík",
-		activity: "Děláš kolegovi žertík s jeho počítačem... (příběh pokračuje níže)",
-		story: { generator: generateOfficePrankStory, title: "🎉 Příběh žertíka" },
 	},
 	{
 		id: "printer-jam",
@@ -942,64 +824,14 @@ export const workActivities = [
 		title: "💻 Localhost fenomén",
 		activity: "'Na mém počítači to funguje' jste řekli třikrát dnes. Kolegové vás nenávidí. Ale máte pravdu. U vás to fakt funguje.",
 	},
-	{
-		id: "coffee-machine-adventure",
-		title: "☕ Kávový dobrodruh",
-		activity: "Pokoušíš se ovládnout nový super-automatický kávovar... (příběh pokračuje níže)",
-		story: { generator: generateCoffeeMachineStory, title: "☕ Příběh kávovaru" },
-	},
-	{
-		id: "job-interview-conductor",
-		title: "📋 Personalista",
-		activity: "Vedeš pohovor s kandidátem na pozici junior developera... (příběh pokračuje níže)",
-		story: { generator: generateJobInterviewStory, title: "📋 Příběh pohovoru" },
-	},
-	{
-		id: "server-room-adventure",
-		title: "🖥️ Serverovnový průzkumník",
-		activity: "Vstupuješ do serverovny opravit blikající server... (příběh pokračuje níže)",
-		story: { generator: generateServerRoomStory, title: "🖥️ Příběh serverovny" },
-	},
-	{
-		id: "elevator-stuck",
-		title: "🛗 Pasažér výtahu",
-		activity: "Zasekl ses ve výtahu s někým zajímavým... (příběh pokračuje níže)",
-		story: { generator: generateElevatorStuckStory, title: "🛗 Příběh výtahu" },
-	},
-	{
-		id: "lunch-thief-investigation",
-		title: "🍱 Detektiv obědů",
-		activity: "Někdo ti ukradl oběd z ledničky! Čas na vyšetřování... (příběh pokračuje níže)",
-		story: { generator: generateLunchThiefStory, title: "🍱 Příběh zloděje obědů" },
-	},
-	{
-		id: "friday-deploy-yolo",
-		title: "🚀 Páteční deployer",
-		activity: "Je pátek odpoledne a ty mačkáš DEPLOY... (příběh pokračuje níže)",
-		story: { generator: generateFridayDeployStory, title: "🚀 Příběh pátečního deploye" },
-	},
-	{
-		id: "client-meeting-important",
-		title: "💼 Account manager",
-		activity: "Máš důležitou schůzku s potenciálním klientem... (příběh pokračuje níže)",
-		story: { generator: generateClientMeetingStory, title: "💼 Příběh schůzky s klientem" },
-	},
-	{
-		id: "hackathon-participant",
-		title: "🏆 Hackathonista",
-		activity: "Účastníš se 48hodinového hackathonu... (příběh pokračuje níže)",
-		story: { generator: generateHackathonStory, title: "🏆 Příběh hackathonu" },
-	},
 ] as const satisfies readonly Activity[];
 
 // Derived from activities - no manual maintenance needed
-// Includes both linear stories and branching stories
 export const storyActivityIds = new Set(
 	(workActivities as readonly Activity[])
 		.filter((act): act is BaseActivity =>
 			typeof act !== "function" &&
-			(("story" in act && act.story !== undefined) ||
-			("branchingStoryId" in act && act.branchingStoryId !== undefined))
+			"branchingStoryId" in act && act.branchingStoryId !== undefined
 		)
 		.map((act) => act.id)
 );

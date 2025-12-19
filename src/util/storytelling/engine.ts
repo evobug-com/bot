@@ -20,6 +20,7 @@ import {
 	isIntroNode,
 	isOutcomeNode,
 	isTerminalNode,
+	resolveDynamicValue,
 } from "./types";
 
 // Story registry - stores all available stories
@@ -110,8 +111,8 @@ function processIntroNode(
 	}
 
 	// Apply any coin change from intro
-	if (node.coinsChange) {
-		session.accumulatedCoins += node.coinsChange;
+	if (node.coinsChange !== undefined) {
+		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
 	}
 
 	// Advance to the next node (usually first decision)
@@ -124,7 +125,7 @@ function processIntroNode(
 	return {
 		session,
 		currentNode: nextNode,
-		narrative: node.narrative,
+		narrative: resolveDynamicValue(node.narrative),
 		isComplete: false,
 	};
 }
@@ -176,8 +177,8 @@ async function processOutcomeNode(
 	const rollResult = rollChance(actualChance);
 
 	// Apply any coin change from this node
-	if (node.coinsChange) {
-		session.accumulatedCoins += node.coinsChange;
+	if (node.coinsChange !== undefined) {
+		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
 	}
 
 	// Determine next node based on roll
@@ -187,16 +188,17 @@ async function processOutcomeNode(
 	sessionManager.updateSession(session);
 
 	const nextNode = getNodeOrThrow(story, nextNodeId);
+	const resolvedNarrative = resolveDynamicValue(node.narrative);
 
 	// Check if next node is terminal or another decision
 	if (isTerminalNode(nextNode)) {
-		return processTerminalNode(session, story, node.narrative, rollResult);
+		return processTerminalNode(session, story, resolvedNarrative, rollResult);
 	}
 
 	return {
 		session,
 		currentNode: nextNode,
-		narrative: node.narrative,
+		narrative: resolvedNarrative,
 		isComplete: false,
 		rollResult,
 	};
@@ -217,8 +219,8 @@ async function processTerminalNode(
 	}
 
 	// Apply final coin change
-	if (node.coinsChange) {
-		session.accumulatedCoins += node.coinsChange;
+	if (node.coinsChange !== undefined) {
+		session.accumulatedCoins += resolveDynamicValue(node.coinsChange);
 	}
 
 	// Calculate final rewards
@@ -252,7 +254,8 @@ async function processTerminalNode(
 
 	// Build final narrative with summary
 	const coinSign = finalCoins >= 0 ? "+" : "";
-	const narrative = `${precedingNarrative}\n\n${node.narrative}\n\n**Celková bilance:** ${coinSign}${finalCoins} mincí, +${finalXP} XP`;
+	const resolvedTerminalNarrative = resolveDynamicValue(node.narrative);
+	const narrative = `${precedingNarrative}\n\n${resolvedTerminalNarrative}\n\n**Celková bilance:** ${coinSign}${finalCoins} mincí, +${finalXP} XP`;
 
 	return {
 		session,

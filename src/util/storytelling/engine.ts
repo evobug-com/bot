@@ -174,8 +174,15 @@ async function processDecisionChoice(
 
 	const selectedChoice = node.choices[choice];
 
-	// Record the choice
+	// Record the choice for analytics
 	session.choicesPath.push(choice);
+
+	// Record the choice with label for summary
+	session.choiceHistory.push({
+		nodeId: node.id,
+		choice,
+		label: selectedChoice.label,
+	});
 
 	// Move to the outcome node
 	session.currentNodeId = selectedChoice.nextNodeId;

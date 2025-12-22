@@ -32,6 +32,7 @@ db.run(`
 		current_node_id TEXT NOT NULL,
 		accumulated_coins INTEGER NOT NULL DEFAULT 0,
 		choices_path TEXT NOT NULL DEFAULT '[]',
+		choice_history TEXT NOT NULL DEFAULT '[]',
 		started_at INTEGER NOT NULL,
 		last_interaction_at INTEGER NOT NULL,
 		message_id TEXT NOT NULL,
@@ -40,6 +41,13 @@ db.run(`
 		user_level INTEGER NOT NULL DEFAULT 1
 	)
 `);
+
+// Add choice_history column if it doesn't exist (migration for existing databases)
+try {
+	db.run(`ALTER TABLE story_sessions ADD COLUMN choice_history TEXT NOT NULL DEFAULT '[]'`);
+} catch {
+	// Column already exists, ignore
+}
 
 // Create index on discord_user_id for fast lookups
 db.run(`
@@ -64,6 +72,7 @@ interface StorySessionRow {
 	current_node_id: string;
 	accumulated_coins: number;
 	choices_path: string;
+	choice_history: string;
 	started_at: number;
 	last_interaction_at: number;
 	message_id: string;
@@ -84,6 +93,7 @@ function rowToSession(row: StorySessionRow): StorySession {
 		currentNodeId: row.current_node_id,
 		accumulatedCoins: row.accumulated_coins,
 		choicesPath: JSON.parse(row.choices_path) as string[],
+		choiceHistory: JSON.parse(row.choice_history ?? "[]") as StorySession["choiceHistory"],
 		startedAt: row.started_at,
 		lastInteractionAt: row.last_interaction_at,
 		messageId: row.message_id,
@@ -102,9 +112,9 @@ export function createSession(session: StorySession): void {
 		`
 		INSERT INTO story_sessions (
 			session_id, discord_user_id, db_user_id, story_id, current_node_id,
-			accumulated_coins, choices_path, started_at, last_interaction_at,
+			accumulated_coins, choices_path, choice_history, started_at, last_interaction_at,
 			message_id, channel_id, guild_id, user_level
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		[
 			session.sessionId,
@@ -114,6 +124,7 @@ export function createSession(session: StorySession): void {
 			session.currentNodeId,
 			session.accumulatedCoins,
 			JSON.stringify(session.choicesPath),
+			JSON.stringify(session.choiceHistory),
 			session.startedAt,
 			session.lastInteractionAt,
 			session.messageId,
@@ -174,6 +185,7 @@ export function updateSession(session: StorySession): void {
 			current_node_id = ?,
 			accumulated_coins = ?,
 			choices_path = ?,
+			choice_history = ?,
 			last_interaction_at = ?
 		WHERE session_id = ?
 		`,
@@ -181,6 +193,7 @@ export function updateSession(session: StorySession): void {
 			session.currentNodeId,
 			session.accumulatedCoins,
 			JSON.stringify(session.choicesPath),
+			JSON.stringify(session.choiceHistory),
 			session.lastInteractionAt,
 			session.sessionId,
 		],

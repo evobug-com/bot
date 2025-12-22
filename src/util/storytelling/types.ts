@@ -160,6 +160,18 @@ export interface BranchingStory {
 // =============================================================================
 
 /**
+ * A recorded choice with its human-readable label
+ */
+export interface ChoiceHistoryEntry {
+	/** Node ID where the choice was made */
+	nodeId: string;
+	/** Choice identifier (choiceX or choiceY) */
+	choice: "choiceX" | "choiceY";
+	/** Human-readable label of the choice */
+	label: string;
+}
+
+/**
  * Active story session for a player
  */
 export interface StorySession {
@@ -177,6 +189,8 @@ export interface StorySession {
 	accumulatedCoins: number;
 	/** Path of choices made (for analytics) */
 	choicesPath: string[];
+	/** History of choices with human-readable labels (for summary) */
+	choiceHistory: ChoiceHistoryEntry[];
 	/** Session start timestamp */
 	startedAt: number;
 	/** Last interaction timestamp */

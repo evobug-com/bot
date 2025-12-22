@@ -78,6 +78,7 @@ function rowToSession(row: StorySessionRow): StorySession {
 		currentNodeId: row.current_node_id,
 		accumulatedCoins: row.accumulated_coins,
 		choicesPath: JSON.parse(row.choices_path) as string[],
+		choiceHistory: [],
 		startedAt: row.started_at,
 		lastInteractionAt: row.last_interaction_at,
 		messageId: row.message_id,
@@ -223,7 +224,7 @@ function getSessionByMessage(messageId: string): StorySession | null {
 // Helper to create a test session
 function createTestSession(overrides: Partial<StorySession> = {}): StorySession {
 	const now = Date.now();
-	return {
+	const base: StorySession = {
 		sessionId: `test-${now}-${Math.random().toString(36).substring(7)}`,
 		discordUserId: "123456789",
 		dbUserId: 1,
@@ -231,6 +232,7 @@ function createTestSession(overrides: Partial<StorySession> = {}): StorySession 
 		currentNodeId: "intro",
 		accumulatedCoins: 0,
 		choicesPath: [],
+		choiceHistory: [],
 		startedAt: now,
 		lastInteractionAt: now,
 		messageId: "msg-123",
@@ -238,8 +240,8 @@ function createTestSession(overrides: Partial<StorySession> = {}): StorySession 
 		guildId: "guild-789",
 		userLevel: 10,
 		resolvedNodeValues: {},
-		...overrides,
 	};
+	return { ...base, ...overrides };
 }
 
 describe("Story Session Storage", () => {

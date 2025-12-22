@@ -367,10 +367,11 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 						.setDescription(fullNarrative)
 						.setFooter({ text: "Vyber si svou cestu..." });
 
-					// Send the story with buttons
+					// Send the story with buttons (ephemeral - only the user sees the choices)
 					await interaction.followUp({
 						embeds: [storyEmbed],
 						components: buttons.map((row) => row.toJSON()),
+						flags: MessageFlags.Ephemeral,
 					});
 				} else {
 					// Something went wrong, just show narrative without buttons
@@ -380,6 +381,7 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 
 					await interaction.followUp({
 						embeds: [storyEmbed],
+						flags: MessageFlags.Ephemeral,
 					});
 				}
 			}

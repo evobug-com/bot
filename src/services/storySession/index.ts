@@ -68,6 +68,7 @@ export function createSession(params: {
 		currentNodeId: params.startNodeId,
 		accumulatedCoins: 0,
 		choicesPath: [],
+		choiceHistory: [],
 		startedAt: now,
 		lastInteractionAt: now,
 		messageId: params.messageId,

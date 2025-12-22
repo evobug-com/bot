@@ -18,12 +18,34 @@ import {
 } from "discord.js";
 import * as sessionManager from "../services/storySession";
 import * as storyEngine from "../util/storytelling/engine";
-import type { StoryAction } from "../util/storytelling/types";
+import type { StoryAction, StoryActionResult, StorySession } from "../util/storytelling/types";
 import { isDecisionNode } from "../util/storytelling/types";
 import { createLogger } from "../util/logger";
 import { createInteraktivniPribehEmbed } from "../util/messages/embedBuilders";
 
 const log = createLogger("StoryInteractions");
+
+/**
+ * Build a summary of the story for public display
+ */
+function buildStorySummary(session: StorySession, result: StoryActionResult): string {
+	let summary = "";
+
+	// List choices made
+	if (session.choiceHistory.length > 0) {
+		summary += "**Rozhodnutí:**\n";
+		for (const choice of session.choiceHistory) {
+			summary += `• ${choice.label}\n`;
+		}
+		summary += "\n";
+	}
+
+	// Final outcome narrative (without the coin/XP summary that's already in result.narrative)
+	// The engine already adds the rewards to the narrative, so we just use it
+	summary += `**Výsledek:**\n${result.narrative}`;
+
+	return summary;
+}
 
 // Custom ID prefix for story buttons
 const STORY_PREFIX = "story_";
@@ -217,16 +239,28 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 
 		// Build the response
 		if (result.isComplete) {
-			// Story completed - show final narrative without buttons
-			const completeEmbed = createInteraktivniPribehEmbed()
-				.setTitle(storyTitle)
-				.setDescription(result.narrative)
+			// Story completed - update ephemeral to show completion status
+			const completedEmbed = createInteraktivniPribehEmbed()
+				.setTitle("✅ Příběh dokončen")
+				.setDescription("Výsledek byl odeslán do kanálu.")
 				.setFooter({ text: "Konec příběhu" });
 
 			await interaction.update({
-				embeds: [completeEmbed],
+				embeds: [completedEmbed],
 				components: [],
 			});
+
+			// Send PUBLIC message with summary for everyone to see
+			if (interaction.channel && "send" in interaction.channel) {
+				const summaryEmbed = createInteraktivniPribehEmbed()
+					.setTitle(storyTitle)
+					.setDescription(buildStorySummary(session, result))
+					.setFooter({ text: `${interaction.user.displayName} dokončil příběh` });
+
+				await interaction.channel.send({
+					embeds: [summaryEmbed],
+				});
+			}
 		} else {
 			// Story continues - show new narrative with buttons
 			const context = storyEngine.getStoryContext(result.session);

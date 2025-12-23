@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `💻 **${STORY_TITLE}**
-
-Kolega z účetního oddělení tě zastavuje na chodbě: "Pomoz mi, můj počítač je strašně pomalý a občas se zasekává!"
+		narrative: `Kolega z účetního oddělení tě zastavuje na chodbě: "Pomoz mi, můj počítač je strašně pomalý a občas se zasekává!"
 
 Díváš se na něj a uvažuješ, jak problém vyřešit. Máš čas si ho pořádně prohlédnout, nebo zkusíš rychlou opravu?`,
 		nextNodeId: "decision_1",

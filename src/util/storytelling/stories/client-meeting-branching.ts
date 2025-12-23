@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `💼 **${STORY_TITLE}**
-
-Za hodinu máš klíčovou prezentaci pro potenciálního klienta. Je to velká ryba - kontrakt by mohl znamenat **500+ mincí** provize.
+		narrative: `Za hodinu máš klíčovou prezentaci pro potenciálního klienta. Je to velká ryba - kontrakt by mohl znamenat **500+ mincí** provize.
 
 Tvůj šéf právě poslal zprávu: "Tohle musí vyjít. Klient je náročný, ale má peníze."
 
@@ -162,7 +160,7 @@ Klient dorazí za 15 minut. Co uděláš?`,
 		type: "decision",
 		narrative: `🤔 Prezentace běží dobře, ale klient začíná klást technické otázky, na které nejsi úplně připravený.
 
-"A jak to řešíte s GDPR compliance?" ptá se důrazně.`,
+"A jak řešíte soulad s GDPR?" ptá se důrazně.`,
 		choices: {
 			choiceX: {
 				id: "choiceX",
@@ -242,7 +240,7 @@ Klient zvedá obočí. "To se stává často?" ptá se skepticky.`,
 	outcome_tech_support: {
 		id: "outcome_tech_support",
 		type: "outcome",
-		narrative: `📞 "IT podporo, potřebujem zázrak během 10 minut!" Kolega ti slibuje, že to zkusí...`,
+		narrative: `📞 "IT podporo, potřebujeme zázrak během 10 minut!" Kolega ti slibuje, že to zkusí...`,
 		successChance: 70,
 		successNodeId: "terminal_support_fixed",
 		failNodeId: "terminal_still_broken",

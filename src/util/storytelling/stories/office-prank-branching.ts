@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🎭 **${STORY_TITLE}**
-
-Kolega Honza odešel na oběd a nechal počítač odemčený. To je příliš lákavá příležitost!
+		narrative: `Kolega Honza odešel na oběd a nechal počítač odemčený. To je příliš lákavá příležitost!
 
 Máš nápad na žertík, ale musíš se rozhodnout - jít na jistotu s něčím jednoduchým, nebo zkusit něco komplexnějšího a vtipnějšího?`,
 		nextNodeId: "decision_1",
@@ -76,7 +74,7 @@ Máš nápad na žertík, ale musíš se rozhodnout - jít na jistotu s něčím
 	outcome_simple: {
 		id: "outcome_simple",
 		type: "outcome",
-		narrative: `🖱️ Rychle měníš pozadí na vtipný obrázek a přehazuješ klávesy Y a Z na klávesnici...
+		narrative: `🖱️ Rychle měníš pozadí na vtipný obrázek a prohazuješ klávesy Y a Z na klávesnici...
 
 ⌨️ Honza se vrací, zapíná počítač...`,
 		successChance: 70,
@@ -237,7 +235,7 @@ Kolegi přikyvují. Šéf vypadá spokojený s týmovým duchem...`,
 		type: "outcome",
 		narrative: `💪 "To jsem udělal já!" říkáš s úsměvem.
 
-Šéf se na tebe dívá. Kolegi jsou ticho...`,
+Šéf se na tebe dívá. Kolegové jsou potichu...`,
 		successChance: 70,
 		successNodeId: "terminal_big_bonus",
 		failNodeId: "terminal_jealousy",
@@ -413,7 +411,7 @@ Ztrácíš **-200 mincí**, ale zachoval jsi práci a reputaci.`,
 		type: "terminal",
 		narrative: `😠 **Závist kolegů**
 
-Kolegi jsou naštvaní, že jsi si vzal všechny zásluhy. Někdo to nahlásil HR za "narušování pracovního prostředí".
+Kolegové jsou naštvaní, že jsi si vzal všechny zásluhy. Někdo to nahlásil HR za "narušování pracovního prostředí".
 
 Dostáváš napomenutí a ztrácíš **-150 mincí** z platu jako sankci.`,
 		coinsChange: -150,

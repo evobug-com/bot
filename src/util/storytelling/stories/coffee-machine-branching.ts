@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `☕ **${STORY_TITLE}**
-
-Přicházíš do kuchyňky a vidíš nový super-automatický kávovar. Je to technologický zázrak - dotykový displej, LED podsvícení, desítky tlačítek!
+		narrative: `Přicházíš do kuchyňky a vidíš nový super-automatický kávovar. Je to technologický zázrak - dotykový displej, LED podsvícení, desítky tlačítek!
 
 Ovládací panel vypadá jako kokpit letadla. Vedle leží tlustý manuál v němčině. *Co uděláš?*`,
 		nextNodeId: "decision_1",

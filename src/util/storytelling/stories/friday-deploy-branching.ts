@@ -33,9 +33,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🚀 **${STORY_TITLE}**
-
-Je pátek 16:30. Právě jsi dokončil novou feature a všechno je připravené k nasazení.
+		narrative: `Je pátek 16:30. Právě jsi dokončil novou feature a všechno je připravené k nasazení.
 
 Kolegové odcházejí domů a varují tě: *"Páteční deploy? To nemyslíš vážně..."*
 
@@ -194,7 +192,7 @@ Produkce není dotčená, ale máš problém. Už je 17:00...`,
 	decision_2c_monday: {
 		id: "decision_2c_monday",
 		type: "decision",
-		narrative: `☀️ **Pondělí ráno.** Jsi čerstvý a odpočatý. Šéf je spokojený, že to nerisknul jsi.
+		narrative: `☀️ **Pondělí ráno.** Jsi čerstvý a odpočatý. Šéf je spokojený, že jsi to nerisknul.
 
 Co teď s deployem?`,
 		choices: {

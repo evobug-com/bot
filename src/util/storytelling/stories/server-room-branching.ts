@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🖥️ **${STORY_TITLE}**
-
-Vstupuješ do serverovny s blikajícími LED diodami a hučícími ventilátory. Je tu zima jako na Antarktidě - měl jsi vzít bundu.
+		narrative: `Vstupuješ do serverovny s blikajícími LED diodami a hučícími ventilátory. Je tu zima jako na Antarktidě - měl jsi vzít bundu.
 
 Monitoring hlásí nějaký problém, ale není jasné, co přesně se děje. Všimneš si dvou věcí najednou:
 - V hlavních racích bliká červená LED
@@ -258,7 +256,7 @@ Někdo určitě ví, že jsi u toho serveru. Co uděláš?`,
 	outcome_investigate: {
 		id: "outcome_investigate",
 		type: "outcome",
-		narrative: `🕵️ Prohledáváš logy serveru. Hledáš stopu, kdo to nainstaloval...`,
+		narrative: `🕵️ Prohledáváš logy serveru. Hledáš, kdo to nainstaloval...`,
 		successChance: 70,
 		successNodeId: "terminal_evidence",
 		failNodeId: "terminal_caught_snooping",
@@ -278,7 +276,7 @@ Postupoval jsi podle předpisů, vyměnil disk správně a RAID rebuild proběhl
 
 CEO ti osobně volá a děkuje. Dostáváš bonus **+650 mincí**.
 
-*"Kdyby ses nezdržoval u toho divného serveru, mohl jsi přijít pozdě. Dobře rozhodnutí."*`,
+*"Kdyby ses zdržoval u toho divného serveru, mohl jsi přijít pozdě. Dobré rozhodnutí."*`,
 		coinsChange: 650,
 		isPositiveEnding: true,
 		xpMultiplier: 1.6,

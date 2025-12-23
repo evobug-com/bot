@@ -31,9 +31,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🛗 **${STORY_TITLE}**
-
-Nastupuješ do výtahu a mačkáš tlačítko svého patra. Výtah se rozjíždí...
+		narrative: `Nastupuješ do výtahu a mačkáš tlačítko svého patra. Výtah se rozjíždí...
 
 ⚡ **TRZZ!** Náhlé škubnutí! Světla blikají a výtah se zastaví. Zasekl se mezi patry!
 

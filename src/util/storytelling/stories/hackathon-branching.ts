@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `💻 **${STORY_TITLE}**
-
-Přihlásil ses na prestižní 48hodinový hackathon! Téma: "Budoucnost technologií"
+		narrative: `Přihlásil ses na prestižní 48hodinový hackathon! Téma: "Budoucnost technologií"
 
 V hlavě se ti rojí nápady. Energy drinky jsou nachystané, klávesnice čeká...
 
@@ -336,7 +334,7 @@ Získáváš **+550 mincí** a kontakty od investorů!`,
 		type: "terminal",
 		narrative: `💪 **ZACHRÁNĚNO!**
 
-Našel jsi ten bug! Byl to jeden missing semicolon (samozřejmě).
+Našel jsi ten bug! Byl to jeden chybějící středník (samozřejmě).
 
 Projekt funguje a prezentace je solidní. Získáváš **+400 mincí** a respekt za perseverance!`,
 		coinsChange: 400,

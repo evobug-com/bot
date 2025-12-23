@@ -36,9 +36,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🕵️ **${STORY_TITLE}**
-
-Procházíš ekonomické logy a všímáš si neobvyklých aktivit. Po důkladné analýze objevuješ podezřelé vzory v /work příkazech.
+		narrative: `Procházíš ekonomické logy a všímáš si neobvyklých aktivit. Po důkladné analýze objevuješ podezřelé vzory v /work příkazech.
 
 📊 Jeden uživatel má nadměrný počet coinů získaných za krátkou dobu! **Máš důkazy o podvádění!**
 

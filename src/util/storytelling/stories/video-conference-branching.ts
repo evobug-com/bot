@@ -35,9 +35,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `📹 **${STORY_TITLE}**
-
-Máš před sebou důležitou videokonferenci s indickými kolegy z Bangaloru. Je to klíčová prezentace projektu, který může rozhodnout o budoucnosti celého týmu.
+		narrative: `Máš před sebou důležitou videokonferenci s indickými kolegy z Bangaloru. Je to klíčová prezentace projektu, který může rozhodnout o budoucnosti celého týmu.
 
 Za 5 minut začíná meeting. Jak se připravíš?`,
 		nextNodeId: "decision_1",
@@ -88,7 +86,7 @@ Za 5 minut začíná meeting. Jak se připravíš?`,
 	decision_2a_presentation: {
 		id: "decision_2a_presentation",
 		type: "decision",
-		narrative: `✅ **Vše funguje perfektně!** Připojuješ se včas, všichni kolegyně a kolegové jsou online.
+		narrative: `✅ **Vše funguje perfektně!** Připojuješ se včas, všichni kolegové jsou online.
 
 Team leader z Bangaloru říká: "Ready for your pitch? We're excited to hear it!"
 

@@ -33,9 +33,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🍱 **${STORY_TITLE}**
-
-Otevíráš ledničku v kancelářské kuchyňce, abys si vzal svůj pečlivě připravený oběd...
+		narrative: `Otevíráš ledničku v kancelářské kuchyňce, abys si vzal svůj pečlivě připravený oběd...
 
 😱 **TEN TU NENÍ!** Někdo ti ukradl oběd! Tvůj žaludek vrtí prázdnotou a vztek stoupá.
 

@@ -36,9 +36,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🗳️ **${STORY_TITLE}**
-
-Rozhodl jsi se kandidovat ve volbách do parlamentu. Je to tvá šance něco změnit!
+		narrative: `Rozhodl jsi se kandidovat ve volbách do parlamentu. Je to tvá šance něco změnit!
 
 Volební kampaň začíná. Jak povedeš svou kampaň?`,
 		nextNodeId: "decision_1",

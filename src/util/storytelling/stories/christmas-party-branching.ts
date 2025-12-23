@@ -34,9 +34,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: `🎄 **${STORY_TITLE}**
-
-Dnes večer se koná vánoční večírek tvé firmy v luxusním hotelu. Sál je vyzdobený, hraje vánoční hudba, stoly se prohýbají pod vánoční hostinou.
+		narrative: `Dnes večer se koná vánoční večírek tvé firmy v luxusním hotelu. Sál je vyzdobený, hraje vánoční hudba, stoly se prohýbají pod vánoční hostinou.
 
 Všichni kolegové jsou tu - od nováčků po CEO. Atmosféra je příjemná, ale co s tímto večerem uděláš?`,
 		nextNodeId: "decision_1",
@@ -347,7 +345,7 @@ Musíš zaplatit **-200 mincí** za vázu, ale tvoje poctivost byla oceněna. Po
 		type: "terminal",
 		narrative: `🧦 **Ponožky...**
 
-...vánoční ponožky. S sobem Rudolf.
+...vánoční ponožky. Se sebou Rudolf.
 
 No, aspoň něco. Někdo měl smysl pro humor. Prodáš je na bazaru za **+50 mincí**.
 

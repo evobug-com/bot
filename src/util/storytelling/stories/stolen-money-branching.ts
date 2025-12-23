@@ -34,9 +34,7 @@ const nodes: Record<string, StoryNode> = {
 	intro: {
 		id: "intro",
 		type: "intro",
-		narrative: () => `💰 **${STORY_TITLE}**
-
-Procházíš parkem, když si všimneš starší paní, která upustila peněženku. Rychle ji sebereš - je v ní **${randomInt(400, 600)} mincí**!
+		narrative: () => `Procházíš parkem, když si všimneš starší paní, která upustila peněženku. Rychle ji sebereš - je v ní **${randomInt(400, 600)} mincí**!
 
 Paní si ničeho nevšimla a pomalu odchází. Srdce ti buší... *co uděláš?*`,
 		nextNodeId: "decision_1",
@@ -338,7 +336,7 @@ Nezískal jsi nic, ale ani jsi nic neztratil. Někdy je to tak.`,
 		type: "terminal",
 		narrative: `🤨 **Podezření**
 
-Paní se na tebe divně dívá. "Kde jste tu peněženku vzal? Viděl jsem, jak jste ji sebral ze země!"
+Paní se na tebe divně dívá. "Kde jste tu peněženku vzal? Viděla jsem, jak jste ji sebral ze země!"
 
 Než stihneš něco říct, odchází s podezíravým výrazem. Žádná odměna.`,
 		coinsChange: 0,

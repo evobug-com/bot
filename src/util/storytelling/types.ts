@@ -177,6 +177,34 @@ export interface ChoiceHistoryEntry {
 }
 
 /**
+ * Types of journal entries for the story
+ */
+export type StoryJournalType = "intro" | "decision" | "outcome";
+
+/**
+ * A journal entry recording what happened in the story
+ */
+export interface StoryJournalEntry {
+	/** Type of story event */
+	type: StoryJournalType;
+	/** The narrative text shown to the player */
+	narrative: string;
+	/** For decision: which choice was made */
+	choice?: "choiceX" | "choiceY";
+	/** For decision: both options that were available */
+	options?: {
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
+	};
+	/** For outcome: the roll result */
+	rollResult?: {
+		rolled: number;
+		needed: number;
+		success: boolean;
+	};
+}
+
+/**
  * Active story session for a player
  */
 export interface StorySession {
@@ -196,6 +224,8 @@ export interface StorySession {
 	choicesPath: string[];
 	/** History of choices with human-readable labels (for summary) */
 	choiceHistory: ChoiceHistoryEntry[];
+	/** Full story journal with all narratives (intro, decisions, outcomes) */
+	storyJournal: StoryJournalEntry[];
 	/** Session start timestamp */
 	startedAt: number;
 	/** Last interaction timestamp */

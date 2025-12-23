@@ -144,6 +144,14 @@ function processIntroNode(
 		session.accumulatedCoins += resolveNodeValue(session, node.id, "coinsChange", node.coinsChange);
 	}
 
+	const introNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
+
+	// Record intro in story journal
+	session.storyJournal.push({
+		type: "intro",
+		narrative: introNarrative,
+	});
+
 	// Advance to the next node (usually first decision)
 	session.currentNodeId = node.nextNodeId;
 	session.choicesPath.push("intro");
@@ -154,7 +162,7 @@ function processIntroNode(
 	return {
 		session,
 		currentNode: nextNode,
-		narrative: resolveNodeValue(session, node.id, "narrative", node.narrative),
+		narrative: introNarrative,
 		isComplete: false,
 	};
 }
@@ -173,6 +181,7 @@ async function processDecisionChoice(
 	}
 
 	const selectedChoice = node.choices[choice];
+	const decisionNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
 
 	// Record the choice for analytics
 	session.choicesPath.push(choice);
@@ -180,7 +189,24 @@ async function processDecisionChoice(
 	// Record the choice with full context for public summary
 	session.choiceHistory.push({
 		nodeId: node.id,
-		narrative: resolveNodeValue(session, node.id, "narrative", node.narrative),
+		narrative: decisionNarrative,
+		choice,
+		options: {
+			choiceX: {
+				label: node.choices.choiceX.label,
+				description: node.choices.choiceX.description,
+			},
+			choiceY: {
+				label: node.choices.choiceY.label,
+				description: node.choices.choiceY.description,
+			},
+		},
+	});
+
+	// Record decision in story journal
+	session.storyJournal.push({
+		type: "decision",
+		narrative: decisionNarrative,
 		choice,
 		options: {
 			choiceX: {
@@ -231,10 +257,18 @@ async function processOutcomeNode(
 	const nextNodeId = rollResult.success ? node.successNodeId : node.failNodeId;
 	session.currentNodeId = nextNodeId;
 	session.choicesPath.push(rollResult.success ? "success" : "fail");
-	sessionManager.updateSession(session);
 
 	const nextNode = getNodeOrThrow(story, nextNodeId);
 	const resolvedNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
+
+	// Record outcome in story journal
+	session.storyJournal.push({
+		type: "outcome",
+		narrative: resolvedNarrative,
+		rollResult,
+	});
+
+	sessionManager.updateSession(session);
 
 	// Check if next node is terminal or another decision
 	if (isTerminalNode(nextNode)) {

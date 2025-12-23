@@ -22,32 +22,47 @@ import type { StoryAction, StoryActionResult, StorySession } from "../util/story
 import { isDecisionNode } from "../util/storytelling/types";
 import { createLogger } from "../util/logger";
 import { createInteraktivniPribehEmbed } from "../util/messages/embedBuilders";
+import { generateStoryImage, logImageGenerationResult } from "../utils/storyImageGenerator";
 
 const log = createLogger("StoryInteractions");
 
 /**
  * Build a summary of the story for public display
- * Shows everything the user saw: narrative, options, and their choice
+ * Shows the full story journey: intro, decisions, outcomes
  */
 function buildStorySummary(session: StorySession, result: StoryActionResult): string {
 	const parts: string[] = [];
 
-	// Show each decision point with full context
-	for (const [i, entry] of session.choiceHistory.entries()) {
-		const chosenOption = entry.options[entry.choice];
-		const otherChoice = entry.choice === "choiceX" ? "choiceY" : "choiceX";
-		const otherOption = entry.options[otherChoice];
+	// Show the full story journey from the journal
+	for (const entry of session.storyJournal) {
+		if (entry.type === "intro") {
+			parts.push(`**📖 Začátek příběhu**`);
+			parts.push(entry.narrative);
+			parts.push("");
+		} else if (entry.type === "decision" && entry.choice && entry.options) {
+			const chosenOption = entry.options[entry.choice];
+			const otherChoice = entry.choice === "choiceX" ? "choiceY" : "choiceX";
+			const otherOption = entry.options[otherChoice];
 
-		parts.push(`**${i + 1}. rozhodnutí**`);
-		parts.push(entry.narrative);
-		parts.push("");
-		parts.push(`✅ **${chosenOption.label}** - ${chosenOption.description}`);
-		parts.push(`❌ ~~${otherOption.label}~~ - ${otherOption.description}`);
-		parts.push("");
+			parts.push(`**🎯 Rozhodnutí**`);
+			parts.push(entry.narrative);
+			parts.push("");
+			parts.push(`✅ **${chosenOption.label}**`);
+			parts.push(`❌ ~~${otherOption.label}~~`);
+			parts.push("");
+		} else if (entry.type === "outcome") {
+			const rollEmoji = entry.rollResult?.success ? "🎲 ✅" : "🎲 ❌";
+			parts.push(`**${rollEmoji} Výsledek hodu**`);
+			parts.push(entry.narrative);
+			if (entry.rollResult) {
+				parts.push(`*Hod: ${entry.rollResult.rolled.toFixed(1)} (potřeba < ${entry.rollResult.needed})*`);
+			}
+			parts.push("");
+		}
 	}
 
-	// Final outcome narrative
-	parts.push(`**Výsledek:**`);
+	// Final result
+	parts.push(`**🏁 Konec příběhu**`);
 	parts.push(result.narrative);
 
 	return parts.join("\n");
@@ -262,6 +277,49 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 					.setTitle(storyTitle)
 					.setDescription(buildStorySummary(session, result))
 					.setFooter({ text: `${interaction.user.displayName} dokončil příběh` });
+
+				// Generate meme image for the story (async, don't block)
+				if (story) {
+					generateStoryImage(story, session, result, interaction.user.displayName)
+						.then((imageResult) => {
+							// Log the result for debugging/monitoring
+							logImageGenerationResult(imageResult);
+
+							// If we got an image, send it as a follow-up
+							if (imageResult.imageUrl && interaction.channel && "send" in interaction.channel) {
+								// For base64 images, we need to send as attachment
+								if (imageResult.imageUrl.startsWith("data:image")) {
+									const base64Data = imageResult.imageUrl.split(",")[1];
+									if (base64Data) {
+										const buffer = Buffer.from(base64Data, "base64");
+										interaction.channel.send({
+											files: [{
+												attachment: buffer,
+												name: "story-meme.png",
+											}],
+										}).catch((err: unknown) => {
+											log("error", `Failed to send image: ${String(err)}`);
+										});
+									}
+								} else {
+									// Regular URL - set as embed image
+									const imageEmbed = createInteraktivniPribehEmbed()
+										.setTitle("🎨 Meme z příběhu")
+										.setImage(imageResult.imageUrl)
+										.setFooter({ text: `${interaction.user.displayName}` });
+
+									interaction.channel.send({
+										embeds: [imageEmbed],
+									}).catch((err: unknown) => {
+										log("error", `Failed to send image embed: ${String(err)}`);
+									});
+								}
+							}
+						})
+						.catch((err: unknown) => {
+							log("error", `Image generation failed: ${String(err)}`);
+						});
+				}
 
 				await interaction.channel.send({
 					embeds: [summaryEmbed],

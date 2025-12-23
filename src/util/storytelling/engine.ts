@@ -177,11 +177,21 @@ async function processDecisionChoice(
 	// Record the choice for analytics
 	session.choicesPath.push(choice);
 
-	// Record the choice with label for summary
+	// Record the choice with full context for public summary
 	session.choiceHistory.push({
 		nodeId: node.id,
+		narrative: resolveNodeValue(session, node.id, "narrative", node.narrative),
 		choice,
-		label: selectedChoice.label,
+		options: {
+			choiceX: {
+				label: node.choices.choiceX.label,
+				description: node.choices.choiceX.description,
+			},
+			choiceY: {
+				label: node.choices.choiceY.label,
+				description: node.choices.choiceY.description,
+			},
+		},
 	});
 
 	// Move to the outcome node

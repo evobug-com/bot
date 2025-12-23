@@ -160,15 +160,20 @@ export interface BranchingStory {
 // =============================================================================
 
 /**
- * A recorded choice with its human-readable label
+ * A recorded choice with full context for public summary
  */
 export interface ChoiceHistoryEntry {
 	/** Node ID where the choice was made */
 	nodeId: string;
+	/** The narrative shown at this decision point */
+	narrative: string;
 	/** Choice identifier (choiceX or choiceY) */
 	choice: "choiceX" | "choiceY";
-	/** Human-readable label of the choice */
-	label: string;
+	/** Both options that were available */
+	options: {
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
+	};
 }
 
 /**

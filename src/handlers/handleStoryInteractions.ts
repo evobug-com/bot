@@ -27,24 +27,30 @@ const log = createLogger("StoryInteractions");
 
 /**
  * Build a summary of the story for public display
+ * Shows everything the user saw: narrative, options, and their choice
  */
 function buildStorySummary(session: StorySession, result: StoryActionResult): string {
-	let summary = "";
+	const parts: string[] = [];
 
-	// List choices made
-	if (session.choiceHistory.length > 0) {
-		summary += "**Rozhodnutí:**\n";
-		for (const choice of session.choiceHistory) {
-			summary += `• ${choice.label}\n`;
-		}
-		summary += "\n";
+	// Show each decision point with full context
+	for (const [i, entry] of session.choiceHistory.entries()) {
+		const chosenOption = entry.options[entry.choice];
+		const otherChoice = entry.choice === "choiceX" ? "choiceY" : "choiceX";
+		const otherOption = entry.options[otherChoice];
+
+		parts.push(`**${i + 1}. rozhodnutí**`);
+		parts.push(entry.narrative);
+		parts.push("");
+		parts.push(`✅ **${chosenOption.label}** - ${chosenOption.description}`);
+		parts.push(`❌ ~~${otherOption.label}~~ - ${otherOption.description}`);
+		parts.push("");
 	}
 
-	// Final outcome narrative (without the coin/XP summary that's already in result.narrative)
-	// The engine already adds the rewards to the narrative, so we just use it
-	summary += `**Výsledek:**\n${result.narrative}`;
+	// Final outcome narrative
+	parts.push(`**Výsledek:**`);
+	parts.push(result.narrative);
 
-	return summary;
+	return parts.join("\n");
 }
 
 // Custom ID prefix for story buttons

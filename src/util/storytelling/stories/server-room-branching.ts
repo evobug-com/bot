@@ -1,7 +1,7 @@
 /**
  * Server Room - Branching Story
  *
- * A Mass Effect-style branching narrative about a server room adventure.
+ * Branching narrative about a server room adventure.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

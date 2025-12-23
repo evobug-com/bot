@@ -1,7 +1,7 @@
 /**
  * Friday Deploy - Branching Story
  *
- * A Mass Effect-style branching narrative about the risky decision to deploy on Friday afternoon.
+ * Branching narrative about the risky decision to deploy on Friday afternoon.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

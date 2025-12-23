@@ -1,7 +1,7 @@
 /**
  * Christmas Party - Branching Story
  *
- * A Mass Effect-style branching narrative about attending a company Christmas party.
+ * Branching narrative about attending a company Christmas party.
  * Features 3 decision layers and 11 unique endings (8 positive, 3 negative).
  *
  * Story Graph:

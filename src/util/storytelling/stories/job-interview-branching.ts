@@ -1,7 +1,7 @@
 /**
  * Job Interview - Branching Story
  *
- * A Mass Effect-style branching narrative about conducting a job interview.
+ * Branching narrative about conducting a job interview.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

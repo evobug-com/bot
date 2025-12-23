@@ -1,7 +1,7 @@
 /**
  * IT Support - Branching Story
  *
- * A Mass Effect-style branching narrative about fixing computer/network problems.
+ * Branching narrative about fixing computer/network problems.
  * Features 3 decision layers and 12 unique endings (8 positive, 4 negative = 67% positive rate).
  *
  * Story Graph:

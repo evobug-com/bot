@@ -1,7 +1,7 @@
 /**
  * Video Conference - Branching Story
  *
- * A Mass Effect-style branching narrative about a high-stakes video conference with international colleagues.
+ * Branching narrative about a high-stakes video conference with international colleagues.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

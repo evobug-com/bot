@@ -1,7 +1,7 @@
 /**
  * Hackathon - Branching Story
  *
- * A Mass Effect-style branching narrative about participating in a 48-hour hackathon.
+ * Branching narrative about participating in a 48-hour hackathon.
  * Features 3 decision layers and 12 unique endings.
  *
  * Story Graph:

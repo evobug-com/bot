@@ -1,7 +1,7 @@
 /**
  * Coffee Machine - Branching Story
  *
- * A Mass Effect-style branching narrative about using a new super-automatic coffee machine.
+ * Branching narrative about using a new super-automatic coffee machine.
  * Features 3 decision layers and 12 unique endings.
  *
  * Story Graph:

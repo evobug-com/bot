@@ -1,7 +1,7 @@
 /**
  * Elevator Stuck - Branching Story
  *
- * A Mass Effect-style branching narrative about being stuck in an elevator.
+ * Branching narrative about being stuck in an elevator.
  * Features 3 decision layers and 11 unique endings (8 positive, 3 negative = 73% positive).
  *
  * Story Graph:

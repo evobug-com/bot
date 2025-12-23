@@ -1,7 +1,7 @@
 /**
  * Client Meeting - Branching Story
  *
- * A Mass Effect-style branching narrative about a crucial client presentation.
+ * Branching narrative about a crucial client presentation.
  * Features 3 decision layers and 12 unique endings.
  *
  * Story Graph:

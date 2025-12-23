@@ -1,7 +1,7 @@
 /**
  * Lunch Thief - Branching Story
  *
- * A Mass Effect-style branching narrative about investigating a stolen lunch.
+ * Branching narrative about investigating a stolen lunch.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

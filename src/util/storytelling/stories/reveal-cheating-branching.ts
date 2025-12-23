@@ -1,7 +1,7 @@
 /**
  * Reveal Cheating - Branching Story
  *
- * A Mass Effect-style branching narrative about discovering a cheater in the economy system.
+ * Branching narrative about discovering a cheater in the economy system.
  * Features 3 decision layers and 11 unique endings.
  *
  * Story Graph:

@@ -1,7 +1,7 @@
 /**
  * Elections Candidate - Branching Story
  *
- * A Mass Effect-style branching narrative about running for parliament.
+ * Branching narrative about running for parliament.
  * Features 3 decision layers and 13 unique endings (8 positive, 5 negative).
  *
  * Story Graph:

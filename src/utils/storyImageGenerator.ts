@@ -119,32 +119,6 @@ export async function generateStoryImage(
 	};
 }
 
-/** Helper to build usage result from SDK response */
-function buildUsageResult(usage: { promptTokens: number; completionTokens: number; totalTokens: number } | undefined, estimatedCost: number) {
-	if (!usage) return undefined;
-	return {
-		promptTokens: usage.promptTokens,
-		completionTokens: usage.completionTokens,
-		totalTokens: usage.totalTokens,
-		estimatedCost,
-	};
-}
-
-/** Response type from non-streaming chat.send */
-interface ChatResponse {
-	choices?: Array<{
-		message?: {
-			content?: string | Array<{ type: string; text?: string; [key: string]: unknown }>;
-			[key: string]: unknown;
-		};
-	}>;
-	usage?: {
-		promptTokens: number;
-		completionTokens: number;
-		totalTokens: number;
-	};
-}
-
 /**
  * Single attempt to generate an image
  */
@@ -153,8 +127,7 @@ async function attemptImageGeneration(
 	storyId: string,
 	prompt: string,
 ): Promise<ImageGenerationResult> {
-	// Cast response to non-streaming type (we don't use streaming)
-	const response = await client.chat.send({
+	const response = await client.chat.completions.create({
 		model: "google/gemini-2.5-flash-image-preview",
 		messages: [
 			{
@@ -164,9 +137,9 @@ async function attemptImageGeneration(
 				],
 			},
 		],
-		// @ts-expect-error - modalities is OpenRouter-specific for image generation
+		// @ts-expect-error - OpenRouter specific parameter for image generation
 		modalities: ["text", "image"],
-	}) as ChatResponse;
+	});
 
 	// Log usage information
 	const usage = response.usage;
@@ -174,24 +147,30 @@ async function attemptImageGeneration(
 
 	if (usage) {
 		// Gemini 2.5 Flash pricing (approximate): $0.10/1M input, $0.40/1M output
-		const inputCost = (usage.promptTokens / 1_000_000) * 0.10;
-		const outputCost = (usage.completionTokens / 1_000_000) * 0.40;
+		const inputCost = (usage.prompt_tokens / 1_000_000) * 0.10;
+		const outputCost = (usage.completion_tokens / 1_000_000) * 0.40;
 		estimatedCost = inputCost + outputCost;
 
-		log("info", `Image generation usage - Prompt: ${usage.promptTokens}, Completion: ${usage.completionTokens}, Estimated cost: $${estimatedCost.toFixed(6)}`);
+		log("info", `Image generation usage - Prompt: ${usage.prompt_tokens}, Completion: ${usage.completion_tokens}, Estimated cost: $${estimatedCost.toFixed(6)}`);
 	}
 
 	// Extract image from response
-	const message = response.choices?.[0]?.message;
+	const message = response.choices[0]?.message;
 
 	// Check for images in the message.images field (OpenRouter format)
-	const images = (message as unknown as { images?: Array<{ type: string; image_url: { url: string } }> })?.images;
+	// @ts-expect-error - OpenRouter specific response field
+	const images = message?.images as Array<{ type: string; image_url: { url: string } }> | undefined;
 
 	if (images && images.length > 0 && images[0]?.image_url?.url) {
 		log("info", `Successfully generated image for story "${storyId}"`);
 		return {
 			imageUrl: images[0].image_url.url,
-			usage: buildUsageResult(usage, estimatedCost),
+			usage: usage ? {
+				promptTokens: usage.prompt_tokens,
+				completionTokens: usage.completion_tokens,
+				totalTokens: usage.total_tokens,
+				estimatedCost,
+			} : undefined,
 		};
 	}
 
@@ -201,24 +180,34 @@ async function attemptImageGeneration(
 		for (const part of content) {
 			// Check for inline_data format (Gemini native)
 			if (part && typeof part === "object" && "inline_data" in part) {
-				const inlineData = (part as unknown as { inline_data: { mime_type: string; data: string } }).inline_data;
+				const inlineData = part.inline_data as { mime_type: string; data: string };
 				if (inlineData?.data) {
 					const imageUrl = `data:${inlineData.mime_type || "image/png"};base64,${inlineData.data}`;
 					log("info", `Successfully generated image (inline_data) for story "${storyId}"`);
 					return {
 						imageUrl,
-						usage: buildUsageResult(usage, estimatedCost),
+						usage: usage ? {
+							promptTokens: usage.prompt_tokens,
+							completionTokens: usage.completion_tokens,
+							totalTokens: usage.total_tokens,
+							estimatedCost,
+						} : undefined,
 					};
 				}
 			}
 			// Check for image_url format in content array
 			if (part && typeof part === "object" && "type" in part && part.type === "image_url") {
-				const imageUrlPart = part as unknown as { type: string; image_url: { url: string } };
+				const imageUrlPart = part as { type: string; image_url: { url: string } };
 				if (imageUrlPart.image_url?.url) {
 					log("info", `Successfully generated image (content array) for story "${storyId}"`);
 					return {
 						imageUrl: imageUrlPart.image_url.url,
-						usage: buildUsageResult(usage, estimatedCost),
+						usage: usage ? {
+							promptTokens: usage.prompt_tokens,
+							completionTokens: usage.completion_tokens,
+							totalTokens: usage.total_tokens,
+							estimatedCost,
+						} : undefined,
 					};
 				}
 			}
@@ -230,16 +219,26 @@ async function attemptImageGeneration(
 		log("info", `Successfully generated image (base64 string) for story "${storyId}"`);
 		return {
 			imageUrl: content,
-			usage: buildUsageResult(usage, estimatedCost),
+			usage: usage ? {
+				promptTokens: usage.prompt_tokens,
+				completionTokens: usage.completion_tokens,
+				totalTokens: usage.total_tokens,
+				estimatedCost,
+			} : undefined,
 		};
 	}
 
 	// Log detailed response for debugging
-	log("debug", `No image in response, structure: ${JSON.stringify(response.choices?.[0], null, 2)}`);
+	log("debug", `No image in response, structure: ${JSON.stringify(response.choices[0], null, 2)}`);
 	return {
 		imageUrl: null,
 		error: "No image generated in response",
-		usage: buildUsageResult(usage, estimatedCost),
+		usage: usage ? {
+			promptTokens: usage.prompt_tokens,
+			completionTokens: usage.completion_tokens,
+			totalTokens: usage.total_tokens,
+			estimatedCost,
+		} : undefined,
 	};
 }
 

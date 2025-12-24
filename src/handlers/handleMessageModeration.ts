@@ -8,6 +8,7 @@ import { type ContextMessage, type ModerationContext, type ModerationOptions, mo
 const MODERATION_OPTIONS: ModerationOptions = {
 	useReasoning: true,
 	reasoningEffort: "low", // minimal overhead, still improves accuracy
+	excludeReasoning: true, // don't return reasoning tokens, saves cost
 };
 
 // Rolling buffer of last 5 messages per channel for context

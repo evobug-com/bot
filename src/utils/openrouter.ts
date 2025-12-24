@@ -1,4 +1,4 @@
-import { OpenRouter } from "@openrouter/sdk";
+import OpenAI from "openai";
 import { rulesText } from "../data/rulesData.ts";
 
 const openrouterApiKey = process.env.OPENROUTER_API_KEY;
@@ -8,8 +8,13 @@ if (!openrouterApiKey) {
 }
 
 export const openrouter = openrouterApiKey
-	? new OpenRouter({
+	? new OpenAI({
 			apiKey: openrouterApiKey,
+			baseURL: "https://openrouter.ai/api/v1",
+			defaultHeaders: {
+				"HTTP-Referer": "https://allcom.zone/",
+				"X-Title": "Allcom Discord Bot",
+			},
 		})
 	: null;
 
@@ -42,6 +47,8 @@ export interface ModerationOptions {
 	useReasoning?: boolean;
 	/** Reasoning effort level. Defaults to "low". */
 	reasoningEffort?: ReasoningEffort;
+	/** Whether to exclude reasoning from response (saves tokens). Defaults to true. */
+	excludeReasoning?: boolean;
 }
 
 // Static system prompt - stays identical for OpenRouter prompt caching
@@ -132,6 +139,7 @@ export function parseResponse(response: string): ModerationResult | null {
 const DEFAULT_OPTIONS: Required<ModerationOptions> = {
 	useReasoning: false,
 	reasoningEffort: "low",
+	excludeReasoning: true,
 };
 
 export async function moderateMessage(
@@ -148,15 +156,16 @@ export async function moderateMessage(
 	try {
 		const userMessage = buildUserMessage(content, context);
 
-		const response = await openrouter.chat.send({
+		// Build request parameters
+		const requestParams = {
 			model: "openai/gpt-5-mini",
 			messages: [
 				{
-					role: "system",
+					role: "system" as const,
 					content: MODERATION_SYSTEM_PROMPT,
 				},
 				{
-					role: "user",
+					role: "user" as const,
 					content: userMessage,
 				},
 			],
@@ -165,25 +174,15 @@ export async function moderateMessage(
 			...(opts.useReasoning && {
 				reasoning: {
 					effort: opts.reasoningEffort,
+					exclude: opts.excludeReasoning,
 				},
 			}),
-		});
+		};
 
-		const rawContent = response.choices?.[0]?.message?.content;
-		if (!rawContent) {
-			return null;
-		}
+		const response = await openrouter.chat.completions.create(requestParams);
 
-		// Extract text content (can be string or array of content items)
-		let result: string;
-		if (typeof rawContent === "string") {
-			result = rawContent;
-		} else if (Array.isArray(rawContent)) {
-			const textItems = rawContent
-				.filter((item): item is { type: "text"; text: string } => item.type === "text")
-				.map((item) => item.text);
-			result = textItems.join("");
-		} else {
+		const result = response.choices[0]?.message?.content;
+		if (!result) {
 			return null;
 		}
 

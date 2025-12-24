@@ -2,7 +2,7 @@
  * Friday Deploy - Branching Story
  *
  * Branching narrative about the risky decision to deploy on Friday afternoon.
- * Features 3 decision layers and 11 unique endings.
+ * Features 3 decision layers and 13 unique endings.
  *
  * Story Graph:
  * [INTRO] -> [DECISION 1: Deploy or Wait]
@@ -12,10 +12,10 @@
  *       -> Full review  -> [OUTCOME] -> [TERMINAL: Perfect/Minor bug]
  *     -> Failure -> [DECISION 2b: Build failing]
  *       -> Fix fast -> [OUTCOME] -> [TERMINAL: Fixed/Weekend ruined]
- *       -> Rollback -> [TERMINAL: Safe rollback]
+ *       -> Rollback -> [OUTCOME] -> [TERMINAL: Safe rollback/Rollback issues]
  *   -> Wait -> [OUTCOME 70/30]
  *     -> Success -> [DECISION 2c: Monday deploy]
- *       -> Deploy Monday  -> [TERMINAL: Smooth Monday]
+ *       -> Deploy Monday  -> [OUTCOME] -> [TERMINAL: Smooth Monday/Monday issues]
  *       -> More testing   -> [OUTCOME] -> [TERMINAL: Bug found early/Overthinking]
  *     -> Failure -> [TERMINAL: Boss angry]
  */
@@ -133,7 +133,7 @@ Produkce není dotčená, ale máš problém. Už je 17:00...`,
 				description: "Vrátíš změny a jdeš domů. Bezpečná varianta.",
 				baseReward: 100,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_safe_rollback",
+				nextNodeId: "outcome_rollback",
 			},
 		},
 	},
@@ -175,6 +175,18 @@ Produkce není dotčená, ale máš problém. Už je 17:00...`,
 	},
 
 	// =========================================================================
+	// OUTCOME: Rollback attempt
+	// =========================================================================
+	outcome_rollback: {
+		id: "outcome_rollback",
+		type: "outcome",
+		narrative: `↩️ Spouštíš rollback... Pipeline se vrací na předchozí verzi...`,
+		successChance: 70,
+		successNodeId: "terminal_safe_rollback",
+		failNodeId: "terminal_rollback_issues",
+	},
+
+	// =========================================================================
 	// OUTCOME: Waiting for Monday
 	// =========================================================================
 	outcome_wait: {
@@ -202,7 +214,7 @@ Co teď s deployem?`,
 				description: "Nasadíš to ráno v pondělí, když je tým u počítačů.",
 				baseReward: 200,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_smooth_monday",
+				nextNodeId: "outcome_monday_deploy",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -213,6 +225,18 @@ Co teď s deployem?`,
 				nextNodeId: "outcome_more_testing",
 			},
 		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Monday morning deploy
+	// =========================================================================
+	outcome_monday_deploy: {
+		id: "outcome_monday_deploy",
+		type: "outcome",
+		narrative: `☕ Pondělní ráno. Spouštíš deploy s čerstvou hlavou...`,
+		successChance: 70,
+		successNodeId: "terminal_smooth_monday",
+		failNodeId: "terminal_monday_issues",
 	},
 
 	// =========================================================================
@@ -352,7 +376,37 @@ Získáváš **+50 mincí** za opatrnost, i když trochu přehnanou.`,
 		xpMultiplier: 0.9,
 	},
 
-	// Negative endings (3)
+	// Negative endings (5)
+	terminal_rollback_issues: {
+		id: "terminal_rollback_issues",
+		type: "terminal",
+		narrative: `⚠️ **ROLLBACK KOMPLIKACE**
+
+Rollback se zasekl! Některé migrace nejdou vrátit zpět.
+
+Musíš zůstat a ručně opravit databázi. Je pátek 20:00.
+
+Ztrácíš **-150 mincí** za komplikovaný rollback.`,
+		coinsChange: -150,
+		isPositiveEnding: false,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_monday_issues: {
+		id: "terminal_monday_issues",
+		type: "terminal",
+		narrative: `😓 **PONDĚLNÍ PROBLÉMY**
+
+I přes odpočinek přes víkend se objevily problémy. Produkce sice běží, ale s chybami.
+
+Celé pondělní dopoledne strávíš hotfixem místo nových features.
+
+Ztrácíš **-100 mincí** za ztracený čas.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.9,
+	},
+
 	terminal_hotfix_needed: {
 		id: "terminal_hotfix_needed",
 		type: "terminal",
@@ -409,8 +463,8 @@ export const fridayDeployBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 22,
-	averageReward: 180,
+	expectedPaths: 13,
+	averageReward: 150,
 	maxPossibleReward: 500, // Deploy -> Quick merge success (hero)
 	minPossibleReward: -500, // Deploy -> Quick fix fail (weekend ruined)
 };

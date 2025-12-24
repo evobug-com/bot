@@ -220,9 +220,16 @@ async function processDecisionChoice(
 		},
 	});
 
-	// Move to the outcome node
+	// Move to the next node
 	session.currentNodeId = selectedChoice.nextNodeId;
 	sessionManager.updateSession(session);
+
+	const nextNode = getNodeOrThrow(story, selectedChoice.nextNodeId);
+
+	// Handle direct terminal (no outcome roll - deterministic choice)
+	if (isTerminalNode(nextNode)) {
+		return processTerminalNode(session, story, decisionNarrative);
+	}
 
 	// Process the outcome node immediately (auto-roll)
 	return processOutcomeNode(session, story, selectedChoice.riskMultiplier);

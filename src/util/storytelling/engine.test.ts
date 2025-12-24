@@ -568,3 +568,211 @@ describe("Story Engine - Stolen Money Branching", () => {
 		}
 	});
 });
+
+// Import work command to register all stories
+import "../../commands/work";
+
+/**
+ * Comprehensive validation of all branching stories
+ * Simulates the actual engine flow to ensure all paths work correctly
+ */
+describe("All Branching Stories - Engine Flow Validation", () => {
+	// Helper to get node
+	function getNode(story: BranchingStory, nodeId: string): StoryNode | undefined {
+		return story.nodes[nodeId];
+	}
+
+	/**
+	 * Simulates the engine flow for a path through the story
+	 * Returns error message if flow would fail, null if OK
+	 */
+	function simulateEnginePath(
+		story: BranchingStory,
+		path: string[],
+	): { error: string | null; reachedTerminal: boolean } {
+		let currentNodeId = story.startNodeId;
+		const pathCopy = [...path];
+
+		for (let i = 0; i < 100; i++) {
+			const node = getNode(story, currentNodeId);
+			if (!node) {
+				return { error: `Node not found: ${currentNodeId}`, reachedTerminal: false };
+			}
+
+			if (isTerminalNode(node)) {
+				return { error: null, reachedTerminal: true };
+			}
+
+			if (isIntroNode(node)) {
+				currentNodeId = node.nextNodeId;
+				continue;
+			}
+
+			if (isDecisionNode(node)) {
+				const choice = pathCopy.shift();
+				if (!choice || (choice !== "choiceX" && choice !== "choiceY")) {
+					return { error: `Expected choice at decision ${node.id}`, reachedTerminal: false };
+				}
+
+				const selectedChoice = node.choices[choice];
+				const nextNode = getNode(story, selectedChoice.nextNodeId);
+
+				if (!nextNode) {
+					return { error: `Decision ${node.id} ${choice} points to missing node`, reachedTerminal: false };
+				}
+
+				// Engine handles direct terminal (deterministic choice)
+				if (isTerminalNode(nextNode)) {
+					return { error: null, reachedTerminal: true };
+				}
+
+				if (isOutcomeNode(nextNode)) {
+					currentNodeId = selectedChoice.nextNodeId;
+					continue;
+				}
+
+				return {
+					error: `Decision ${node.id} ${choice} points to invalid type: ${nextNode.type}`,
+					reachedTerminal: false,
+				};
+			}
+
+			if (isOutcomeNode(node)) {
+				const roll = pathCopy.shift();
+				if (!roll || (roll !== "success" && roll !== "fail")) {
+					return { error: `Expected roll at outcome ${node.id}`, reachedTerminal: false };
+				}
+
+				const nextNodeId = roll === "success" ? node.successNodeId : node.failNodeId;
+				const nextNode = getNode(story, nextNodeId);
+
+				if (!nextNode) {
+					return { error: `Outcome ${node.id} ${roll} points to missing node`, reachedTerminal: false };
+				}
+
+				if (isTerminalNode(nextNode)) {
+					return { error: null, reachedTerminal: true };
+				}
+
+				if (isDecisionNode(nextNode)) {
+					currentNodeId = nextNodeId;
+					continue;
+				}
+
+				return {
+					error: `Outcome ${node.id} ${roll} points to invalid type: ${nextNode.type}`,
+					reachedTerminal: false,
+				};
+			}
+
+			return { error: `Unknown node type at ${currentNodeId}`, reachedTerminal: false };
+		}
+
+		return { error: "Max iterations - infinite loop", reachedTerminal: false };
+	}
+
+	/**
+	 * Generate all possible paths through a story
+	 */
+	function generateAllPaths(story: BranchingStory): string[][] {
+		const paths: string[][] = [];
+
+		function traverse(nodeId: string, currentPath: string[]): void {
+			const node = getNode(story, nodeId);
+			if (!node) return;
+
+			if (isTerminalNode(node)) {
+				paths.push([...currentPath]);
+				return;
+			}
+
+			if (isIntroNode(node)) {
+				traverse(node.nextNodeId, currentPath);
+			}
+
+			if (isDecisionNode(node)) {
+				const choiceXNext = getNode(story, node.choices.choiceX.nextNodeId);
+				const choiceYNext = getNode(story, node.choices.choiceY.nextNodeId);
+
+				if (choiceXNext) {
+					if (isTerminalNode(choiceXNext)) {
+						paths.push([...currentPath, "choiceX"]);
+					} else if (isOutcomeNode(choiceXNext)) {
+						traverse(node.choices.choiceX.nextNodeId, [...currentPath, "choiceX"]);
+					}
+				}
+
+				if (choiceYNext) {
+					if (isTerminalNode(choiceYNext)) {
+						paths.push([...currentPath, "choiceY"]);
+					} else if (isOutcomeNode(choiceYNext)) {
+						traverse(node.choices.choiceY.nextNodeId, [...currentPath, "choiceY"]);
+					}
+				}
+			}
+
+			if (isOutcomeNode(node)) {
+				traverse(node.successNodeId, [...currentPath, "success"]);
+				traverse(node.failNodeId, [...currentPath, "fail"]);
+			}
+		}
+
+		traverse(story.startNodeId, []);
+		return paths;
+	}
+
+	// Get all registered story IDs (registered by work command import above)
+	const storyIds = engine.getRegisteredStoryIds().filter(id => id !== "test_story");
+
+	for (const storyId of storyIds) {
+		describe(storyId, () => {
+			it("should have all paths reach terminal nodes correctly", () => {
+				const story = engine.getStory(storyId);
+
+				expect(story).toBeDefined();
+				if (!story) return;
+
+				const allPaths = generateAllPaths(story);
+				expect(allPaths.length).toBeGreaterThan(0);
+
+				const failures: string[] = [];
+
+				for (const path of allPaths) {
+					const result = simulateEnginePath(story, [...path]);
+					if (result.error || !result.reachedTerminal) {
+						failures.push(`Path [${path.join(" -> ")}]: ${result.error ?? "Did not reach terminal"}`);
+					}
+				}
+
+				if (failures.length > 0) {
+					throw new Error(`Story ${storyId} has ${failures.length} failing paths:\n${failures.join("\n")}`);
+				}
+			});
+
+			it("should have at least 8 terminal nodes", () => {
+				const story = engine.getStory(storyId);
+
+				expect(story).toBeDefined();
+				if (!story) return;
+
+				const terminals = Object.values(story.nodes).filter(n => n.type === "terminal");
+				expect(terminals.length).toBeGreaterThanOrEqual(8);
+			});
+
+			it("should have reasonable positive/negative ending balance", () => {
+				const story = engine.getStory(storyId);
+
+				expect(story).toBeDefined();
+				if (!story) return;
+
+				const terminals = Object.values(story.nodes).filter(n => n.type === "terminal");
+				const positive = terminals.filter(t => isTerminalNode(t) && t.isPositiveEnding);
+				const ratio = positive.length / terminals.length;
+
+				// Allow 50-85% positive endings (some stories have more dramatic negative paths)
+				expect(ratio).toBeGreaterThanOrEqual(0.5);
+				expect(ratio).toBeLessThanOrEqual(0.85);
+			});
+		});
+	}
+});

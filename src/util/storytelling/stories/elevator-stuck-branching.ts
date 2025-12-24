@@ -14,7 +14,11 @@
  *   -> Colleague Path -> [OUTCOME 70/30]
  *     -> Success -> [DECISION 2b: What to talk about]
  *       -> Work topics -> [OUTCOME 70/30] -> [TERMINAL: Collaboration (+300) / Networking (+120)]
- *       -> Personal    -> [OUTCOME 70/30] -> [SUCCESS: Date (+350)] / [OUTCOME 70/30] -> [Friendly chat (+150) / HR complaint (-200)]
+ *       -> Personal    -> [OUTCOME 70/30]
+ *         -> Success -> [TERMINAL: Date (+350)]
+ *         -> Failure -> [DECISION 2c: Recovery]
+ *           -> Apologize    -> [OUTCOME 70/30] -> [TERMINAL: Friendly chat (+150) / HR complaint (-200)]
+ *           -> Change topic -> [OUTCOME 70/30] -> [TERMINAL: Friendly chat (+150) / HR complaint (-200)]
  *     -> Failure -> [TERMINAL: Phone distraction (-250)]
  */
 
@@ -201,18 +205,61 @@ Konverzace začíná. O čem budete mluvit?`,
 Konverzace se stává osobnější...`,
 		successChance: 70,
 		successNodeId: "terminal_date",
-		failNodeId: "outcome_personal_fail",
+		failNodeId: "decision_personal_recovery",
 	},
 
 	// =========================================================================
-	// OUTCOME: Personal topics fail recovery
+	// DECISION 2c: Personal topics recovery
 	// =========================================================================
-	outcome_personal_fail: {
-		id: "outcome_personal_fail",
-		type: "outcome",
+	decision_personal_recovery: {
+		id: "decision_personal_recovery",
+		type: "decision",
 		narrative: `😬 "Ehm... já mám partnera," říká kolega/kolegyně nervózně.
 
-Snažíš se zachránit situaci...`,
+Trapná situace. Jak ji zachráníš?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Omluvit se elegantně",
+				description: "😅 'Omlouvám se, špatně jsem to podal/a. Měl/a jsem na mysli jako přátelé!'",
+				baseReward: 150,
+				riskMultiplier: 0.8,
+				nextNodeId: "outcome_apologize",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Změnit téma",
+				description: "🔄 Rychle přehodit na bezpečné téma a doufat, že to zapomene.",
+				baseReward: 100,
+				riskMultiplier: 1.2,
+				nextNodeId: "outcome_change_topic",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Apologize path
+	// =========================================================================
+	outcome_apologize: {
+		id: "outcome_apologize",
+		type: "outcome",
+		narrative: `😅 "Omlouvám se, špatně jsem to podal/a..."
+
+Kolega/kolegyně tě pozoruje...`,
+		successChance: 70,
+		successNodeId: "terminal_friendly_chat",
+		failNodeId: "terminal_hr_complaint",
+	},
+
+	// =========================================================================
+	// OUTCOME: Change topic path
+	// =========================================================================
+	outcome_change_topic: {
+		id: "outcome_change_topic",
+		type: "outcome",
+		narrative: `🔄 "Vlastně... slyšel/a jsi o tom novém projektu?" měníš rychle téma.
+
+Kolega/kolegyně reaguje...`,
 		successChance: 70,
 		successNodeId: "terminal_friendly_chat",
 		failNodeId: "terminal_hr_complaint",
@@ -380,7 +427,7 @@ export const elevatorStuckBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 20,
+	expectedPaths: 15,
 	averageReward: 200,
 	maxPossibleReward: 650, // CEO path -> Professional pitch -> Big investment
 	minPossibleReward: -250, // Colleague path -> fail -> Phone distraction

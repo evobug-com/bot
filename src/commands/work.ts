@@ -13,6 +13,8 @@ import type { CommandContext } from "../util/commands.ts";
 import { createUradPraceEmbed, createInteraktivniPribehEmbed } from "../util/messages/embedBuilders.ts";
 import { WORK_CONFIG } from "../services/work/config.ts";
 import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
+import { getWorkSettings } from "../services/workSettings/storage.ts";
+import { generateAIStory } from "../util/storytelling/aiStoryGenerator.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
@@ -185,10 +187,15 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	// Determine if this work triggers a story (chance-based if enabled)
 	// Check: global setting enabled AND user setting enabled AND chance roll succeeds
 	const userStoryEnabled = isStoryWorkEnabled(interaction.user.id);
+	const workSettings = getWorkSettings();
+	const storyChancePercent = workSettings.storyChancePercent;
 	const shouldTriggerStory =
 		WORK_CONFIG.storyWorkEnabled &&
 		userStoryEnabled &&
-		getSecureRandomIndex(100) < WORK_CONFIG.storyChancePercent;
+		getSecureRandomIndex(100) < storyChancePercent;
+
+	// Determine if AI story should be used (50% chance when AI stories are enabled)
+	const shouldUseAIStory = shouldTriggerStory && workSettings.aiStoryEnabled && getSecureRandomIndex(100) < 50;
 
 	// Filter activities based on story trigger
 	const availableActivities = shouldTriggerStory
@@ -331,72 +338,96 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		// Don't fail the whole command if achievement check fails
 	}
 
-	// Check if this activity has a branching story (Mass Effect-style interactive)
-	if (activity.branchingStoryId) {
+	// Helper function to start and display a story
+	const startAndDisplayStory = async (storyId: string, story: ReturnType<typeof storyEngine.getStory>) => {
+		if (!story) return;
+
+		const storyResult = await storyEngine.startStory(storyId, {
+			discordUserId: interaction.user.id,
+			dbUserId: dbUser.id,
+			messageId: "",
+			channelId: interaction.channelId ?? "",
+			guildId: interaction.guildId ?? "",
+			userLevel: work.levelProgress.currentLevel,
+		});
+
+		const context = storyEngine.getStoryContext(storyResult.session);
+		if (context && isDecisionNode(context.currentNode)) {
+			const buttons = buildDecisionButtons(
+				storyResult.session.storyId,
+				storyResult.session.sessionId,
+				context.currentNode.choices.choiceX.label,
+				context.currentNode.choices.choiceY.label,
+				storyResult.session.accumulatedCoins,
+			);
+
+			let fullNarrative = storyResult.narrative;
+			fullNarrative += `\n\n${storyEngine.resolveNodeValue(storyResult.session, context.currentNode.id, "narrative", context.currentNode.narrative)}`;
+			fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
+			fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
+
+			const storyEmbed = createInteraktivniPribehEmbed()
+				.setTitle(`${story.emoji} ${story.title}`)
+				.setDescription(fullNarrative)
+				.setFooter({ text: "Vyber si svou cestu..." });
+
+			await interaction.followUp({
+				embeds: [storyEmbed],
+				components: buttons.map((row) => row.toJSON()),
+				flags: MessageFlags.Ephemeral,
+			});
+		} else {
+			const storyEmbed = createInteraktivniPribehEmbed()
+				.setTitle(`${story.emoji} ${story.title}`)
+				.setDescription(storyResult.narrative);
+
+			await interaction.followUp({
+				embeds: [storyEmbed],
+				flags: MessageFlags.Ephemeral,
+			});
+		}
+	};
+
+	// Check if we should use AI-generated story
+	if (shouldUseAIStory) {
+		try {
+			const aiResult = await generateAIStory();
+			if (aiResult.story) {
+				storyEngine.registerDynamicStory(aiResult.story);
+				await startAndDisplayStory(aiResult.story.id, aiResult.story);
+			} else {
+				console.error("[Work] AI story generation failed:", aiResult.error);
+				// Fallback to written story if available
+				if (activity.branchingStoryId) {
+					const story = storyEngine.getStory(activity.branchingStoryId);
+					if (story) {
+						await startAndDisplayStory(activity.branchingStoryId, story);
+					}
+				}
+			}
+		} catch (error) {
+			console.error("[Work] Error with AI story:", error);
+			// Fallback to written story
+			if (activity.branchingStoryId) {
+				const story = storyEngine.getStory(activity.branchingStoryId);
+				if (story) {
+					await startAndDisplayStory(activity.branchingStoryId, story);
+				}
+			}
+		}
+	} else if (activity.branchingStoryId) {
+		// Use written branching story
 		try {
 			const storyId = activity.branchingStoryId;
 			const story = storyEngine.getStory(storyId);
 
 			if (!story) {
 				console.error(`Branching story not found: ${storyId}`);
-				// Fallback: just show the work reward, no story
 			} else {
-				// Start the branching story session
-				const storyResult = await storyEngine.startStory(storyId, {
-					discordUserId: interaction.user.id,
-					dbUserId: dbUser.id,
-					messageId: "", // Will be set after sending
-					channelId: interaction.channelId ?? "",
-					guildId: interaction.guildId ?? "",
-					userLevel: work.levelProgress.currentLevel,
-				});
-
-				// Get the first decision node for button labels
-				const context = storyEngine.getStoryContext(storyResult.session);
-				if (context && isDecisionNode(context.currentNode)) {
-					// Build the decision buttons
-					const buttons = buildDecisionButtons(
-						storyResult.session.storyId,
-						storyResult.session.sessionId,
-						context.currentNode.choices.choiceX.label,
-						context.currentNode.choices.choiceY.label,
-						storyResult.session.accumulatedCoins,
-					);
-
-					// Build the full narrative with intro + first decision
-					let fullNarrative = storyResult.narrative;
-					fullNarrative += `\n\n${storyEngine.resolveNodeValue(storyResult.session, context.currentNode.id, "narrative", context.currentNode.narrative)}`;
-					fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
-					fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
-
-					// Create embed with proper styling
-					const storyEmbed = createInteraktivniPribehEmbed()
-						.setTitle(`${story.emoji} ${story.title}`)
-						.setDescription(fullNarrative)
-						.setFooter({ text: "Vyber si svou cestu..." });
-
-					// Send the story with buttons (ephemeral - only the user sees the choices)
-					await interaction.followUp({
-						embeds: [storyEmbed],
-						components: buttons.map((row) => row.toJSON()),
-						flags: MessageFlags.Ephemeral,
-					});
-				} else {
-					// Something went wrong, just show narrative without buttons
-					const storyEmbed = createInteraktivniPribehEmbed()
-						.setTitle(`${story.emoji} ${story.title}`)
-						.setDescription(storyResult.narrative);
-
-					await interaction.followUp({
-						embeds: [storyEmbed],
-						flags: MessageFlags.Ephemeral,
-					});
-				}
+				await startAndDisplayStory(storyId, story);
 			}
 		} catch (error) {
 			console.error(`Error starting branching story ${activity.branchingStoryId}:`, error);
-			// Don't fail the whole command if story fails
-			// User already got their base work reward
 		}
 	}
 

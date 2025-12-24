@@ -36,6 +36,31 @@ export function registerStory(story: BranchingStory): void {
 }
 
 /**
+ * Register a dynamic (AI-generated) story temporarily
+ * These stories are cleaned up after the session ends
+ */
+export function registerDynamicStory(story: BranchingStory): void {
+	storyRegistry.set(story.id, story);
+	console.log(`[StoryEngine] Registered dynamic story: ${story.id}`);
+}
+
+/**
+ * Unregister a story from the engine (for cleanup of AI stories)
+ */
+export function unregisterStory(storyId: string): void {
+	if (storyRegistry.delete(storyId)) {
+		console.log(`[StoryEngine] Unregistered story: ${storyId}`);
+	}
+}
+
+/**
+ * Check if a story ID is a dynamic (AI-generated) story
+ */
+export function isDynamicStory(storyId: string): boolean {
+	return storyId.startsWith("ai_");
+}
+
+/**
  * Get a story by ID
  */
 export function getStory(storyId: string): BranchingStory | undefined {
@@ -339,6 +364,11 @@ async function processTerminalNode(
 	// Delete the session
 	sessionManager.deleteSession(session.sessionId);
 
+	// Clean up dynamic (AI-generated) stories from registry
+	if (isDynamicStory(story.id)) {
+		unregisterStory(story.id);
+	}
+
 	// Build final narrative with summary
 	const coinSign = finalCoins >= 0 ? "+" : "";
 	const resolvedTerminalNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
@@ -392,6 +422,11 @@ async function processKeepBalance(
 	// Delete the session
 	sessionManager.deleteSession(session.sessionId);
 
+	// Clean up dynamic (AI-generated) stories from registry
+	if (isDynamicStory(story.id)) {
+		unregisterStory(story.id);
+	}
+
 	// Build narrative
 	const coinSign = finalCoins >= 0 ? "+" : "";
 	const narrative = `💰 **Ponecháváš si aktuální zůstatek**
@@ -416,6 +451,12 @@ Rozhodl ses ukončit příběh a ponechat si ${coinSign}${finalCoins} mincí.
 export function processCancel(session: StorySession): null {
 	// Delete the session without granting any story rewards
 	sessionManager.deleteSession(session.sessionId);
+
+	// Clean up dynamic (AI-generated) stories from registry
+	if (isDynamicStory(session.storyId)) {
+		unregisterStory(session.storyId);
+	}
+
 	return null;
 }
 

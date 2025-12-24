@@ -205,6 +205,37 @@ export interface StoryJournalEntry {
 }
 
 /**
+ * Context for AI-generated stories (incremental generation)
+ * Stored in session to maintain narrative consistency across API calls
+ */
+export interface AIStoryContext {
+	/** Story title */
+	title: string;
+	/** Story emoji */
+	emoji: string;
+	/** Intro narrative */
+	introNarrative: string;
+	/** First decision narrative and choices */
+	decision1: {
+		narrative: string;
+		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+	};
+	/** Path taken so far: "", "X", "Y", "XS", "XF", "YS", "YF", etc. */
+	pathSoFar: string;
+	/** Narrative describing what happened after first choice */
+	firstOutcomeNarrative?: string;
+	/** Second decision if generated */
+	decision2?: {
+		narrative: string;
+		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+	};
+	/** Second outcome narrative if generated */
+	secondOutcomeNarrative?: string;
+}
+
+/**
  * Active story session for a player
  */
 export interface StorySession {
@@ -244,6 +275,16 @@ export interface StorySession {
 	 * Ensures narrative and coinsChange use the same random values.
 	 */
 	resolvedNodeValues: Record<string, Record<string, string | number>>;
+	/**
+	 * AI story context for incremental generation.
+	 * Only present for AI-generated stories.
+	 */
+	aiContext?: AIStoryContext;
+	/**
+	 * Whether this is an incrementally generated AI story.
+	 * If true, nodes may be generated on-demand.
+	 */
+	isIncrementalAI?: boolean;
 }
 
 // =============================================================================

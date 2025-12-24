@@ -4,6 +4,7 @@ import {
 	getWorkSettings,
 	setAIStoryEnabled,
 	setStoryChancePercent,
+	setAIStoryChancePercent,
 } from "../services/workSettings/storage";
 
 const getAdminIds = (): string[] => {
@@ -34,6 +35,19 @@ export const data = new ChatInputCommandBuilder()
 				option
 					.setName("percent")
 					.setDescription("Chance percentage (0-100)")
+					.setRequired(true)
+					.setMinValue(0)
+					.setMaxValue(100),
+			),
+	)
+	.addSubcommands((subcommand) =>
+		subcommand
+			.setName("ai-chance")
+			.setDescription("Set chance for AI vs predefined stories (0=always predefined, 100=always AI)")
+			.addIntegerOptions((option) =>
+				option
+					.setName("percent")
+					.setDescription("AI story chance (0-100)")
 					.setRequired(true)
 					.setMinValue(0)
 					.setMaxValue(100),
@@ -77,6 +91,15 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 			break;
 		}
 
+		case "ai-chance": {
+			const percent = interaction.options.getInteger("percent", true);
+			setAIStoryChancePercent(percent);
+			await interaction.editReply({
+				content: `AI story chance set to **${percent}%** (${percent === 0 ? "always predefined" : percent === 100 ? "always AI" : "mixed"})`,
+			});
+			break;
+		}
+
 		case "status": {
 			const settings = getWorkSettings();
 			await interaction.editReply({
@@ -85,8 +108,7 @@ export const execute = async ({ interaction }: CommandContext): Promise<void> =>
 					"",
 					`AI Stories: ${settings.aiStoryEnabled ? "ENABLED" : "DISABLED"}`,
 					`Story Chance: ${settings.storyChancePercent}%`,
-					"",
-					"_When AI stories are enabled and a story triggers, there's a 50% chance it will be AI-generated._",
+					`AI Story Chance: ${settings.aiStoryChancePercent}% ${settings.aiStoryChancePercent === 0 ? "(always predefined)" : settings.aiStoryChancePercent === 100 ? "(always AI)" : "(mixed)"}`,
 				].join("\n"),
 			});
 			break;

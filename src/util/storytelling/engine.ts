@@ -15,6 +15,7 @@ import type {
 	StoryFinalResult,
 	StoryNode,
 	StorySession,
+	AIStoryContext,
 } from "./types";
 import {
 	isDecisionNode,
@@ -23,6 +24,12 @@ import {
 	isTerminalNode,
 	resolveDynamicValue,
 } from "./types";
+import {
+	generateLayer2,
+	generateLayer3,
+	addLayer2ToStory,
+	addLayer3ToStory,
+} from "./aiStoryGeneratorIncremental";
 
 // Story registry - stores all available stories
 const storyRegistry = new Map<string, BranchingStory>();
@@ -122,6 +129,88 @@ function getNodeOrThrow(story: BranchingStory, nodeId: string): StoryNode {
 		throw new Error(`Node not found: ${nodeId}`);
 	}
 	return node;
+}
+
+/**
+ * Generate Layer 2 nodes on-demand for incremental AI stories
+ * Called after first outcome roll when the decision2 node doesn't exist
+ */
+async function ensureLayer2Generated(
+	session: StorySession,
+	story: BranchingStory,
+	path: "XS" | "XF" | "YS" | "YF",
+): Promise<void> {
+	// Skip if not an incremental AI story
+	if (!session.isIncrementalAI || !session.aiContext) {
+		return;
+	}
+
+	const decision2Id = `decision2_${path}`;
+	// Skip if already generated
+	if (story.nodes[decision2Id]) {
+		return;
+	}
+
+	console.log(`[StoryEngine] Generating Layer 2 for path: ${path}`);
+
+	const choice = path[0] as "X" | "Y";
+	const wasSuccess = path[1] === "S";
+
+	const result = await generateLayer2(session.aiContext, choice, wasSuccess);
+
+	if (!result.success || !result.data || !result.context) {
+		throw new Error(`Failed to generate Layer 2: ${result.error}`);
+	}
+
+	// Update session context
+	session.aiContext = result.context;
+	sessionManager.updateSession(session);
+
+	// Add Layer 2 nodes to story
+	addLayer2ToStory(story, result.data, path);
+}
+
+/**
+ * Generate Layer 3 terminal on-demand for incremental AI stories
+ * Called after second outcome roll when the terminal node doesn't exist
+ */
+async function ensureLayer3Generated(
+	session: StorySession,
+	story: BranchingStory,
+	path: string, // e.g., "XS_X_S" or "YF_Y_F"
+): Promise<void> {
+	// Skip if not an incremental AI story
+	if (!session.isIncrementalAI || !session.aiContext) {
+		return;
+	}
+
+	const terminalId = `terminal_${path}`;
+	// Skip if already generated
+	if (story.nodes[terminalId]) {
+		return;
+	}
+
+	console.log(`[StoryEngine] Generating Layer 3 for path: ${path}`);
+
+	// Parse the path to determine the second choice and outcome
+	const parts = path.split("_");
+	const choice = parts[1] as "X" | "Y";
+	const wasSuccess = parts[2] === "S";
+
+	// Update context with second choice before generating
+	const updatedContext: AIStoryContext = {
+		...session.aiContext,
+		pathSoFar: session.aiContext.pathSoFar + choice,
+	};
+
+	const result = await generateLayer3(updatedContext, choice, wasSuccess);
+
+	if (!result.success || !result.data) {
+		throw new Error(`Failed to generate Layer 3: ${result.error}`);
+	}
+
+	// Add terminal node to story
+	addLayer3ToStory(story, result.data, path);
 }
 
 /**
@@ -289,6 +378,25 @@ async function processOutcomeNode(
 	const nextNodeId = rollResult.success ? node.successNodeId : node.failNodeId;
 	session.currentNodeId = nextNodeId;
 	session.choicesPath.push(rollResult.success ? "success" : "fail");
+
+	// For incremental AI stories, generate the next layer on-demand
+	if (session.isIncrementalAI) {
+		// Check if this is a Layer 1 outcome (outcome1X or outcome1Y)
+		if (node.id === "outcome1X" || node.id === "outcome1Y") {
+			const choice = node.id === "outcome1X" ? "X" : "Y";
+			const path = `${choice}${rollResult.success ? "S" : "F"}` as "XS" | "XF" | "YS" | "YF";
+			await ensureLayer2Generated(session, story, path);
+		}
+		// Check if this is a Layer 2 outcome (outcome2_XX_X or outcome2_XX_Y)
+		else if (node.id.startsWith("outcome2_")) {
+			// Parse: outcome2_XS_X → path = XS, choice = X
+			const parts = node.id.split("_");
+			const layer1Path = parts[1]; // XS, XF, YS, or YF
+			const choice2 = parts[2]; // X or Y
+			const terminalPath = `${layer1Path}_${choice2}_${rollResult.success ? "S" : "F"}`;
+			await ensureLayer3Generated(session, story, terminalPath);
+		}
+	}
 
 	const nextNode = getNodeOrThrow(story, nextNodeId);
 	const resolvedNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
@@ -521,6 +629,71 @@ export async function startStory(
 
 	// Process the intro node
 	return processIntroNode(session, story);
+}
+
+/**
+ * Result of starting an incremental AI story
+ */
+export interface IncrementalAIStoryResult {
+	success: boolean;
+	result?: StoryActionResult;
+	error?: string;
+	usage?: { promptTokens: number; completionTokens: number; totalTokens: number };
+}
+
+/**
+ * Start a new incrementally-generated AI story
+ * Only generates Layer 1 (intro + decision1) - subsequent layers are generated on-demand
+ */
+export async function startIncrementalAIStory(
+	params: {
+		discordUserId: string;
+		dbUserId: number;
+		messageId: string;
+		channelId: string;
+		guildId: string;
+		userLevel: number;
+	},
+): Promise<IncrementalAIStoryResult> {
+	// Import here to avoid circular dependency issues
+	const { generateLayer1, buildStoryFromLayer1 } = await import("./aiStoryGeneratorIncremental");
+
+	// Generate Layer 1
+	const layer1Result = await generateLayer1();
+	if (!layer1Result.success || !layer1Result.data || !layer1Result.context) {
+		return {
+			success: false,
+			error: layer1Result.error ?? "Failed to generate story",
+			usage: layer1Result.usage,
+		};
+	}
+
+	// Build story from Layer 1
+	const storyId = `ai_incr_${Date.now()}`;
+	const story = buildStoryFromLayer1(layer1Result.data, storyId);
+
+	// Register the story
+	registerDynamicStory(story);
+
+	// Create session with AI context
+	const session = sessionManager.createSession({
+		...params,
+		storyId,
+		startNodeId: story.startNodeId,
+		isIncrementalAI: true,
+		aiContext: layer1Result.context,
+	});
+
+	// Process the intro node
+	const result = processIntroNode(session, story);
+
+	console.log(`[StoryEngine] Started incremental AI story "${story.title}" for user ${params.discordUserId}`);
+
+	return {
+		success: true,
+		result,
+		usage: layer1Result.usage,
+	};
 }
 
 /**

@@ -236,12 +236,22 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 	}
 
 	try {
+		// For incremental AI stories, defer immediately since generation takes time
+		if (session.isIncrementalAI) {
+			await interaction.deferUpdate();
+		}
+
 		// Get story for title/emoji
 		const story = storyEngine.getStory(session.storyId);
 		const storyTitle = story ? `${story.emoji} ${story.title}` : "📖 Příběh";
 
-		// Process the action
+		// Process the action (may generate new nodes for incremental AI stories)
 		const result = await storyEngine.processAction(session, action);
+
+		// Helper to update message (use editReply if deferred, update otherwise)
+		const updateMessage = session.isIncrementalAI
+			? async (opts: Parameters<typeof interaction.editReply>[0]) => interaction.editReply(opts)
+			: async (opts: Parameters<typeof interaction.update>[0]) => interaction.update(opts);
 
 		if (result === null) {
 			// Cancel action - story was cancelled, user should get normal work
@@ -251,7 +261,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 				.setDescription("Příběh byl zrušen. Použij `/work` pro normální práci.")
 				.setFooter({ text: "Konec příběhu" });
 
-			await interaction.update({
+			await updateMessage({
 				embeds: [cancelEmbed],
 				components: [],
 			});
@@ -266,7 +276,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 				.setDescription("Výsledek byl odeslán do kanálu.")
 				.setFooter({ text: "Konec příběhu" });
 
-			await interaction.update({
+			await updateMessage({
 				embeds: [completedEmbed],
 				components: [],
 			});
@@ -335,7 +345,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 					.setDescription(`${result.narrative}\n\n⚠️ Chyba: Neočekávaný stav příběhu.`)
 					.setFooter({ text: "Chyba" });
 
-				await interaction.update({
+				await updateMessage({
 					embeds: [errorEmbed],
 					components: [],
 				});
@@ -369,7 +379,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 				.setDescription(fullNarrative)
 				.setFooter({ text: "Vyber si svou cestu..." });
 
-			await interaction.update({
+			await updateMessage({
 				embeds: [continueEmbed],
 				components: buttons.map((row) => row.toJSON()),
 			});

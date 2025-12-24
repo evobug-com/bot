@@ -1,47 +1,39 @@
-import { OpenRouter } from "@openrouter/sdk";
+import { openrouter } from "../../utils/openrouter";
 import type { BranchingStory } from "./types";
 import { validateAIStoryResponse, validateStoryBalance } from "./aiStorySchema";
 import { buildStoryFromAIResponse } from "./aiStoryBuilder";
 import { WORK_CONFIG } from "../../services/work/config";
 
-const openrouterApiKey = process.env.OPENROUTER_API_KEY;
-
-const openrouter = openrouterApiKey
-	? new OpenRouter({
-			apiKey: openrouterApiKey,
-		})
-	: null;
-
 const { aiStoryRewards } = WORK_CONFIG;
 
-const SYSTEM_PROMPT = `Jsi tvůrce vtipných interaktivních příběhů z kancelářského prostředí pro Discord hru.
-Piš POUZE v češtině. Buď humorný, sarkastický, ale vhodný pro práci.
+const SYSTEM_PROMPT = `You are a creator of funny interactive office stories for a Discord game.
+Write ALL story content in CZECH language. Be humorous, sarcastic, but work-appropriate.
 
-GENERUJ PŘÍBĚH V TOMTO JSON FORMÁTU:
+GENERATE A STORY IN THIS JSON FORMAT:
 {
-  "title": "Krátký název příběhu (max 50 znaků)",
-  "emoji": "Jeden emoji reprezentující příběh",
+  "title": "Short story title in Czech (max 50 chars)",
+  "emoji": "Single emoji representing the story",
   "intro": {
-    "narrative": "Úvodní situace, která vtáhne hráče do příběhu (50-500 znaků)"
+    "narrative": "Opening situation that draws the player in (50-500 chars, in Czech)"
   },
   "decision1": {
-    "narrative": "Popis první rozhodovací situace (20-400 znaků)",
+    "narrative": "Description of the first decision point (20-400 chars, in Czech)",
     "choiceX": {
-      "label": "Text tlačítka A (max 25 znaků)",
-      "description": "Popis volby A (max 150 znaků)",
-      "baseReward": číslo ${aiStoryRewards.minBaseReward}-${aiStoryRewards.maxBaseReward},
-      "riskMultiplier": číslo ${aiStoryRewards.minRiskMultiplier}-${aiStoryRewards.maxRiskMultiplier} (nižší = jednodušší)
+      "label": "Button text A (max 25 chars, in Czech)",
+      "description": "Description of choice A (max 150 chars, in Czech)",
+      "baseReward": integer (MUST be ${aiStoryRewards.minBaseReward}-${aiStoryRewards.maxBaseReward}, e.g. 150, 250, 400),
+      "riskMultiplier": decimal (MUST be ${aiStoryRewards.minRiskMultiplier}-${aiStoryRewards.maxRiskMultiplier}, e.g. 0.7, 1.0, 1.3)
     },
-    "choiceY": { ... stejná struktura ... }
+    "choiceY": { ... same structure ... }
   },
   "decision2": {
-    "afterXSuccess": { ... decision struktura pro když volba X uspěje ... },
-    "afterXFail": { ... decision struktura pro když volba X selže ... },
-    "afterYSuccess": { ... decision struktura pro když volba Y uspěje ... },
-    "afterYFail": { ... decision struktura pro když volba Y selže ... }
+    "afterXSuccess": { ... decision structure for when choice X succeeds ... },
+    "afterXFail": { ... decision structure for when choice X fails ... },
+    "afterYSuccess": { ... decision structure for when choice Y succeeds ... },
+    "afterYFail": { ... decision structure for when choice Y fails ... }
   },
   "terminals": {
-    "XS_X_S": { "narrative": "Konec příběhu (30-500 znaků)", "coinsChange": ${aiStoryRewards.minTerminalCoins} až ${aiStoryRewards.maxTerminalCoins}, "isPositiveEnding": true/false, "xpMultiplier": ${aiStoryRewards.minXpMultiplier}-${aiStoryRewards.maxXpMultiplier} },
+    "XS_X_S": { "narrative": "Story ending (30-500 chars, in Czech)", "coinsChange": integer (MUST be ${aiStoryRewards.minTerminalCoins} to ${aiStoryRewards.maxTerminalCoins}), "isPositiveEnding": true/false, "xpMultiplier": decimal (${aiStoryRewards.minXpMultiplier}-${aiStoryRewards.maxXpMultiplier}) },
     "XS_X_F": { ... },
     "XS_Y_S": { ... },
     "XS_Y_F": { ... },
@@ -60,15 +52,21 @@ GENERUJ PŘÍBĚH V TOMTO JSON FORMÁTU:
   }
 }
 
-PRAVIDLA:
-1. Příběh musí být vtipný a zábavný
-2. Témata: kancelář, IT, kolegové, schůzky, deadlines, teambuilding, káva, tiskárna, email, home office
-3. Pozitivní konce mají kladné coinsChange, negativní záporné
-4. Přibližně 50-60% konců by mělo být pozitivních
-5. Rizikovější volby (vyšší riskMultiplier) by měly mít vyšší baseReward
-6. Všechny texty MUSÍ být v češtině
+STRICT NUMBER RULES (MUST be followed!):
+- baseReward: integers ONLY, range ${aiStoryRewards.minBaseReward}-${aiStoryRewards.maxBaseReward} (e.g. 150, 300, 450)
+- riskMultiplier: decimals ONLY, range ${aiStoryRewards.minRiskMultiplier}-${aiStoryRewards.maxRiskMultiplier} (e.g. 0.6, 1.0, 1.4)
+- coinsChange: integers ONLY, range ${aiStoryRewards.minTerminalCoins} to ${aiStoryRewards.maxTerminalCoins} (e.g. -300, 0, 400)
+- xpMultiplier: decimals ONLY, range ${aiStoryRewards.minXpMultiplier}-${aiStoryRewards.maxXpMultiplier} (e.g. 0.8, 1.5)
 
-Vygeneruj jeden kompletní příběh.`;
+STORY RULES:
+1. The story must be funny and entertaining
+2. Topics: office, IT, coworkers, meetings, deadlines, team building, coffee, printer, email, home office
+3. Positive endings have positive coinsChange, negative endings have negative coinsChange
+4. Approximately 50-60% of endings should be positive
+5. Riskier choices (higher riskMultiplier) should have higher baseReward
+6. ALL text content (title, narratives, labels, descriptions) MUST be in Czech
+
+Generate one complete story.`;
 
 export interface AIStoryResult {
 	story: BranchingStory | null;
@@ -93,39 +91,22 @@ export async function generateAIStory(): Promise<AIStoryResult> {
 	}
 
 	try {
-		const response = await openrouter.chat.send({
+		const response = await openrouter.chat.completions.create({
 			model: "google/gemini-3-flash-preview",
 			messages: [
 				{ role: "system", content: SYSTEM_PROMPT },
-				{ role: "user", content: "Vygeneruj nový interaktivní příběh v JSON formátu." },
+				{ role: "user", content: "Generate a new interactive story in JSON format." },
 			],
-			responseFormat: { type: "json_object" },
-			temperature: 0.9, // Higher for more creative stories
-			maxTokens: 8000, // Stories can be long
+			response_format: { type: "json_object" },
+			temperature: 0.9,
+			max_tokens: 8000,
 		});
 
-		const rawContent = response.choices?.[0]?.message?.content;
-		if (!rawContent) {
+		const content = response.choices[0]?.message?.content;
+		if (!content) {
 			return {
 				story: null,
 				error: "Empty response from AI",
-			};
-		}
-
-		// Extract text content (can be string or array of content items)
-		let content: string;
-		if (typeof rawContent === "string") {
-			content = rawContent;
-		} else if (Array.isArray(rawContent)) {
-			// Extract text from content items
-			const textItems = rawContent
-				.filter((item): item is { type: "text"; text: string } => item.type === "text")
-				.map((item) => item.text);
-			content = textItems.join("");
-		} else {
-			return {
-				story: null,
-				error: "Unexpected content format from AI",
 			};
 		}
 
@@ -162,20 +143,20 @@ export async function generateAIStory(): Promise<AIStoryResult> {
 		// Calculate usage and cost
 		const usage = response.usage;
 		const estimatedCost = usage
-			? (usage.promptTokens * 0.1 + usage.completionTokens * 0.4) / 1_000_000
+			? (usage.prompt_tokens * 0.1 + usage.completion_tokens * 0.4) / 1_000_000
 			: 0;
 
 		console.log(
-			`[AIStory] Generated story "${story.title}" - ${usage?.totalTokens ?? 0} tokens, $${estimatedCost.toFixed(6)}`,
+			`[AIStory] Generated story "${story.title}" - ${usage?.total_tokens ?? 0} tokens, $${estimatedCost.toFixed(6)}`,
 		);
 
 		return {
 			story,
 			usage: usage
 				? {
-						promptTokens: usage.promptTokens,
-						completionTokens: usage.completionTokens,
-						totalTokens: usage.totalTokens,
+						promptTokens: usage.prompt_tokens,
+						completionTokens: usage.completion_tokens,
+						totalTokens: usage.total_tokens,
 						estimatedCost,
 					}
 				: undefined,

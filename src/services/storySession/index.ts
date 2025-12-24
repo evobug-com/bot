@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { StorySession } from "../../util/storytelling/types";
+import type { StorySession, AIStoryContext } from "../../util/storytelling/types";
 import * as storage from "./storage";
 
 // In-memory cache for fast access
@@ -52,6 +52,10 @@ export function createSession(params: {
 	channelId: string;
 	guildId: string;
 	userLevel: number;
+	/** Optional: set to true for incrementally generated AI stories */
+	isIncrementalAI?: boolean;
+	/** Optional: AI context for incremental story generation */
+	aiContext?: AIStoryContext;
 }): StorySession {
 	// Delete any existing session for this user
 	const existingSessionId = userSessionIndex.get(params.discordUserId);
@@ -77,6 +81,8 @@ export function createSession(params: {
 		guildId: params.guildId,
 		userLevel: params.userLevel,
 		resolvedNodeValues: {},
+		isIncrementalAI: params.isIncrementalAI,
+		aiContext: params.aiContext,
 	};
 
 	// Save to SQLite

@@ -1,7 +1,7 @@
 /**
  * Test Story Command
  *
- * DEV ONLY: Always triggers a branching story for testing purposes.
+ * ADMIN ONLY: Always triggers a branching story for testing purposes.
  * Logs pricing/tokens to console.
  */
 
@@ -14,7 +14,7 @@ import { getSecureRandomIndex } from "../utils/random.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
-import { isDecisionNode } from "../util/storytelling/types";
+import { isDecisionNode, type BranchingStory } from "../util/storytelling/types";
 // Import all branching stories
 import "../util/storytelling/stories/stolen-money-branching";
 import "../util/storytelling/stories/christmas-party-branching";
@@ -40,47 +40,161 @@ import "../util/storytelling/stories/reply-all-branching.ts";
 import "../util/storytelling/stories/salary-negotiation-branching.ts";
 import "../util/storytelling/stories/team-building-branching.ts";
 
+const getAdminIds = (): string[] => {
+	const adminIds = process.env.ADMIN_IDS;
+	if (!adminIds) return [];
+	return adminIds.split(",").map((id) => id.trim());
+};
+
 export const data = new ChatInputCommandBuilder()
 	.setName("test-story")
 	.setNameLocalizations({ cs: "test-příběh" })
-	.setDescription("[DEV] Test branching story - always triggers a random story")
-	.setDescriptionLocalizations({ cs: "[DEV] Test interaktivního příběhu - vždy spustí náhodný příběh" });
+	.setDescription("[ADMIN] Test branching story - always triggers a story")
+	.setDescriptionLocalizations({ cs: "[ADMIN] Test interaktivního příběhu - vždy spustí příběh" })
+	.addBooleanOptions((option) =>
+		option
+			.setName("ai")
+			.setDescription("Generate an AI story instead of using a predefined one")
+			.setRequired(false),
+	);
 
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
+	// Check admin permission
+	const adminIds = getAdminIds();
+	if (!adminIds.includes(interaction.user.id)) {
+		await interaction.reply({
+			content: "Only admins can use this command.",
+			flags: MessageFlags.Ephemeral,
+		});
+		return;
+	}
+
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-	// Get all registered story IDs
-	const storyIds = storyEngine.getRegisteredStoryIds();
+	const useAI = interaction.options.getBoolean("ai") ?? false;
 
-	if (storyIds.length === 0) {
-		const errorEmbed = createErrorEmbed("Chyba", "Žádné příběhy nejsou registrovány.");
-		await interaction.editReply({ embeds: [errorEmbed] });
+	let story: BranchingStory | null = null;
+	let storyId: string;
+
+	if (useAI) {
+		// Show immediate feedback while generating
+		await interaction.editReply({
+			content: "🤖 Generuji AI příběh... (používá se inkrementální generování)",
+		});
+
+		console.log("\n========== GENERATING INCREMENTAL AI STORY ==========");
+		console.log(`User: ${interaction.user.displayName} (${interaction.user.id})`);
+
+		// Get user level from API
+		const [statsError, statsResult] = await orpc.users.stats.user({ id: dbUser.id });
+		const userLevel = statsError ? 1 : statsResult.levelProgress.currentLevel;
+
+		// Use incremental AI story generation (only Layer 1 is generated now)
+		const aiResult = await storyEngine.startIncrementalAIStory({
+			discordUserId: interaction.user.id,
+			dbUserId: dbUser.id,
+			messageId: "",
+			channelId: interaction.channelId ?? "",
+			guildId: interaction.guildId ?? "",
+			userLevel,
+		});
+
+		if (!aiResult.success || !aiResult.result) {
+			const errorEmbed = createErrorEmbed("AI Story Error", aiResult.error ?? "Failed to generate AI story");
+			await interaction.editReply({ content: "", embeds: [errorEmbed] });
+			return;
+		}
+
+		const storyContext = storyEngine.getStoryContext(aiResult.result.session);
+		if (!storyContext) {
+			const errorEmbed = createErrorEmbed("AI Story Error", "Failed to get story context");
+			await interaction.editReply({ content: "", embeds: [errorEmbed] });
+			return;
+		}
+
+		story = storyContext.story;
+		storyId = story.id;
+
+		console.log(`Generated (Layer 1 only): ${story.title} (${storyId})`);
+		if (aiResult.usage) {
+			console.log(`Tokens: ${aiResult.usage.totalTokens}`);
+		}
+		console.log("====================================================\n");
+
+		// Display the story (intro + decision1)
+		const context = storyContext;
+
+		if (isDecisionNode(context.currentNode)) {
+			const buttons = buildDecisionButtons(
+				aiResult.result.session.storyId,
+				aiResult.result.session.sessionId,
+				context.currentNode.choices.choiceX.label,
+				context.currentNode.choices.choiceY.label,
+				aiResult.result.session.accumulatedCoins,
+			);
+
+			let fullNarrative = aiResult.result.narrative;
+			fullNarrative += `\n\n${storyEngine.resolveNodeValue(aiResult.result.session, context.currentNode.id, "narrative", context.currentNode.narrative)}`;
+			fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
+			fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
+
+			const storyEmbed = createInteraktivniPribehEmbed()
+				.setTitle(`${story.emoji} ${story.title}`)
+				.setDescription(fullNarrative)
+				.setFooter({ text: "[TEST MODE - AI Incremental] Vyber si svou cestu..." });
+
+			await interaction.editReply({
+				content: "",
+				embeds: [storyEmbed],
+				components: buttons.map((row) => row.toJSON()),
+			});
+		} else {
+			const storyEmbed = createInteraktivniPribehEmbed()
+				.setTitle(`${story.emoji} ${story.title}`)
+				.setDescription(aiResult.result.narrative)
+				.setFooter({ text: "[TEST MODE - AI Incremental] Chyba při načítání voleb" });
+
+			await interaction.editReply({
+				content: "",
+				embeds: [storyEmbed],
+			});
+		}
 		return;
+	} else {
+		// Get all registered story IDs
+		const storyIds = storyEngine.getRegisteredStoryIds();
+
+		if (storyIds.length === 0) {
+			const errorEmbed = createErrorEmbed("Chyba", "Žádné příběhy nejsou registrovány.");
+			await interaction.editReply({ embeds: [errorEmbed] });
+			return;
+		}
+
+		// Pick a random story
+		const randomIndex = getSecureRandomIndex(storyIds.length);
+		const selectedStoryId = storyIds[randomIndex];
+
+		if (!selectedStoryId) {
+			const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se vybrat příběh.");
+			await interaction.editReply({ embeds: [errorEmbed] });
+			return;
+		}
+
+		storyId = selectedStoryId;
+		story = storyEngine.getStory(storyId) ?? null;
+
+		if (!story) {
+			const errorEmbed = createErrorEmbed("Chyba", `Příběh "${storyId}" nebyl nalezen.`);
+			await interaction.editReply({ embeds: [errorEmbed] });
+			return;
+		}
+
+		console.log("\n========== TEST STORY STARTED ==========");
+		console.log(`Story: ${story.title} (${storyId})`);
+		console.log(`User: ${interaction.user.displayName} (${interaction.user.id})`);
+		console.log(`DB User ID: ${dbUser.id}`);
+		console.log("=========================================\n");
 	}
-
-	// Pick a random story
-	const randomIndex = getSecureRandomIndex(storyIds.length);
-	const storyId = storyIds[randomIndex];
-
-	if (!storyId) {
-		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se vybrat příběh.");
-		await interaction.editReply({ embeds: [errorEmbed] });
-		return;
-	}
-
-	const story = storyEngine.getStory(storyId);
-
-	if (!story) {
-		const errorEmbed = createErrorEmbed("Chyba", `Příběh "${storyId}" nebyl nalezen.`);
-		await interaction.editReply({ embeds: [errorEmbed] });
-		return;
-	}
-
-	console.log("\n========== TEST STORY STARTED ==========");
-	console.log(`Story: ${story.title} (${storyId})`);
-	console.log(`User: ${interaction.user.displayName} (${interaction.user.id})`);
-	console.log(`DB User ID: ${dbUser.id}`);
-	console.log("=========================================\n");
 
 	try {
 		// Get user level from API

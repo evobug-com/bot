@@ -14,7 +14,6 @@ import { createUradPraceEmbed, createInteraktivniPribehEmbed } from "../util/mes
 import { WORK_CONFIG } from "../services/work/config.ts";
 import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
 import { getWorkSettings } from "../services/workSettings/storage.ts";
-import { generateAIStory } from "../util/storytelling/aiStoryGenerator.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
@@ -194,8 +193,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		userStoryEnabled &&
 		getSecureRandomIndex(100) < storyChancePercent;
 
-	// Determine if AI story should be used (50% chance when AI stories are enabled)
-	const shouldUseAIStory = shouldTriggerStory && workSettings.aiStoryEnabled && getSecureRandomIndex(100) < 50;
+	// Determine if AI story should be used (based on aiStoryChancePercent setting)
+	const shouldUseAIStory = shouldTriggerStory && workSettings.aiStoryEnabled && getSecureRandomIndex(100) < workSettings.aiStoryChancePercent;
 
 	// Filter activities based on story trigger
 	const availableActivities = shouldTriggerStory
@@ -391,10 +390,43 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	// Check if we should use AI-generated story
 	if (shouldUseAIStory) {
 		try {
-			const aiResult = await generateAIStory();
-			if (aiResult.story) {
-				storyEngine.registerDynamicStory(aiResult.story);
-				await startAndDisplayStory(aiResult.story.id, aiResult.story);
+			// Use incremental AI story generation (only generates Layer 1 initially)
+			const aiResult = await storyEngine.startIncrementalAIStory({
+				discordUserId: interaction.user.id,
+				dbUserId: dbUser.id,
+				messageId: "",
+				channelId: interaction.channelId ?? "",
+				guildId: interaction.guildId ?? "",
+				userLevel: work.levelProgress.currentLevel,
+			});
+
+			if (aiResult.success && aiResult.result) {
+				const context = storyEngine.getStoryContext(aiResult.result.session);
+				if (context && isDecisionNode(context.currentNode)) {
+					const buttons = buildDecisionButtons(
+						aiResult.result.session.storyId,
+						aiResult.result.session.sessionId,
+						context.currentNode.choices.choiceX.label,
+						context.currentNode.choices.choiceY.label,
+						aiResult.result.session.accumulatedCoins,
+					);
+
+					let fullNarrative = aiResult.result.narrative;
+					fullNarrative += `\n\n${storyEngine.resolveNodeValue(aiResult.result.session, context.currentNode.id, "narrative", context.currentNode.narrative)}`;
+					fullNarrative += `\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}`;
+					fullNarrative += `\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
+
+					const storyEmbed = createInteraktivniPribehEmbed()
+						.setTitle(`${context.story.emoji} ${context.story.title}`)
+						.setDescription(fullNarrative)
+						.setFooter({ text: "Vyber si svou cestu..." });
+
+					await interaction.followUp({
+						embeds: [storyEmbed],
+						components: buttons.map((row) => row.toJSON()),
+						flags: MessageFlags.Ephemeral,
+					});
+				}
 			} else {
 				console.error("[Work] AI story generation failed:", aiResult.error);
 				// Fallback to written story if available

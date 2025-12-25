@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Runtime data (should be volume mounted)
+data/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Local files
+*.local
+.env
+.env.*
+
+# Test files
+*.test.ts
+**/*.test.ts
+
+# Documentation
+*.md
+!CHANGELOG.md

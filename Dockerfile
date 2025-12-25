@@ -3,8 +3,8 @@ FROM oven/bun:1-alpine
 
 WORKDIR /app
 
-# Install ffmpeg for Discord voice support, and git for submodules
-RUN apk add --no-cache ffmpeg git
+# Install ffmpeg for Discord voice support
+RUN apk add --no-cache ffmpeg
 
 # Copy package files first for better caching
 COPY package.json bun.lock ./

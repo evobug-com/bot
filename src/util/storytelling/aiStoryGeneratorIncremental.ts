@@ -122,7 +122,7 @@ function buildLayer2Prompt(context: AIStoryContext, wasSuccess: boolean): string
 	const choiceMade = context.pathSoFar === "X" ? context.decision1.choiceX : context.decision1.choiceY;
 	const outcome = wasSuccess ? "SUCCEEDED" : "FAILED";
 
-	return `Continue this office story. The player made a choice and the outcome was determined.
+	return `Continue this story. The player made a choice and the outcome was determined.
 Write ALL content in CZECH language.
 
 STORY SO FAR:
@@ -163,7 +163,7 @@ function buildLayer3Prompt(context: AIStoryContext, wasSuccess: boolean): string
 		: { label: "unknown", description: "unknown" };
 	const outcome = wasSuccess ? "SUCCEEDED" : "FAILED";
 
-	return `Finish this office story with a final ending.
+	return `Finish this story with a final ending.
 Write ALL content in CZECH language.
 
 STORY SO FAR:

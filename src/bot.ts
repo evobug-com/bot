@@ -75,6 +75,16 @@ client.once(Events.ClientReady, async (readyClient) => {
 	]);
 	log("info", "All handlers initialized successfully");
 
+	// Heartbeat monitor - check if gateway is alive every 5 minutes
+	setInterval(() => {
+		const ping = readyClient.ping;
+		if (ping === null || ping === -1) {
+			log("error", `Gateway heartbeat failed (ping: ${ping}), forcing restart...`);
+			process.exit(1); // Let Docker restart the container
+		}
+		log("debug", `Gateway heartbeat OK, ping: ${ping}ms`);
+	}, 5 * 60 * 1000);
+
 	// Notify PM2 that the bot is ready (if running under PM2)
 	if (process.send) {
 		process.send('ready');
@@ -125,6 +135,20 @@ client.on(Events.GuildCreate, async (guild) => {
 
 client.on(Events.GuildDelete, async (guild) => {
 	log("info", `Left a guild: ${guild.name} (ID: ${guild.id})`);
+});
+
+// Gateway connection monitoring
+client.on(Events.Invalidated, () => {
+	log("error", "Client session invalidated, forcing restart...");
+	process.exit(1); // Let Docker restart the container
+});
+
+// Debug event to catch WebSocket lifecycle messages
+client.on(Events.Debug, (message) => {
+	// Only log WebSocket-related debug messages
+	if (message.includes("[WS]") || message.includes("Heartbeat")) {
+		log("debug", message);
+	}
 });
 
 // Handle commands

@@ -22,6 +22,9 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Změněno
 - Changelog nyní čte ze souboru místo z gitu (kompatibilní s Dockerem)
 
+### Opraveno
+- Monitorování gateway připojení pro detekci mrtvých WebSocket spojení
+
 ## [2.4.0] - 2024-12-20
 
 ### Přidáno

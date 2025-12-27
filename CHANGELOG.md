@@ -24,6 +24,7 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Opraveno
 - Monitorování gateway připojení pro detekci mrtvých WebSocket spojení
+- Chybějící složka sounds již nezobrazuje error v logu
 
 ## [2.4.0] - 2024-12-20
 

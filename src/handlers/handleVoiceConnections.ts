@@ -257,7 +257,7 @@ async function getMP3Files(): Promise<string[]> {
 		const files = await readdir(config.soundsDirectory);
 		return files.filter(file => file.endsWith('.mp3'));
 	} catch (error) {
-		log("error", "Failed to read sounds directory:", error);
+		log("debug", "Failed to read sounds directory:", error);
 		return [];
 	}
 }

@@ -56,6 +56,18 @@ try {
 	// Column already exists, ignore
 }
 
+// Add processing lock columns if they don't exist (migration for existing databases)
+try {
+	db.run(`ALTER TABLE story_sessions ADD COLUMN is_processing INTEGER NOT NULL DEFAULT 0`);
+} catch {
+	// Column already exists, ignore
+}
+try {
+	db.run(`ALTER TABLE story_sessions ADD COLUMN processing_started_at INTEGER`);
+} catch {
+	// Column already exists, ignore
+}
+
 // Create index on discord_user_id for fast lookups
 db.run(`
 	CREATE INDEX IF NOT EXISTS idx_story_sessions_discord_user
@@ -87,6 +99,8 @@ interface StorySessionRow {
 	channel_id: string;
 	guild_id: string;
 	user_level: number;
+	is_processing: number; // 0 or 1 (SQLite doesn't have boolean)
+	processing_started_at: number | null;
 }
 
 /**
@@ -110,6 +124,8 @@ function rowToSession(row: StorySessionRow): StorySession {
 		guildId: row.guild_id,
 		userLevel: row.user_level,
 		resolvedNodeValues: {},
+		isProcessing: row.is_processing === 1,
+		processingStartedAt: row.processing_started_at ?? undefined,
 	};
 }
 
@@ -122,8 +138,8 @@ export function createSession(session: StorySession): void {
 		INSERT INTO story_sessions (
 			session_id, discord_user_id, db_user_id, story_id, current_node_id,
 			accumulated_coins, choices_path, choice_history, story_journal, started_at, last_interaction_at,
-			message_id, channel_id, guild_id, user_level
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			message_id, channel_id, guild_id, user_level, is_processing, processing_started_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`,
 		[
 			session.sessionId,
@@ -141,6 +157,8 @@ export function createSession(session: StorySession): void {
 			session.channelId,
 			session.guildId,
 			session.userLevel,
+			session.isProcessing ? 1 : 0,
+			session.processingStartedAt ?? null,
 		],
 	);
 }
@@ -197,7 +215,9 @@ export function updateSession(session: StorySession): void {
 			choices_path = ?,
 			choice_history = ?,
 			story_journal = ?,
-			last_interaction_at = ?
+			last_interaction_at = ?,
+			is_processing = ?,
+			processing_started_at = ?
 		WHERE session_id = ?
 		`,
 		[
@@ -207,6 +227,8 @@ export function updateSession(session: StorySession): void {
 			JSON.stringify(session.choiceHistory),
 			JSON.stringify(session.storyJournal),
 			session.lastInteractionAt,
+			session.isProcessing ? 1 : 0,
+			session.processingStartedAt ?? null,
 			session.sessionId,
 		],
 	);

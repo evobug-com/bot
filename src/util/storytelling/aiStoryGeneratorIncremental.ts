@@ -92,6 +92,94 @@ export type Layer2Response = z.infer<typeof Layer2ResponseSchema>;
 export type Layer3Response = z.infer<typeof Layer3ResponseSchema>;
 
 // =============================================================================
+// Retry and Normalization Utilities
+// =============================================================================
+
+/** Sleep for a given number of milliseconds */
+async function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Retry a function with exponential backoff */
+async function withRetry<T>(
+	fn: () => Promise<T>,
+	maxRetries: number = 2,
+	baseDelayMs: number = 1000,
+): Promise<T> {
+	let lastError: Error | undefined;
+
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			// eslint-disable-next-line no-await-in-loop -- Intentional sequential retry
+			return await fn();
+		} catch (error) {
+			lastError = error instanceof Error ? error : new Error(String(error));
+			if (attempt < maxRetries) {
+				const delay = baseDelayMs * (attempt + 1); // Linear backoff
+				console.log(`[AIStory] Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+				// eslint-disable-next-line no-await-in-loop -- Intentional delay between retries
+				await sleep(delay);
+			}
+		}
+	}
+
+	throw lastError ?? new Error("Retry failed with unknown error");
+}
+
+/**
+ * Normalize Layer 2 response values to ensure they're within valid bounds.
+ * This acts as a safety net for when AI doesn't follow constraints exactly.
+ */
+function normalizeLayer2Response(response: Layer2Response): Layer2Response {
+	return {
+		// Truncate narrative if too long
+		outcomeNarrative: response.outcomeNarrative.length > 300
+			? response.outcomeNarrative.slice(0, 297) + "..."
+			: response.outcomeNarrative,
+		decision2: {
+			narrative: response.decision2.narrative.length > 400
+				? response.decision2.narrative.slice(0, 397) + "..."
+				: response.decision2.narrative,
+			choiceX: {
+				...response.decision2.choiceX,
+				label: response.decision2.choiceX.label.slice(0, 25),
+				description: response.decision2.choiceX.description.slice(0, 150),
+				baseReward: Math.max(aiStoryRewards.minBaseReward, Math.min(aiStoryRewards.maxBaseReward, response.decision2.choiceX.baseReward)),
+				riskMultiplier: Math.max(aiStoryRewards.minRiskMultiplier, Math.min(aiStoryRewards.maxRiskMultiplier, response.decision2.choiceX.riskMultiplier)),
+			},
+			choiceY: {
+				...response.decision2.choiceY,
+				label: response.decision2.choiceY.label.slice(0, 25),
+				description: response.decision2.choiceY.description.slice(0, 150),
+				baseReward: Math.max(aiStoryRewards.minBaseReward, Math.min(aiStoryRewards.maxBaseReward, response.decision2.choiceY.baseReward)),
+				riskMultiplier: Math.max(aiStoryRewards.minRiskMultiplier, Math.min(aiStoryRewards.maxRiskMultiplier, response.decision2.choiceY.riskMultiplier)),
+			},
+		},
+	};
+}
+
+/**
+ * Normalize Layer 3 response values to ensure they're within valid bounds.
+ */
+function normalizeLayer3Response(response: Layer3Response): Layer3Response {
+	return {
+		// Truncate narrative if too long
+		outcomeNarrative: response.outcomeNarrative.length > 300
+			? response.outcomeNarrative.slice(0, 297) + "..."
+			: response.outcomeNarrative,
+		terminal: {
+			narrative: response.terminal.narrative.length > 500
+				? response.terminal.narrative.slice(0, 497) + "..."
+				: response.terminal.narrative,
+			// Clamp coinsChange to valid range
+			coinsChange: Math.max(aiStoryRewards.minTerminalCoins, Math.min(aiStoryRewards.maxTerminalCoins, response.terminal.coinsChange)),
+			isPositiveEnding: response.terminal.isPositiveEnding,
+			xpMultiplier: Math.max(aiStoryRewards.minXpMultiplier, Math.min(aiStoryRewards.maxXpMultiplier, response.terminal.xpMultiplier)),
+		},
+	};
+}
+
+// =============================================================================
 // Prompts
 // =============================================================================
 
@@ -149,6 +237,12 @@ JSON FORMAT:
   }
 }
 
+CRITICAL CONSTRAINTS (MUST FOLLOW):
+- outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
+- label: MAXIMUM 25 characters each
+- baseReward: integer between ${aiStoryRewards.minBaseReward} and ${aiStoryRewards.maxBaseReward}
+- riskMultiplier: decimal between ${aiStoryRewards.minRiskMultiplier} and ${aiStoryRewards.maxRiskMultiplier}
+
 RULES:
 - Continue the narrative naturally from the ${outcome.toLowerCase()}
 - Be funny and consistent with the story theme
@@ -187,6 +281,12 @@ JSON FORMAT:
     "xpMultiplier": decimal ${aiStoryRewards.minXpMultiplier}-${aiStoryRewards.maxXpMultiplier}
   }
 }
+
+CRITICAL CONSTRAINTS (MUST FOLLOW):
+- outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
+- terminal.narrative: MAXIMUM 500 characters
+- coinsChange: integer between ${aiStoryRewards.minTerminalCoins} and ${aiStoryRewards.maxTerminalCoins} (NOT below ${aiStoryRewards.minTerminalCoins}!)
+- xpMultiplier: decimal between ${aiStoryRewards.minXpMultiplier} and ${aiStoryRewards.maxXpMultiplier}
 
 RULES:
 - ${wasSuccess ? "This should generally be a POSITIVE ending (positive coinsChange)" : "This should generally be a NEGATIVE ending (negative coinsChange)"}
@@ -288,6 +388,7 @@ export async function generateLayer1(): Promise<GenerationResult<Layer1Response>
 /**
  * Generate Layer 2: outcome narrative + decision2
  * Called after player makes first choice and outcome is determined
+ * Uses retry logic and value normalization for robustness.
  */
 export async function generateLayer2(
 	context: AIStoryContext,
@@ -298,26 +399,45 @@ export async function generateLayer2(
 	const updatedContext = { ...context, pathSoFar: choice };
 	const prompt = buildLayer2Prompt(updatedContext, wasSuccess);
 
-	const result = await callOpenRouter(prompt, "Continue the story.", Layer2ResponseSchema);
+	// Use retry logic for transient failures
+	const result = await withRetry(
+		async () => {
+			const res = await callOpenRouter(prompt, "Continue the story.", Layer2ResponseSchema);
+			// Throw on failure to trigger retry
+			if (!res.success) {
+				throw new Error(res.error ?? "Generation failed");
+			}
+			return res;
+		},
+		2, // maxRetries
+		1000, // baseDelayMs
+	).catch((error: unknown) => ({
+		success: false as const,
+		error: error instanceof Error ? error.message : String(error),
+	}));
 
 	if (!result.success || !result.data) {
 		return result;
 	}
 
+	// Normalize values to ensure they're within bounds (safety net)
+	const normalizedData = normalizeLayer2Response(result.data);
+
 	// Update context with new data
 	const newContext: AIStoryContext = {
 		...updatedContext,
 		pathSoFar: `${choice}${wasSuccess ? "S" : "F"}`,
-		firstOutcomeNarrative: result.data.outcomeNarrative,
-		decision2: result.data.decision2,
+		firstOutcomeNarrative: normalizedData.outcomeNarrative,
+		decision2: normalizedData.decision2,
 	};
 
-	return { ...result, context: newContext };
+	return { ...result, data: normalizedData, context: newContext };
 }
 
 /**
  * Generate Layer 3: outcome narrative + terminal
  * Called after player makes second choice and outcome is determined
+ * Uses retry logic and value normalization for robustness.
  */
 export async function generateLayer3(
 	context: AIStoryContext,
@@ -328,7 +448,31 @@ export async function generateLayer3(
 	const tempContext = { ...context };
 	const prompt = buildLayer3Prompt(tempContext, wasSuccess);
 
-	return callOpenRouter(prompt, "Finish the story.", Layer3ResponseSchema);
+	// Use retry logic for transient failures
+	const result = await withRetry(
+		async () => {
+			const res = await callOpenRouter(prompt, "Finish the story.", Layer3ResponseSchema);
+			// Throw on failure to trigger retry
+			if (!res.success) {
+				throw new Error(res.error ?? "Generation failed");
+			}
+			return res;
+		},
+		2, // maxRetries
+		1000, // baseDelayMs
+	).catch((error: unknown) => ({
+		success: false as const,
+		error: error instanceof Error ? error.message : String(error),
+	}));
+
+	if (!result.success || !result.data) {
+		return result;
+	}
+
+	// Normalize values to ensure they're within bounds (safety net)
+	const normalizedData = normalizeLayer3Response(result.data);
+
+	return { ...result, data: normalizedData };
 }
 
 // =============================================================================

@@ -257,5 +257,51 @@ export function cleanupExpiredSessions(maxAgeMs?: number): number {
 	return cleaned;
 }
 
+// =============================================================================
+// Processing Lock Functions (prevents duplicate button clicks)
+// =============================================================================
+
+/** How long before a processing lock auto-expires (prevents deadlocks if bot crashes) */
+const PROCESSING_TIMEOUT_MS = 60_000; // 60 seconds
+
+/**
+ * Check if a session is currently being processed (with timeout detection).
+ * Returns true if the session is actively being processed (within timeout).
+ */
+export function isSessionProcessing(session: StorySession): boolean {
+	if (!session.isProcessing) {
+		return false;
+	}
+	if (!session.processingStartedAt) {
+		return false;
+	}
+
+	// Check if processing has timed out (auto-expire after 60 seconds)
+	const elapsed = Date.now() - session.processingStartedAt;
+	return elapsed < PROCESSING_TIMEOUT_MS;
+}
+
+/**
+ * Set or clear the processing lock for a session.
+ * When setting to true, also records the start timestamp.
+ * When setting to false, clears the timestamp.
+ * Persists to SQLite so lock survives bot restarts.
+ */
+export function setSessionProcessing(sessionId: string, isProcessing: boolean): void {
+	const session = sessionCache.get(sessionId);
+	if (!session) {
+		return;
+	}
+
+	session.isProcessing = isProcessing;
+	session.processingStartedAt = isProcessing ? Date.now() : undefined;
+
+	// Persist to SQLite
+	storage.updateSession(session);
+
+	// Update cache
+	sessionCache.set(sessionId, session);
+}
+
 // Re-export types
 export type { StorySession };

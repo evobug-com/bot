@@ -285,6 +285,16 @@ export interface StorySession {
 	 * If true, nodes may be generated on-demand.
 	 */
 	isIncrementalAI?: boolean;
+	/**
+	 * Whether an action is currently being processed for this session.
+	 * Used to prevent duplicate button clicks while AI is generating.
+	 */
+	isProcessing?: boolean;
+	/**
+	 * Unix timestamp when processing started.
+	 * Used for timeout detection (auto-expires after 60 seconds).
+	 */
+	processingStartedAt?: number;
 }
 
 // =============================================================================

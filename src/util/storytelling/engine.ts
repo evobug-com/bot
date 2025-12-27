@@ -370,32 +370,54 @@ async function processOutcomeNode(
 	const rollResult = rollChance(actualChance);
 
 	// Apply any coin change from this node
-	if (node.coinsChange !== undefined) {
-		session.accumulatedCoins += resolveNodeValue(session, node.id, "coinsChange", node.coinsChange);
-	}
+	const outcomeCoinsChange = node.coinsChange !== undefined
+		? resolveNodeValue(session, node.id, "coinsChange", node.coinsChange)
+		: 0;
 
 	// Determine next node based on roll
 	const nextNodeId = rollResult.success ? node.successNodeId : node.failNodeId;
+
+	// Save session state for rollback in case of layer generation failure
+	const snapshot = {
+		currentNodeId: session.currentNodeId,
+		choicesPath: [...session.choicesPath],
+		accumulatedCoins: session.accumulatedCoins,
+	};
+
+	// Update session state
+	session.accumulatedCoins += outcomeCoinsChange;
 	session.currentNodeId = nextNodeId;
 	session.choicesPath.push(rollResult.success ? "success" : "fail");
 
 	// For incremental AI stories, generate the next layer on-demand
-	if (session.isIncrementalAI) {
-		// Check if this is a Layer 1 outcome (outcome1X or outcome1Y)
-		if (node.id === "outcome1X" || node.id === "outcome1Y") {
-			const choice = node.id === "outcome1X" ? "X" : "Y";
-			const path = `${choice}${rollResult.success ? "S" : "F"}` as "XS" | "XF" | "YS" | "YF";
-			await ensureLayer2Generated(session, story, path);
+	// Wrapped in try-catch to rollback session state on failure
+	try {
+		if (session.isIncrementalAI) {
+			// Check if this is a Layer 1 outcome (outcome1X or outcome1Y)
+			if (node.id === "outcome1X" || node.id === "outcome1Y") {
+				const choice = node.id === "outcome1X" ? "X" : "Y";
+				const path = `${choice}${rollResult.success ? "S" : "F"}` as "XS" | "XF" | "YS" | "YF";
+				await ensureLayer2Generated(session, story, path);
+			}
+			// Check if this is a Layer 2 outcome (outcome2_XX_X or outcome2_XX_Y)
+			else if (node.id.startsWith("outcome2_")) {
+				// Parse: outcome2_XS_X → path = XS, choice = X
+				const parts = node.id.split("_");
+				const layer1Path = parts[1]; // XS, XF, YS, or YF
+				const choice2 = parts[2]; // X or Y
+				const terminalPath = `${layer1Path}_${choice2}_${rollResult.success ? "S" : "F"}`;
+				await ensureLayer3Generated(session, story, terminalPath);
+			}
 		}
-		// Check if this is a Layer 2 outcome (outcome2_XX_X or outcome2_XX_Y)
-		else if (node.id.startsWith("outcome2_")) {
-			// Parse: outcome2_XS_X → path = XS, choice = X
-			const parts = node.id.split("_");
-			const layer1Path = parts[1]; // XS, XF, YS, or YF
-			const choice2 = parts[2]; // X or Y
-			const terminalPath = `${layer1Path}_${choice2}_${rollResult.success ? "S" : "F"}`;
-			await ensureLayer3Generated(session, story, terminalPath);
-		}
+	} catch (error) {
+		// Rollback session state on layer generation failure
+		session.currentNodeId = snapshot.currentNodeId;
+		session.choicesPath = snapshot.choicesPath;
+		session.accumulatedCoins = snapshot.accumulatedCoins;
+
+		// Re-throw with context
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		throw new Error(`Layer generation failed: ${errorMessage}`);
 	}
 
 	const nextNode = getNodeOrThrow(story, nextNodeId);

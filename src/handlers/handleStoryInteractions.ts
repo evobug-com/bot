@@ -235,10 +235,26 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 		return;
 	}
 
+	// Check if an action is already being processed for this session (prevents duplicate clicks)
+	if (sessionManager.isSessionProcessing(session)) {
+		await interaction.reply({
+			content: "⏳ Tvoje akce se právě zpracovává, chvilku počkej...",
+			flags: MessageFlags.Ephemeral,
+		});
+		return;
+	}
+
+	// Set the processing lock (persisted to SQLite for restart survival)
+	sessionManager.setSessionProcessing(session.sessionId, true);
+
+	// Track whether we've deferred the interaction (for proper error handling)
+	let isDeferred = false;
+
 	try {
 		// For incremental AI stories, defer immediately since generation takes time
 		if (session.isIncrementalAI) {
 			await interaction.deferUpdate();
+			isDeferred = true;
 		}
 
 		// Get story for title/emoji
@@ -386,10 +402,28 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 		}
 	} catch (error) {
 		log("error", `Error processing story action: ${error instanceof Error ? error.message : String(error)}`);
-		await interaction.reply({
-			content: "❌ Nastala chyba při zpracování akce. Zkus to prosím znovu.",
-			flags: MessageFlags.Ephemeral,
-		});
+
+		// Send error feedback using the appropriate method based on deferred state
+		try {
+			if (isDeferred) {
+				// If we deferred, we must use editReply (reply would fail with InteractionAlreadyReplied)
+				// editReply doesn't support flags - the ephemeral status was set by deferUpdate
+				await interaction.editReply({
+					content: "❌ Nastala chyba při zpracování akce. Zkus to prosím znovu.",
+				});
+			} else {
+				await interaction.reply({
+					content: "❌ Nastala chyba při zpracování akce. Zkus to prosím znovu.",
+					flags: MessageFlags.Ephemeral,
+				});
+			}
+		} catch (replyError) {
+			// Log but don't throw - interaction may have expired or already been handled
+			log("warn", `Failed to send error message to user: ${replyError instanceof Error ? replyError.message : String(replyError)}`);
+		}
+	} finally {
+		// Always clear the processing lock when done (success or failure)
+		sessionManager.setSessionProcessing(session.sessionId, false);
 	}
 }
 

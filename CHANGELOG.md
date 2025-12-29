@@ -13,6 +13,23 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Bezpečnost / Security 🔒 Bezpečnost
 -->
 
+
+## Unreleased
+
+<!-- commits 0affe673b18bca582eda398218aa215f7281436b aefcb8b4be9c0d4428732b0eec311da92e1abc76 c937c4c -->
+
+### Změněno
+- Mírně upraveny AI prompty pro příběhy
+
+### Opraveno
+- Chyba "InteractionAlreadyReplied" u AI příběhů - nyní uživatelé vidí chybovou zprávu
+- Opakované klikání na tlačítka při generování AI příběhu - nyní zablokováno s upozorněním
+- Poškození stavu session při selhání generování vrstvy - nyní se automaticky vrátí zpět
+- AI generování nyní zkouší až 3x při dočasném selhání a normalizuje hodnoty do platných rozsahů
+
+### Odstraněno
+- Nepoužívané soubory
+
 ## [2.5.0] - 2024-12-26
 
 ### Přidáno

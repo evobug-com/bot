@@ -16,16 +16,30 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
-<!-- commits 0affe673b18bca582eda398218aa215f7281436b aefcb8b4be9c0d4428732b0eec311da92e1abc76 c937c4c -->
+<!-- commits after 4cb28f5 -->
+
+
+## [2.6.0] - 2025-01-08
+
+<!-- commits 0affe67..4cb28f5 -->
+
+### Přidáno
+- Náhodná slova a personalizace uživatelů pro AI příběhy - příběhy jsou nyní rozmanitější
+- Databáze 1000 českých podstatných jmen a 100 sloves pro inspiraci příběhů
+- Soubor `data/story-members.txt` pro přidání faktů o uživatelích do příběhů
 
 ### Změněno
+- Různé šance úspěchu pro kroky AI příběhů (50% první krok, 75% druhý)
+- Odměny za AI příběhy nyní určuje kód místo LLM (konzistentnější)
+- Při spuštění AI příběhu se zobrazuje "🤖 AI Příběh" místo nesouvisející aktivity
 - Mírně upraveny AI prompty pro příběhy
 
 ### Opraveno
-- Chyba "InteractionAlreadyReplied" u AI příběhů - nyní uživatelé vidí chybovou zprávu
+- Chyba "InteractionAlreadyReplied" - nyní se automaticky vygeneruje nový příběh
 - Opakované klikání na tlačítka při generování AI příběhu - nyní zablokováno s upozorněním
 - Poškození stavu session při selhání generování vrstvy - nyní se automaticky vrátí zpět
 - AI generování nyní zkouší až 3x při dočasném selhání a normalizuje hodnoty do platných rozsahů
+- Snížen spam v logu při opakovaných pokusech o generování obrázků
 
 ### Odstraněno
 - Nepoužívané soubory

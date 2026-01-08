@@ -11,8 +11,48 @@
 import { z } from "zod";
 import { openrouter } from "../../utils/openrouter";
 import { WORK_CONFIG } from "../../services/work/config";
+import { getSecureRandomIndex } from "../../utils/random";
 
 const { aiStoryRewards } = WORK_CONFIG;
+
+// =============================================================================
+// Random Reward Calculation
+// =============================================================================
+
+/** Fixed success rate for all AI story outcomes */
+export const AI_STORY_SUCCESS_RATE = 70;
+
+/**
+ * Calculate random coins for a story outcome using secure random.
+ * Success outcomes get positive coins, failure outcomes get negative coins.
+ */
+export function calculateRandomCoins(isSuccess: boolean): number {
+	if (isSuccess) {
+		// Success: random coins between 100 and maxTerminalCoins (600)
+		const range = aiStoryRewards.maxTerminalCoins - 100 + 1;
+		return 100 + getSecureRandomIndex(range);
+	} else {
+		// Failure: random coins between minTerminalCoins (-400) and 0
+		const range = Math.abs(aiStoryRewards.minTerminalCoins) + 1;
+		return -getSecureRandomIndex(range);
+	}
+}
+
+/**
+ * Calculate random XP multiplier for a story outcome.
+ * Success gets higher multiplier, failure gets lower.
+ */
+export function calculateRandomXpMultiplier(isSuccess: boolean): number {
+	if (isSuccess) {
+		// Success: 1.0 to maxXpMultiplier (2.0)
+		const range = (aiStoryRewards.maxXpMultiplier - 1.0) * 10; // 10 steps
+		return 1.0 + getSecureRandomIndex(Math.floor(range) + 1) / 10;
+	} else {
+		// Failure: minXpMultiplier (0.5) to 1.0
+		const range = (1.0 - aiStoryRewards.minXpMultiplier) * 10; // 5 steps
+		return aiStoryRewards.minXpMultiplier + getSecureRandomIndex(Math.floor(range) + 1) / 10;
+	}
+}
 
 // =============================================================================
 // Types
@@ -29,8 +69,8 @@ export interface AIStoryContext {
 	/** First decision narrative and choices */
 	decision1: {
 		narrative: string;
-		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
-		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
 	};
 	/** Path taken so far: "X" or "Y" for first choice, "XS", "XF", "YS", "YF" after outcome */
 	pathSoFar: string;
@@ -39,17 +79,15 @@ export interface AIStoryContext {
 	/** Second decision if generated */
 	decision2?: {
 		narrative: string;
-		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
-		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
 	};
 }
 
-/** Choice schema for validation */
+/** Choice schema for validation (rewards are calculated by code, not AI) */
 const AIChoiceSchema = z.object({
 	label: z.string().min(1).max(25),
 	description: z.string().min(1).max(150),
-	baseReward: z.number().int().min(aiStoryRewards.minBaseReward).max(aiStoryRewards.maxBaseReward),
-	riskMultiplier: z.number().min(aiStoryRewards.minRiskMultiplier).max(aiStoryRewards.maxRiskMultiplier),
 });
 
 /** Decision schema */
@@ -59,12 +97,9 @@ const AIDecisionSchema = z.object({
 	choiceY: AIChoiceSchema,
 });
 
-/** Terminal schema */
+/** Terminal schema (coinsChange and xpMultiplier are calculated by code based on outcome) */
 const AITerminalSchema = z.object({
 	narrative: z.string().min(30).max(500),
-	coinsChange: z.number().int().min(aiStoryRewards.minTerminalCoins).max(aiStoryRewards.maxTerminalCoins),
-	isPositiveEnding: z.boolean(),
-	xpMultiplier: z.number().min(aiStoryRewards.minXpMultiplier).max(aiStoryRewards.maxXpMultiplier),
 });
 
 /** Layer 1 response schema */
@@ -141,18 +176,12 @@ function normalizeLayer2Response(response: Layer2Response): Layer2Response {
 				? response.decision2.narrative.slice(0, 397) + "..."
 				: response.decision2.narrative,
 			choiceX: {
-				...response.decision2.choiceX,
 				label: response.decision2.choiceX.label.slice(0, 25),
 				description: response.decision2.choiceX.description.slice(0, 150),
-				baseReward: Math.max(aiStoryRewards.minBaseReward, Math.min(aiStoryRewards.maxBaseReward, response.decision2.choiceX.baseReward)),
-				riskMultiplier: Math.max(aiStoryRewards.minRiskMultiplier, Math.min(aiStoryRewards.maxRiskMultiplier, response.decision2.choiceX.riskMultiplier)),
 			},
 			choiceY: {
-				...response.decision2.choiceY,
 				label: response.decision2.choiceY.label.slice(0, 25),
 				description: response.decision2.choiceY.description.slice(0, 150),
-				baseReward: Math.max(aiStoryRewards.minBaseReward, Math.min(aiStoryRewards.maxBaseReward, response.decision2.choiceY.baseReward)),
-				riskMultiplier: Math.max(aiStoryRewards.minRiskMultiplier, Math.min(aiStoryRewards.maxRiskMultiplier, response.decision2.choiceY.riskMultiplier)),
 			},
 		},
 	};
@@ -160,6 +189,7 @@ function normalizeLayer2Response(response: Layer2Response): Layer2Response {
 
 /**
  * Normalize Layer 3 response values to ensure they're within valid bounds.
+ * Note: coinsChange, isPositiveEnding, and xpMultiplier are calculated by code, not AI.
  */
 function normalizeLayer3Response(response: Layer3Response): Layer3Response {
 	return {
@@ -171,10 +201,6 @@ function normalizeLayer3Response(response: Layer3Response): Layer3Response {
 			narrative: response.terminal.narrative.length > 500
 				? response.terminal.narrative.slice(0, 497) + "..."
 				: response.terminal.narrative,
-			// Clamp coinsChange to valid range
-			coinsChange: Math.max(aiStoryRewards.minTerminalCoins, Math.min(aiStoryRewards.maxTerminalCoins, response.terminal.coinsChange)),
-			isPositiveEnding: response.terminal.isPositiveEnding,
-			xpMultiplier: Math.max(aiStoryRewards.minXpMultiplier, Math.min(aiStoryRewards.maxXpMultiplier, response.terminal.xpMultiplier)),
 		},
 	};
 }
@@ -196,15 +222,13 @@ OUTPUT JSON:
     "narrative": "Situation requiring choice (20-400 chars Czech)",
     "choiceX": {
       "label": "Option A (max 25 chars)",
-      "description": "What happens (max 150 chars)",
-      "baseReward": ${aiStoryRewards.minBaseReward}-${aiStoryRewards.maxBaseReward},
-      "riskMultiplier": ${aiStoryRewards.minRiskMultiplier}-${aiStoryRewards.maxRiskMultiplier}
+      "description": "What happens (max 150 chars)"
     },
     "choiceY": { same structure as choiceX }
   }
 }
 
-Higher risk = higher reward. Be funny. Czech only.`;
+Be funny. Czech only.`;
 
 function buildLayer2Prompt(context: AIStoryContext, wasSuccess: boolean): string {
 	const choiceMade = context.pathSoFar === "X" ? context.decision1.choiceX : context.decision1.choiceY;
@@ -229,9 +253,7 @@ JSON FORMAT:
     "narrative": "Second decision description (20-400 chars, Czech)",
     "choiceX": {
       "label": "Button A (max 25 chars, Czech)",
-      "description": "What happens (max 150 chars, Czech)",
-      "baseReward": integer ${aiStoryRewards.minBaseReward}-${aiStoryRewards.maxBaseReward},
-      "riskMultiplier": decimal ${aiStoryRewards.minRiskMultiplier}-${aiStoryRewards.maxRiskMultiplier}
+      "description": "What happens (max 150 chars, Czech)"
     },
     "choiceY": { same structure }
   }
@@ -240,8 +262,6 @@ JSON FORMAT:
 CRITICAL CONSTRAINTS (MUST FOLLOW):
 - outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
 - label: MAXIMUM 25 characters each
-- baseReward: integer between ${aiStoryRewards.minBaseReward} and ${aiStoryRewards.maxBaseReward}
-- riskMultiplier: decimal between ${aiStoryRewards.minRiskMultiplier} and ${aiStoryRewards.maxRiskMultiplier}
 
 RULES:
 - Continue the narrative naturally from the ${outcome.toLowerCase()}
@@ -275,21 +295,16 @@ JSON FORMAT:
 {
   "outcomeNarrative": "What happened in the final moment (20-300 chars, Czech)",
   "terminal": {
-    "narrative": "Story ending (30-500 chars, Czech)",
-    "coinsChange": integer ${aiStoryRewards.minTerminalCoins} to ${aiStoryRewards.maxTerminalCoins},
-    "isPositiveEnding": true/false,
-    "xpMultiplier": decimal ${aiStoryRewards.minXpMultiplier}-${aiStoryRewards.maxXpMultiplier}
+    "narrative": "Story ending (30-500 chars, Czech)"
   }
 }
 
 CRITICAL CONSTRAINTS (MUST FOLLOW):
 - outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
 - terminal.narrative: MAXIMUM 500 characters
-- coinsChange: integer between ${aiStoryRewards.minTerminalCoins} and ${aiStoryRewards.maxTerminalCoins} (NOT below ${aiStoryRewards.minTerminalCoins}!)
-- xpMultiplier: decimal between ${aiStoryRewards.minXpMultiplier} and ${aiStoryRewards.maxXpMultiplier}
 
 RULES:
-- ${wasSuccess ? "This should generally be a POSITIVE ending (positive coinsChange)" : "This should generally be a NEGATIVE ending (negative coinsChange)"}
+- ${wasSuccess ? "Write a POSITIVE/happy ending" : "Write a NEGATIVE/unfortunate ending"}
 - Be funny and give a satisfying conclusion
 - ALL text in Czech`;
 }
@@ -497,7 +512,7 @@ export function buildStoryFromLayer1(layer1: Layer1Response, storyId: string): B
 	};
 	nodes.intro = introNode;
 
-	// Decision 1 node
+	// Decision 1 node (baseReward and riskMultiplier are calculated by code, not AI)
 	const decision1Node: DecisionNode = {
 		id: "decision1",
 		type: "decision",
@@ -507,28 +522,28 @@ export function buildStoryFromLayer1(layer1: Layer1Response, storyId: string): B
 				id: "choiceX",
 				label: layer1.decision1.choiceX.label,
 				description: layer1.decision1.choiceX.description,
-				baseReward: layer1.decision1.choiceX.baseReward,
-				riskMultiplier: layer1.decision1.choiceX.riskMultiplier,
+				baseReward: 0, // Coins calculated by code based on outcome
+				riskMultiplier: 1.0, // Fixed 70% success rate
 				nextNodeId: "outcome1X",
 			},
 			choiceY: {
 				id: "choiceY",
 				label: layer1.decision1.choiceY.label,
 				description: layer1.decision1.choiceY.description,
-				baseReward: layer1.decision1.choiceY.baseReward,
-				riskMultiplier: layer1.decision1.choiceY.riskMultiplier,
+				baseReward: 0, // Coins calculated by code based on outcome
+				riskMultiplier: 1.0, // Fixed 70% success rate
 				nextNodeId: "outcome1Y",
 			},
 		},
 	};
 	nodes.decision1 = decision1Node;
 
-	// Outcome nodes for first decision (placeholders - nextNodeIds will be filled by Layer 2)
+	// Outcome nodes for first decision - fixed 70% success chance
 	const outcome1X: OutcomeNode = {
 		id: "outcome1X",
 		type: "outcome",
 		narrative: "...", // Will be replaced by Layer 2
-		successChance: 70 / layer1.decision1.choiceX.riskMultiplier,
+		successChance: AI_STORY_SUCCESS_RATE,
 		successNodeId: "decision2_XS", // Placeholder
 		failNodeId: "decision2_XF", // Placeholder
 	};
@@ -538,7 +553,7 @@ export function buildStoryFromLayer1(layer1: Layer1Response, storyId: string): B
 		id: "outcome1Y",
 		type: "outcome",
 		narrative: "...", // Will be replaced by Layer 2
-		successChance: 70 / layer1.decision1.choiceY.riskMultiplier,
+		successChance: AI_STORY_SUCCESS_RATE,
 		successNodeId: "decision2_YS", // Placeholder
 		failNodeId: "decision2_YF", // Placeholder
 	};
@@ -575,7 +590,7 @@ export function addLayer2ToStory(
 		outcomeNode.narrative = layer2.outcomeNarrative;
 	}
 
-	// Create decision 2 node
+	// Create decision 2 node (baseReward and riskMultiplier are calculated by code, not AI)
 	const decision2Node: DecisionNode = {
 		id: decision2Id,
 		type: "decision",
@@ -585,28 +600,28 @@ export function addLayer2ToStory(
 				id: "choiceX",
 				label: layer2.decision2.choiceX.label,
 				description: layer2.decision2.choiceX.description,
-				baseReward: layer2.decision2.choiceX.baseReward,
-				riskMultiplier: layer2.decision2.choiceX.riskMultiplier,
+				baseReward: 0, // Coins calculated by code based on outcome
+				riskMultiplier: 1.0, // Fixed 70% success rate
 				nextNodeId: `outcome2_${path}_X`,
 			},
 			choiceY: {
 				id: "choiceY",
 				label: layer2.decision2.choiceY.label,
 				description: layer2.decision2.choiceY.description,
-				baseReward: layer2.decision2.choiceY.baseReward,
-				riskMultiplier: layer2.decision2.choiceY.riskMultiplier,
+				baseReward: 0, // Coins calculated by code based on outcome
+				riskMultiplier: 1.0, // Fixed 70% success rate
 				nextNodeId: `outcome2_${path}_Y`,
 			},
 		},
 	};
 	story.nodes[decision2Id] = decision2Node;
 
-	// Create outcome nodes for second decision (placeholders)
+	// Create outcome nodes for second decision - fixed 70% success chance
 	const outcome2X: OutcomeNode = {
 		id: `outcome2_${path}_X`,
 		type: "outcome",
 		narrative: "...",
-		successChance: 70 / layer2.decision2.choiceX.riskMultiplier,
+		successChance: AI_STORY_SUCCESS_RATE,
 		successNodeId: `terminal_${path}_X_S`,
 		failNodeId: `terminal_${path}_X_F`,
 	};
@@ -616,7 +631,7 @@ export function addLayer2ToStory(
 		id: `outcome2_${path}_Y`,
 		type: "outcome",
 		narrative: "...",
-		successChance: 70 / layer2.decision2.choiceY.riskMultiplier,
+		successChance: AI_STORY_SUCCESS_RATE,
 		successNodeId: `terminal_${path}_Y_S`,
 		failNodeId: `terminal_${path}_Y_F`,
 	};
@@ -634,10 +649,12 @@ export function addLayer3ToStory(
 ): void {
 	const terminalId = `terminal_${path}`;
 
-	// Parse path to find outcome node
+	// Parse path to find outcome node and determine success/failure
 	const parts = path.split("_");
 	const layer1Path = parts[0]; // "XS", "XF", "YS", "YF"
 	const choice2 = parts[1]; // "X" or "Y"
+	const finalOutcome = parts[2]; // "S" or "F"
+	const isSuccess = finalOutcome === "S";
 	const outcomeNodeId = `outcome2_${layer1Path}_${choice2}`;
 
 	// Update the outcome node narrative
@@ -646,14 +663,18 @@ export function addLayer3ToStory(
 		outcomeNode.narrative = layer3.outcomeNarrative;
 	}
 
-	// Create terminal node
+	// Calculate rewards based on outcome (70% success rate means success is more common)
+	const coinsChange = calculateRandomCoins(isSuccess);
+	const xpMultiplier = calculateRandomXpMultiplier(isSuccess);
+
+	// Create terminal node with code-calculated rewards
 	const terminalNode: TerminalNode = {
 		id: terminalId,
 		type: "terminal",
 		narrative: layer3.terminal.narrative,
-		coinsChange: layer3.terminal.coinsChange,
-		isPositiveEnding: layer3.terminal.isPositiveEnding,
-		xpMultiplier: layer3.terminal.xpMultiplier,
+		coinsChange,
+		isPositiveEnding: isSuccess,
+		xpMultiplier,
 	};
 	story.nodes[terminalId] = terminalNode;
 }

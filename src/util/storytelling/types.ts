@@ -218,8 +218,8 @@ export interface AIStoryContext {
 	/** First decision narrative and choices */
 	decision1: {
 		narrative: string;
-		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
-		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
 	};
 	/** Path taken so far: "", "X", "Y", "XS", "XF", "YS", "YF", etc. */
 	pathSoFar: string;
@@ -228,8 +228,8 @@ export interface AIStoryContext {
 	/** Second decision if generated */
 	decision2?: {
 		narrative: string;
-		choiceX: { label: string; description: string; baseReward: number; riskMultiplier: number };
-		choiceY: { label: string; description: string; baseReward: number; riskMultiplier: number };
+		choiceX: { label: string; description: string };
+		choiceY: { label: string; description: string };
 	};
 	/** Second outcome narrative if generated */
 	secondOutcomeNarrative?: string;

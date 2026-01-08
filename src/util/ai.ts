@@ -17,7 +17,7 @@ export async function generateAiResponse(
 	try {
 		let output = "";
 		const outputFile = path.join(os.tmpdir(), "claude-output.txt");
-		if (await fs.exists(outputFile)) await fs.rm(outputFile, { force: true });
+		await fs.rm(outputFile, { force: true });
 		const outputStream = await fs.open(outputFile, "w");
 		const timeoutMinutes = 1;
 

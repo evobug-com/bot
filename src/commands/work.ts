@@ -317,10 +317,14 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 			const displayCoins = earnedTotalCoins - boostCoinsBonus;
 			const displayXp = earnedTotalXp - boostXpBonus;
 
+			// For AI stories, show generic message since the story content is generated separately
+			const activityTitle = shouldUseAIStory ? "🤖 AI Příběh" : activity.title;
+			const activityText = shouldUseAIStory ? "Generuji unikátní příběh jen pro tebe..." : activity.activity;
+
 			const embed = createUradPraceEmbed().addFields(
 				{
-					name: activity.title,
-					value: activity.activity,
+					name: activityTitle,
+					value: activityText,
 				},
 				{
 					name: "🪙 Získané mince",

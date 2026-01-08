@@ -14,7 +14,6 @@ import { createUradPraceEmbed, createInteraktivniPribehEmbed } from "../util/mes
 import { WORK_CONFIG } from "../services/work/config.ts";
 import { isStoryWorkEnabled } from "../services/userSettings/storage.ts";
 import { getWorkSettings } from "../services/workSettings/storage.ts";
-import { getUserCareerType, getCareerWeights } from "../services/career/index.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import { buildDecisionButtons } from "../handlers/handleStoryInteractions";
@@ -79,66 +78,26 @@ type DynamicActivity = (member: GuildMember) => BaseActivity;
 type Activity = BaseActivity | DynamicActivity;
 
 // ============================================================================
-// WEIGHTED ACTIVITY SELECTION
+// ACTIVITY SELECTION
 // ============================================================================
 
-import type { CategoryWeights } from "../services/career/types.ts";
-
 /**
- * Select an activity using weighted random selection based on career.
- * Activities with higher weights for the user's career are more likely to be selected.
+ * Select a random activity from the list.
  */
-function selectWeightedActivity(
+function selectRandomActivity(
 	activities: readonly Activity[],
-	weights: CategoryWeights,
 	member: GuildMember,
 ): BaseActivity | null {
 	if (activities.length === 0) return null;
 
-	// Build weighted pool
-	const weightedActivities: { activity: Activity; weight: number }[] = [];
+	const index = getSecureRandomIndex(activities.length);
+	const selected = activities[index];
+	if (!selected) return null;
 
-	for (const act of activities) {
-		let category: keyof CategoryWeights;
-		if (typeof act === "function") {
-			// Dynamic activities default to work:misc
-			category = "work:misc";
-		} else {
-			category = act.category;
-		}
-
-		const weight = weights[category] ?? 1;
-		if (weight > 0) {
-			weightedActivities.push({ activity: act, weight });
-		}
+	if (typeof selected === "function") {
+		return selected(member);
 	}
-
-	if (weightedActivities.length === 0) return null;
-
-	// Calculate total weight
-	const totalWeight = weightedActivities.reduce((sum, item) => sum + item.weight, 0);
-
-	// Select using weighted random
-	let randomValue = Math.random() * totalWeight;
-	for (const item of weightedActivities) {
-		randomValue -= item.weight;
-		if (randomValue <= 0) {
-			const selected = item.activity;
-			if (typeof selected === "function") {
-				return selected(member);
-			}
-			return selected;
-		}
-	}
-
-	// Fallback to last item (shouldn't happen, but safety)
-	const lastItem = weightedActivities[weightedActivities.length - 1];
-	if (!lastItem) return null;
-	const fallback = lastItem.activity;
-	if (typeof fallback === "function") {
-		return fallback(member);
-	}
-	return fallback;
+	return selected;
 }
 
 export const data = new ChatInputCommandBuilder()
@@ -275,10 +234,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	// Determine if AI story should be used (based on aiStoryChancePercent setting)
 	const shouldUseAIStory = shouldTriggerStory && workSettings.aiStoryEnabled && getSecureRandomIndex(100) < workSettings.aiStoryChancePercent;
 
-	// Get user's career for activity weighting
-	const userCareer = getUserCareerType(interaction.user.id);
-	const careerWeights = getCareerWeights(userCareer);
-
 	// Filter activities based on story trigger
 	// For /work: only work:* categories for regular activities, only story:work for story trigger
 	const availableActivities = shouldTriggerStory
@@ -296,8 +251,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 				return act.category.startsWith("work:");
 		  });
 
-	// Apply career weighting to activity selection
-	const _activity = selectWeightedActivity(availableActivities, careerWeights, interaction.member as GuildMember);
+	// Select random activity
+	const _activity = selectRandomActivity(availableActivities, interaction.member as GuildMember);
 	if (!_activity) {
 		await interaction.editReply({
 			content: "❌ Nepodařilo se vybrat aktivitu. Zkuste to později.",

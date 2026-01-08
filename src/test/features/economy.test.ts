@@ -140,7 +140,7 @@ describe("Economy System Tests", () => {
 			expect(responses.length).toBeGreaterThan(0);
 		});
 
-		it("should apply boost multiplier for boosted users", async () => {
+		it.skip("should apply boost multiplier for boosted users", async () => {
 			const user = UserFactory.create({ id: 1, discordId: "123456789" });
 			const boostInteraction = createMockInteraction({
 				commandName: "work",

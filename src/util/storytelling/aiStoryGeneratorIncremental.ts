@@ -9,11 +9,149 @@
  */
 
 import { z } from "zod";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { openrouter } from "../../utils/openrouter";
 import { WORK_CONFIG } from "../../services/work/config";
 import { getSecureRandomIndex } from "../../utils/random";
 
 const { aiStoryRewards } = WORK_CONFIG;
+
+// =============================================================================
+// Word & User Data Loading
+// =============================================================================
+
+const DATA_DIR = join(import.meta.dirname, "../../../data");
+
+/** Cached word lists */
+let cachedNouns: string[] | null = null;
+let cachedVerbs: string[] | null = null;
+let cachedMembers: Map<string, string[]> | null = null;
+
+/**
+ * Load words from a file, filtering out comments and empty lines.
+ */
+function loadWordsFromFile(filename: string): string[] {
+	const filepath = join(DATA_DIR, filename);
+	if (!existsSync(filepath)) {
+		console.warn(`[AIStory] Word file not found: ${filepath}`);
+		return [];
+	}
+	try {
+		const content = readFileSync(filepath, "utf-8");
+		return content
+			.split("\n")
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0 && !line.startsWith("#"));
+	} catch (error) {
+		console.error(`[AIStory] Failed to load word file: ${filepath}`, error);
+		return [];
+	}
+}
+
+/**
+ * Get cached nouns list, loading if necessary.
+ */
+function getNouns(): string[] {
+	if (!cachedNouns) {
+		cachedNouns = loadWordsFromFile("story-words-nouns.txt");
+		console.log(`[AIStory] Loaded ${cachedNouns.length} nouns`);
+	}
+	return cachedNouns;
+}
+
+/**
+ * Get cached verbs list, loading if necessary.
+ */
+function getVerbs(): string[] {
+	if (!cachedVerbs) {
+		cachedVerbs = loadWordsFromFile("story-words-verbs.txt");
+		console.log(`[AIStory] Loaded ${cachedVerbs.length} verbs`);
+	}
+	return cachedVerbs;
+}
+
+/**
+ * Pick N random words from a list using secure random.
+ */
+function pickRandomWords(words: string[], count: number): string[] {
+	if (words.length === 0) return [];
+	const picked: string[] = [];
+	const available = [...words];
+	const pickCount = Math.min(count, available.length);
+	for (let i = 0; i < pickCount; i++) {
+		const index = getSecureRandomIndex(available.length);
+		const word = available[index];
+		if (word !== undefined) {
+			picked.push(word);
+			available.splice(index, 1);
+		}
+	}
+	return picked;
+}
+
+/**
+ * Load user metadata from story-members.txt.
+ * Format: <discord_id>: fact1; fact2; fact3
+ */
+function loadUserMetadata(): Map<string, string[]> {
+	const filepath = join(DATA_DIR, "story-members.txt");
+	const members = new Map<string, string[]>();
+	if (!existsSync(filepath)) {
+		return members;
+	}
+	try {
+		const content = readFileSync(filepath, "utf-8");
+		for (const line of content.split("\n")) {
+			const trimmed = line.trim();
+			if (!trimmed || trimmed.startsWith("#")) continue;
+			const colonIndex = trimmed.indexOf(":");
+			if (colonIndex === -1) continue;
+			const discordId = trimmed.slice(0, colonIndex).trim();
+			const factsStr = trimmed.slice(colonIndex + 1).trim();
+			const facts = factsStr
+				.split(";")
+				.map((f) => f.trim())
+				.filter((f) => f.length > 0);
+			if (facts.length > 0) {
+				members.set(discordId, facts);
+			}
+		}
+		console.log(`[AIStory] Loaded ${members.size} member profiles`);
+	} catch (error) {
+		console.error(`[AIStory] Failed to load member metadata`, error);
+	}
+	return members;
+}
+
+/**
+ * Get cached members map, loading if necessary.
+ */
+function getMembers(): Map<string, string[]> {
+	if (!cachedMembers) {
+		cachedMembers = loadUserMetadata();
+	}
+	return cachedMembers;
+}
+
+/**
+ * Get 2-3 random facts for a user, or empty array if not found.
+ */
+function getUserFacts(discordUserId: string): string[] {
+	const members = getMembers();
+	const facts = members.get(discordUserId);
+	if (!facts || facts.length === 0) return [];
+	return pickRandomWords(facts, Math.min(3, facts.length));
+}
+
+/**
+ * Get random words for story generation: 10 nouns + 2 verbs.
+ */
+function getRandomStoryWords(): { nouns: string[]; verbs: string[] } {
+	const nouns = pickRandomWords(getNouns(), 10);
+	const verbs = pickRandomWords(getVerbs(), 2);
+	return { nouns, verbs };
+}
 
 // =============================================================================
 // Random Reward Calculation
@@ -212,10 +350,24 @@ function normalizeLayer3Response(response: Layer3Response): Layer3Response {
 // Prompts
 // =============================================================================
 
-const LAYER1_PROMPT = `You are a creative writer for a Discord game. Write in CZECH language.
+/**
+ * Build Layer 1 prompt with random words and user facts for variety.
+ */
+function buildLayer1Prompt(randomWords: { nouns: string[]; verbs: string[] }, userFacts: string[]): string {
+	const wordsSection = randomWords.nouns.length > 0 || randomWords.verbs.length > 0
+		? `\nUse these words as inspiration (incorporate at least 3 into the story):
+Nouns: ${randomWords.nouns.join(", ")}
+Verbs: ${randomWords.verbs.join(", ")}\n`
+		: "";
+
+	const userSection = userFacts.length > 0
+		? `\nThe main character has these traits: ${userFacts.join(", ")}. Incorporate them naturally.\n`
+		: "";
+
+	return `You are a creative writer for a Discord game. Write in CZECH language.
 
 Create a SHORT funny interactive story. Be completely original - invent any scenario you want.
-
+${wordsSection}${userSection}
 OUTPUT JSON:
 {
   "title": "Czech title (max 50 chars)",
@@ -232,6 +384,7 @@ OUTPUT JSON:
 }
 
 Be funny. Czech only.`;
+}
 
 function buildLayer2Prompt(context: AIStoryContext, wasSuccess: boolean): string {
 	const choiceMade = context.pathSoFar === "X" ? context.decision1.choiceX : context.decision1.choiceY;
@@ -385,8 +538,15 @@ async function callOpenRouter<T>(
  * Generate Layer 1: intro + decision1
  * Called when starting a new AI story
  */
-export async function generateLayer1(): Promise<GenerationResult<Layer1Response> & { context?: AIStoryContext }> {
-	const result = await callOpenRouter(LAYER1_PROMPT, "Generate a new story.", Layer1ResponseSchema);
+export async function generateLayer1(discordUserId?: string): Promise<GenerationResult<Layer1Response> & { context?: AIStoryContext }> {
+	// Get random words and user facts for variety
+	const randomWords = getRandomStoryWords();
+	const userFacts = discordUserId ? getUserFacts(discordUserId) : [];
+
+	// Build dynamic prompt with words and facts
+	const prompt = buildLayer1Prompt(randomWords, userFacts);
+
+	const result = await callOpenRouter(prompt, "Generate a new story.", Layer1ResponseSchema);
 
 	if (!result.success || !result.data) {
 		return result;

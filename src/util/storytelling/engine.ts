@@ -680,8 +680,8 @@ export async function startIncrementalAIStory(
 	// Import here to avoid circular dependency issues
 	const { generateLayer1, buildStoryFromLayer1 } = await import("./aiStoryGeneratorIncremental");
 
-	// Generate Layer 1
-	const layer1Result = await generateLayer1();
+	// Generate Layer 1 with user ID for personalization
+	const layer1Result = await generateLayer1(params.discordUserId);
 	if (!layer1Result.success || !layer1Result.data || !layer1Result.context) {
 		return {
 			success: false,

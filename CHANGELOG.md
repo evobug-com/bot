@@ -40,6 +40,7 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Poškození stavu session při selhání generování vrstvy - nyní se automaticky vrátí zpět
 - AI generování nyní zkouší až 3x při dočasném selhání a normalizuje hodnoty do platných rozsahů
 - Snížen spam v logu při opakovaných pokusech o generování obrázků
+- Některé achievementy byly nesprávně vypnuté od 25 .prosince - nyní opraveno
 
 ### Odstraněno
 - Nepoužívané soubory

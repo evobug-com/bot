@@ -19,8 +19,11 @@ const { aiStoryRewards } = WORK_CONFIG;
 // Random Reward Calculation
 // =============================================================================
 
-/** Fixed success rate for all AI story outcomes */
-export const AI_STORY_SUCCESS_RATE = 70;
+/** Success rate for first outcome roll (balanced coin flip) */
+export const AI_STORY_FIRST_SUCCESS_RATE = 50;
+
+/** Success rate for second/final outcome roll (determines final reward) */
+export const AI_STORY_FINAL_SUCCESS_RATE = 75;
 
 /**
  * Calculate random coins for a story outcome using secure random.
@@ -543,7 +546,7 @@ export function buildStoryFromLayer1(layer1: Layer1Response, storyId: string): B
 		id: "outcome1X",
 		type: "outcome",
 		narrative: "...", // Will be replaced by Layer 2
-		successChance: AI_STORY_SUCCESS_RATE,
+		successChance: AI_STORY_FIRST_SUCCESS_RATE,
 		successNodeId: "decision2_XS", // Placeholder
 		failNodeId: "decision2_XF", // Placeholder
 	};
@@ -553,7 +556,7 @@ export function buildStoryFromLayer1(layer1: Layer1Response, storyId: string): B
 		id: "outcome1Y",
 		type: "outcome",
 		narrative: "...", // Will be replaced by Layer 2
-		successChance: AI_STORY_SUCCESS_RATE,
+		successChance: AI_STORY_FIRST_SUCCESS_RATE,
 		successNodeId: "decision2_YS", // Placeholder
 		failNodeId: "decision2_YF", // Placeholder
 	};
@@ -621,7 +624,7 @@ export function addLayer2ToStory(
 		id: `outcome2_${path}_X`,
 		type: "outcome",
 		narrative: "...",
-		successChance: AI_STORY_SUCCESS_RATE,
+		successChance: AI_STORY_FINAL_SUCCESS_RATE,
 		successNodeId: `terminal_${path}_X_S`,
 		failNodeId: `terminal_${path}_X_F`,
 	};
@@ -631,7 +634,7 @@ export function addLayer2ToStory(
 		id: `outcome2_${path}_Y`,
 		type: "outcome",
 		narrative: "...",
-		successChance: AI_STORY_SUCCESS_RATE,
+		successChance: AI_STORY_FINAL_SUCCESS_RATE,
 		successNodeId: `terminal_${path}_Y_S`,
 		failNodeId: `terminal_${path}_Y_F`,
 	};

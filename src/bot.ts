@@ -106,6 +106,15 @@ client.on(Events.Error, async (error) => {
 		return;
 	}
 
+	// Skip reporting InteractionAlreadyReplied errors - these are handled in handleStoryInteractions
+	const isInteractionAlreadyReplied = error.name === "InteractionAlreadyReplied" ||
+		error.message?.includes("reply to this interaction has already been sent");
+
+	if (isInteractionAlreadyReplied) {
+		log("debug", "Suppressed InteractionAlreadyReplied error (handled by story system)");
+		return;
+	}
+
 	log("error", "Discord.js Error:", {
 		message: error.message,
 		name: error.name,

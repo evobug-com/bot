@@ -101,12 +101,14 @@ export async function generateStoryImage(
 
 			// No image but no error - retry
 			lastError = imageResult.error ?? "No image generated in response";
-			if (attempt < MAX_RETRIES) {
+			// Only log on final retry attempt to reduce noise
+			if (attempt + 1 === MAX_RETRIES) {
 				log("warn", `No image in response for story "${story.id}", retrying (attempt ${attempt + 1}/${MAX_RETRIES})...`);
 			}
 		} catch (error) {
 			lastError = error instanceof Error ? error.message : String(error);
-			if (attempt < MAX_RETRIES) {
+			// Only log on final retry attempt to reduce noise
+			if (attempt + 1 === MAX_RETRIES) {
 				log("warn", `Image generation failed for story "${story.id}": ${lastError}, retrying (attempt ${attempt + 1}/${MAX_RETRIES})...`);
 			}
 		}

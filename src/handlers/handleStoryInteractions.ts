@@ -401,7 +401,76 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 			});
 		}
 	} catch (error) {
-		log("error", `Error processing story action: ${error instanceof Error ? error.message : String(error)}`);
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorName = error instanceof Error ? error.name : "UnknownError";
+
+		// Check if this is an InteractionAlreadyReplied error
+		const isInteractionAlreadyReplied = errorName === "InteractionAlreadyReplied" ||
+			errorMessage.includes("reply to this interaction has already been sent");
+
+		if (isInteractionAlreadyReplied) {
+			// Handle by aborting current story and regenerating
+			log("warn", `InteractionAlreadyReplied for session ${session.sessionId}, attempting story regeneration`);
+
+			try {
+				// Abort the current session
+				sessionManager.deleteSession(session.sessionId);
+				storyEngine.unregisterStory(session.storyId);
+
+				// Try to regenerate the story if this was an AI story
+				if (session.isIncrementalAI && interaction.channel && "send" in interaction.channel) {
+					const newStoryResult = await storyEngine.startIncrementalAIStory({
+						discordUserId: session.discordUserId,
+						dbUserId: session.dbUserId,
+						messageId: interaction.message.id,
+						channelId: session.channelId,
+						guildId: session.guildId,
+						userLevel: session.userLevel,
+					});
+
+					if (newStoryResult.success && newStoryResult.result) {
+						const context = storyEngine.getStoryContext(newStoryResult.result.session);
+						if (context && isDecisionNode(context.currentNode)) {
+							const buttons = buildDecisionButtons(
+								newStoryResult.result.session.storyId,
+								newStoryResult.result.session.sessionId,
+								context.currentNode.choices.choiceX.label,
+								context.currentNode.choices.choiceY.label,
+								newStoryResult.result.session.accumulatedCoins,
+							);
+
+							const narrative = `${newStoryResult.result.narrative}\n\n**${context.currentNode.choices.choiceX.label}**: ${context.currentNode.choices.choiceX.description}\n**${context.currentNode.choices.choiceY.label}**: ${context.currentNode.choices.choiceY.description}`;
+
+							const storyEmbed = createInteraktivniPribehEmbed()
+								.setTitle("🤖 AI Příběh (regenerováno)")
+								.setDescription(`⚠️ Předchozí příběh selhal, vygenerovali jsme nový:\n\n${narrative}`)
+								.setFooter({ text: "Vyber si svou cestu..." });
+
+							await interaction.channel.send({
+								content: `<@${session.discordUserId}>`,
+								embeds: [storyEmbed],
+								components: buttons.map((row) => row.toJSON()),
+							});
+
+							log("info", `Successfully regenerated story for user ${session.discordUserId}`);
+							return;
+						}
+					}
+				}
+
+				// Fallback: just notify the user to try /work again
+				if (interaction.channel && "send" in interaction.channel) {
+					await interaction.channel.send({
+						content: `<@${session.discordUserId}> ⚠️ Příběh selhal kvůli technické chybě. Použij prosím \`/work\` pro nový příběh.`,
+					});
+				}
+			} catch (recoveryError) {
+				log("error", `Failed to recover from InteractionAlreadyReplied: ${recoveryError instanceof Error ? recoveryError.message : String(recoveryError)}`);
+			}
+			return;
+		}
+
+		log("error", `Error processing story action: ${errorMessage}`);
 
 		// Send error feedback using the appropriate method based on deferred state
 		try {

@@ -543,6 +543,13 @@ export async function generateLayer1(discordUserId?: string): Promise<Generation
 	const randomWords = getRandomStoryWords();
 	const userFacts = discordUserId ? getUserFacts(discordUserId) : [];
 
+	// Log the words used for debugging
+	console.log(`[AIStory] Generating story with nouns: ${randomWords.nouns.join(", ")}`);
+	console.log(`[AIStory] Generating story with verbs: ${randomWords.verbs.join(", ")}`);
+	if (userFacts.length > 0) {
+		console.log(`[AIStory] User facts for ${discordUserId}: ${userFacts.join(", ")}`);
+	}
+
 	// Build dynamic prompt with words and facts
 	const prompt = buildLayer1Prompt(randomWords, userFacts);
 

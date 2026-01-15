@@ -2,7 +2,7 @@
  * Story Image Generator
  *
  * Generates meme-style images for completed branching stories using OpenRouter's
- * google/gemini-2.5-flash-image model.
+ * google/gemini-2.5-flash-image model via OpenRouter.
  */
 
 import { openrouter } from "./openrouter";
@@ -130,7 +130,7 @@ async function attemptImageGeneration(
 	prompt: string,
 ): Promise<ImageGenerationResult> {
 	const response = await client.chat.completions.create({
-		model: "google/gemini-2.5-flash-image-preview",
+		model: "google/gemini-2.5-flash-image",
 		messages: [
 			{
 				role: "user",

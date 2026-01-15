@@ -19,6 +19,12 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after 4cb28f5 -->
 
 
+## [2.6.1] - 2025-01-15
+
+### Opraveno
+- Změněn model pro generování obrázků z `gemini-2.5-flash-image-preview` na `gemini-2.5-flash-image` (původní endpoint již nefungoval)
+
+
 ## [2.6.0] - 2025-01-08
 
 <!-- commits 0affe67..4cb28f5 -->

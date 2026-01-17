@@ -1,6 +1,6 @@
 {
 	"name": "allcom-bot",
-	"version": "2.6.2",
+	"version": "2.7.0",
 	"description": "Allcom Discord bot with modular architecture",
 	"private": true,
 	"type": "module",

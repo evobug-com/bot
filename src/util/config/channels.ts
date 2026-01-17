@@ -82,6 +82,13 @@ export const DISCORD_CHANNELS = {
 		name: "📝︱mod-review",
 		description: "Moderation review requests channel",
 	},
+
+	// Ticket system
+	TICKET_CATEGORY: {
+		id: process.env.NODE_ENV === "development" ? "1407091837730029659" /** TEST CAT **/ : "1326587456174428262",
+		name: "🎫 Tickets",
+		description: "Category where ticket channels are created",
+	},
 } as const;
 
 /**

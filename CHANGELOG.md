@@ -19,6 +19,15 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after 4cb28f5 -->
 
 
+## [2.7.0] - 2025-01-17
+
+### Přidáno
+- Ticket systém pro podporu - uživatelé mohou vytvářet dočasné privátní kanály pro žádosti o podporu
+- Příkaz `/send-ticket-button` pro administrátory k nasazení tlačítka pro vytvoření ticketu
+- Automatické nastavení oprávnění: tvůrce ticketu + moderátoři mají přístup
+- Tlačítko "Zavřít Ticket" s 5 sekundovým odpočtem před smazáním kanálu
+
+
 ## [2.6.2] - 2025-01-17
 
 ### Přidáno

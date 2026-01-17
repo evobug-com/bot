@@ -11,6 +11,7 @@ import { handleNewsEmbeds } from "./handlers/handleNewsEmbeds.ts";
 import { handleRulesVerification } from "./handlers/handleRulesVerification.ts";
 import { handleSendingEmbedMessages } from "./handlers/handleSendingEmbedMessages.ts";
 import { handleStreamingNotifications } from "./handlers/handleStreamingNotifications.ts";
+import { handleTicketSystem } from "./handlers/handleTicketSystem.ts";
 import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannels.ts";
 import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
@@ -72,6 +73,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 		handleStreamingNotifications(readyClient),
 		handleCommandsForRoom(readyClient),
 		handleVoiceConnections(readyClient),
+		handleTicketSystem(readyClient),
 	]);
 	log("info", "All handlers initialized successfully");
 

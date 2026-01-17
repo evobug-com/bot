@@ -362,6 +362,7 @@ async function saveVirtualVoiceChannels() {
  * Permissions:
  * - Owner: Full control (manage, move members, etc.)
  * - Verified users: Can view and join
+ * - Partially verified users: Can view and join
  * - Everyone else: Cannot view
  *
  * @param state - Voice state of the channel creator
@@ -381,6 +382,8 @@ async function getVirtualVoiceChannelPermissions(state: VoiceState): Promise<rea
 		await reportError(state.guild, "getVirtualVoiceChannelPermissions", "Verified role not found in guild");
 		return [];
 	}
+
+	const partiallyVerifiedRole = await RoleManager.getRole(state.guild, "PARTIALLY_VERIFIED");
 
 	const permissions: OverwriteResolvable[] = [
 		{
@@ -437,6 +440,20 @@ async function getVirtualVoiceChannelPermissions(state: VoiceState): Promise<rea
 				PermissionFlagsBits.Speak,
 			],
 		});
+
+		// Also give Partially Verified access (temporary verified users)
+		if (partiallyVerifiedRole) {
+			permissions.push({
+				id: partiallyVerifiedRole.id,
+				type: OverwriteType.Role,
+				allow: [
+					PermissionFlagsBits.ViewChannel,
+					PermissionFlagsBits.Connect,
+					PermissionFlagsBits.Stream,
+					PermissionFlagsBits.Speak,
+				],
+			});
+		}
 	}
 
 	return permissions;

@@ -27,6 +27,9 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Automatické nastavení oprávnění: tvůrce ticketu + moderátoři mají přístup
 - Tlačítko "Zavřít Ticket" s 5 sekundovým odpočtem před smazáním kanálu
 
+### Opraveno
+- Částečně verifikovaní uživatelé nyní mají přístup k dočasným hlasovým kanálům
+
 
 ## [2.6.2] - 2025-01-17
 

@@ -475,7 +475,7 @@ async function handleStoryButton(interaction: ButtonInteraction): Promise<void> 
 			// The work command will handle this when triggered again
 			const cancelEmbed = createInteraktivniPribehEmbed()
 				.setTitle("❌ Příběh zrušen")
-				.setDescription("Příběh byl zrušen. Použij `/work` pro normální práci.")
+				.setDescription("Příběh byl zrušen.")
 				.setFooter({ text: "Konec příběhu" });
 
 			await interaction.editReply({

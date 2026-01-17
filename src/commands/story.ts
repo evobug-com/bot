@@ -6,8 +6,6 @@ import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-che
 import type { CommandContext } from "../util/commands.ts";
 import { createInteraktivniPribehEmbed } from "../util/messages/embedBuilders.ts";
 import { getWorkSettings } from "../services/workSettings/storage.ts";
-import { getUserCareerType, getCareerWeights } from "../services/career/index.ts";
-import type { CategoryWeights } from "../services/career/types.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
 import * as sessionManager from "../services/storySession";
@@ -53,48 +51,16 @@ interface StoryActivity {
 }
 
 // ============================================================================
-// WEIGHTED STORY SELECTION
+// STORY SELECTION
 // ============================================================================
 
 /**
- * Select a story using weighted random selection based on career.
- * Stories with higher weights for the user's career are more likely to be selected.
+ * Select a random story from the available stories.
  */
-function selectWeightedStory(
-	stories: StoryActivity[],
-	weights: CategoryWeights,
-): StoryActivity | null {
+function selectRandomStory(stories: StoryActivity[]): StoryActivity | null {
 	if (stories.length === 0) return null;
-
-	// Build weighted pool
-	const weightedStories: { story: StoryActivity; weight: number }[] = [];
-
-	for (const story of stories) {
-		const category = story.category as keyof CategoryWeights;
-		const weight = weights[category] ?? 1;
-		weightedStories.push({ story, weight });
-	}
-
-	// Calculate total weight
-	const totalWeight = weightedStories.reduce((sum, item) => sum + item.weight, 0);
-	if (totalWeight <= 0) {
-		// Fallback to random selection if all weights are 0
-		const index = getSecureRandomIndex(stories.length);
-		return stories[index] ?? null;
-	}
-
-	// Select based on weight
-	let random = Math.random() * totalWeight;
-	for (const item of weightedStories) {
-		random -= item.weight;
-		if (random <= 0) {
-			return item.story;
-		}
-	}
-
-	// Fallback (shouldn't reach here)
-	const lastItem = weightedStories[weightedStories.length - 1];
-	return lastItem?.story ?? null;
+	const index = getSecureRandomIndex(stories.length);
+	return stories[index] ?? null;
 }
 
 // ============================================================================
@@ -210,10 +176,6 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 		return;
 	}
 
-	// Get user's career for story weighting
-	const userCareer = getUserCareerType(interaction.user.id);
-	const careerWeights = getCareerWeights(userCareer);
-
 	// Filter to story activities only (all story categories)
 	const storyActivities: StoryActivity[] = [];
 	for (const act of workActivities) {
@@ -233,8 +195,8 @@ export const execute = async ({ interaction, dbUser }: CommandContext): Promise<
 	const workSettings = getWorkSettings();
 	const shouldUseAIStory = workSettings.aiStoryEnabled && getSecureRandomIndex(100) < workSettings.aiStoryChancePercent;
 
-	// Select a story based on career weights
-	const selectedStory = selectWeightedStory(storyActivities, careerWeights);
+	// Select a random story
+	const selectedStory = selectRandomStory(storyActivities);
 
 	if (!selectedStory && !shouldUseAIStory) {
 		const errorEmbed = createErrorEmbed("Chyba", "Nepodařilo se vybrat příběh. Zkuste to později.");

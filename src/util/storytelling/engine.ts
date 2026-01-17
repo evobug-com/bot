@@ -500,9 +500,10 @@ async function processTerminalNode(
 	}
 
 	// Build final narrative with summary
+	// Note: precedingNarrative is already in the story journal, so we only include the terminal narrative
 	const coinSign = finalCoins >= 0 ? "+" : "";
 	const resolvedTerminalNarrative = resolveNodeValue(session, node.id, "narrative", node.narrative);
-	const narrative = `${precedingNarrative}\n\n${resolvedTerminalNarrative}\n\n**Celková bilance:** ${coinSign}${finalCoins} mincí, +${finalXP} XP`;
+	const narrative = `${resolvedTerminalNarrative}\n\n**Celková bilance:** ${coinSign}${finalCoins} mincí, +${finalXP} XP`;
 
 	return {
 		session,
@@ -736,6 +737,25 @@ export function getStoryContext(session: StorySession): {
 	}
 
 	return { story, currentNode };
+}
+
+/**
+ * Check if a session can be resumed (is at a decision node)
+ * Used for timeout handling - allows user to resume if they return after Discord buttons expire
+ */
+export function canResumeSession(session: StorySession): boolean {
+	const story = storyRegistry.get(session.storyId);
+	if (!story) {
+		return false;
+	}
+
+	const currentNode = story.nodes[session.currentNodeId];
+	if (!currentNode) {
+		return false;
+	}
+
+	// Can resume if at a decision node (waiting for user input)
+	return isDecisionNode(currentNode);
 }
 
 /**

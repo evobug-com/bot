@@ -21,7 +21,8 @@ const { aiStoryRewards } = WORK_CONFIG;
 // Word & User Data Loading
 // =============================================================================
 
-const DATA_DIR = join(import.meta.dirname, "../../../data");
+// Static data files (bundled with code, not volume-mounted)
+const STATIC_DATA_DIR = join(import.meta.dirname, "../../data");
 
 /** Cached word lists */
 let cachedNouns: string[] | null = null;
@@ -32,7 +33,7 @@ let cachedMembers: Map<string, string[]> | null = null;
  * Load words from a file, filtering out comments and empty lines.
  */
 function loadWordsFromFile(filename: string): string[] {
-	const filepath = join(DATA_DIR, filename);
+	const filepath = join(STATIC_DATA_DIR, filename);
 	if (!existsSync(filepath)) {
 		console.warn(`[AIStory] Word file not found: ${filepath}`);
 		return [];
@@ -95,7 +96,7 @@ function pickRandomWords(words: string[], count: number): string[] {
  * Format: <discord_id>: fact1; fact2; fact3
  */
 function loadUserMetadata(): Map<string, string[]> {
-	const filepath = join(DATA_DIR, "story-members.txt");
+	const filepath = join(STATIC_DATA_DIR, "story-members.txt");
 	const members = new Map<string, string[]>();
 	if (!existsSync(filepath)) {
 		return members;
@@ -368,6 +369,15 @@ Verbs: ${randomWords.verbs.join(", ")}\n`
 
 Create a SHORT funny interactive story. Be completely original - invent any scenario you want.
 ${wordsSection}${userSection}
+NARRATIVE COHERENCE RULES (MUST FOLLOW):
+1. decision1.narrative must present a CLEAR situation requiring action
+2. Each choice label MUST be an ACTION VERB PHRASE (e.g., "Utéct", "Zavolat policii", "Schovat se")
+3. Each choice MUST be a DIRECT response to the situation presented
+4. The two choices should represent DIFFERENT approaches (safe/risky, honest/deceptive, fight/flight)
+
+BAD EXAMPLE: Situation about suspicious package → Choice: "Koupit zmrzlinu" (unrelated!)
+GOOD EXAMPLE: Situation about suspicious package → Choice: "Otevřít balíček" / "Zavolat recepci"
+
 OUTPUT JSON:
 {
   "title": "Czech title (max 50 chars)",
@@ -376,7 +386,7 @@ OUTPUT JSON:
   "decision1": {
     "narrative": "Situation requiring choice (20-400 chars Czech)",
     "choiceX": {
-      "label": "Option A (max 25 chars)",
+      "label": "Action verb phrase (max 25 chars)",
       "description": "What happens (max 150 chars)"
     },
     "choiceY": { same structure as choiceX }
@@ -408,20 +418,29 @@ JSON FORMAT:
   "decision2": {
     "narrative": "Second decision description (20-400 chars, Czech)",
     "choiceX": {
-      "label": "Button A (max 25 chars, Czech)",
+      "label": "Action verb phrase (max 25 chars, Czech)",
       "description": "What happens (max 150 chars, Czech)"
     },
     "choiceY": { same structure }
   }
 }
 
-CRITICAL CONSTRAINTS (MUST FOLLOW):
+CRITICAL CAUSE-AND-EFFECT RULES (MUST FOLLOW):
+1. outcomeNarrative MUST describe what happened when they tried to "${choiceMade.label}"
+2. The ${outcome} must be the logical result of THAT specific action:
+   - If SUCCEEDED: "${choiceMade.label}" worked or achieved its goal
+   - If FAILED: "${choiceMade.label}" backfired or was prevented
+3. Start outcomeNarrative with reference to their action
+4. decision2 choices must logically follow from the outcome situation
+5. Each choice label must be an ACTION VERB PHRASE (e.g., "Utéct", "Požádat o pomoc")
+
+EXAMPLE - Player chose "Schovat se pod stůl":
+- SUCCEEDED: "Skryl ses pod stolem právě včas. Hlídač prošel kolem..."
+- FAILED: "Snažíš se schovat, ale stůl je příliš malý. Hlídač tě spatří."
+
+CRITICAL CONSTRAINTS:
 - outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
 - label: MAXIMUM 25 characters each
-
-RULES:
-- Continue the narrative naturally from the ${outcome.toLowerCase()}
-- Be funny and consistent with the story theme
 - ALL text in Czech`;
 }
 
@@ -455,13 +474,24 @@ JSON FORMAT:
   }
 }
 
-CRITICAL CONSTRAINTS (MUST FOLLOW):
+CRITICAL CAUSE-AND-EFFECT RULES (MUST FOLLOW):
+1. outcomeNarrative MUST describe the direct result of "${secondChoice.label}"
+2. The ${outcome} must be the logical result of THAT specific action:
+   - If SUCCEEDED: "${secondChoice.label}" worked or achieved its goal
+   - If FAILED: "${secondChoice.label}" backfired or was prevented
+3. terminal.narrative must:
+   - Show the FINAL CONSEQUENCE of their choice
+   - ${wasSuccess ? "Celebrate their success - they made it!" : "Show the unfortunate but logical consequence"}
+   - Feel like a satisfying conclusion that references their journey
+   - Be funny and memorable
+
+EXAMPLE - Player chose "Skočit z okna":
+- SUCCEEDED: "Skok se povedl! Dopadáš na měkký náklad sena..." → terminal: happy ending
+- FAILED: "Okno je zamčené a ty do něj narazíš hlavou..." → terminal: unfortunate ending
+
+CRITICAL CONSTRAINTS:
 - outcomeNarrative: MAXIMUM 300 characters! Keep it SHORT.
 - terminal.narrative: MAXIMUM 500 characters
-
-RULES:
-- ${wasSuccess ? "Write a POSITIVE/happy ending" : "Write a NEGATIVE/unfortunate ending"}
-- Be funny and give a satisfying conclusion
 - ALL text in Czech`;
 }
 

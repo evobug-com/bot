@@ -19,6 +19,26 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after 4cb28f5 -->
 
 
+## [2.6.2] - 2025-01-17
+
+### Přidáno
+- Vizuální zpětná vazba při zpracování volby v příběhu - tlačítka se ihned deaktivují s ikonou ⏳ na zvoleném tlačítku
+- Mechanismus obnovení příběhu po vypršení Discord tlačítek - při spuštění `/story` s rozpracovaným příběhem se zobrazí možnost pokračovat nebo začít nový
+- Podpora obnovení příběhu po restartu botu - sessions se ukládají do SQLite a lze je obnovit
+
+### Změněno
+- Vylepšeny AI prompty pro generování příběhů s pravidly narativní koherence:
+  - Volby musí být akční slovesné fráze přímo reagující na situaci
+  - Výsledky musí logicky vyplývat ze zvolené akce (příčina-následek)
+  - Závěry musí odkazovat na cestu hráče a být uspokojivé
+
+### Opraveno
+- Příběhy již neukazují nesouvisející volby (např. "Koupit zmrzlinu" když jde o podezřelý balíček)
+- Výsledky voleb nyní správně popisují co se stalo při pokusu o zvolenou akci
+- Tlačítka příběhu nyní okamžitě reagují na kliknutí místo čekání na AI generování
+- Opravena duplikace textu v souhrnu příběhu - výsledek hodu se již nezobrazuje dvakrát
+
+
 ## [2.6.1] - 2025-01-15
 
 ### Opraveno

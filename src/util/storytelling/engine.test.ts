@@ -494,6 +494,146 @@ describe("Story Engine", () => {
 			expect(result).toBeNull();
 		});
 	});
+
+	describe("canResumeSession", () => {
+		it("should return true when session is at a decision node", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-1",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "test_story",
+				currentNodeId: "decision_1",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(true);
+		});
+
+		it("should return false when session is at an intro node", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-2",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "test_story",
+				currentNodeId: "intro",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(false);
+		});
+
+		it("should return false when session is at an outcome node", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-3",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "test_story",
+				currentNodeId: "outcome_a",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(false);
+		});
+
+		it("should return false when session is at a terminal node", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-4",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "test_story",
+				currentNodeId: "terminal_success_a",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(false);
+		});
+
+		it("should return false when story does not exist", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-5",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "nonexistent_story",
+				currentNodeId: "decision_1",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(false);
+		});
+
+		it("should return false when node does not exist in story", () => {
+			const session: StorySession = {
+				sessionId: "resume-test-6",
+				discordUserId: "user-1",
+				dbUserId: 1,
+				storyId: "test_story",
+				currentNodeId: "nonexistent_node",
+				accumulatedCoins: 0,
+				choicesPath: [],
+				choiceHistory: [],
+				storyJournal: [],
+				startedAt: Date.now(),
+				lastInteractionAt: Date.now(),
+				messageId: "",
+				channelId: "",
+				guildId: "",
+				userLevel: 10,
+				resolvedNodeValues: {},
+			};
+
+			expect(engine.canResumeSession(session)).toBe(false);
+		});
+	});
 });
 
 describe("Story Engine - Stolen Money Branching", () => {

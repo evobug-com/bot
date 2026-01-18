@@ -18,6 +18,7 @@ import {
 	type TextChannel,
 } from "discord.js";
 import { ChannelManager, RoleManager } from "../util";
+import { DISCORD_ROLES } from "../util/config/roles.ts";
 import { createLogger } from "../util/logger.ts";
 import { createCeskyTelekomunikacniUradEmbed } from "../util/messages/embedBuilders.ts";
 
@@ -193,7 +194,7 @@ export const streamNotificationEmbeds = {
 	},
 
 	createStreamNotificationContent: () => {
-		return "@here Nový stream začal! 🎉";
+		return `<@&${DISCORD_ROLES.STREAM_NOTIFICATIONS.id}> Nový stream začal! 🎉`;
 	},
 };
 

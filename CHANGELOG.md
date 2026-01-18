@@ -30,6 +30,9 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Opraveno
 - Částečně verifikovaní uživatelé nyní mají přístup k dočasným hlasovým kanálům
 
+### Změněno
+- Oznámení o streamu nyní používá roli `@Twitch Notifikace` místo `@here` - uživatelé mohou odebráním role zrušit notifikace
+
 
 ## [2.6.2] - 2025-01-17
 

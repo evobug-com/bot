@@ -63,6 +63,11 @@ export const DISCORD_ROLES = {
 		name: "🚨 V ohrožení",
 		description: "User at risk of suspension",
 	},
+	STREAM_NOTIFICATIONS: {
+		id: "1462458538336194662",
+		name: "Twitch Notifikace",
+		description: "Role for users who want stream notifications",
+	},
 } as const;
 
 /**

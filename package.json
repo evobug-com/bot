@@ -31,7 +31,7 @@
 		"@types/node": "^25.3.0",
 		"@typescript/native-preview": "latest",
 		"oxlint": "^1.50.0",
-		"oxlint-tsgolint": "^0.14.1"
+		"oxlint-tsgolint": "^0.14.2"
 	},
 	"engines": {
 		"node": ">=18.0.0"

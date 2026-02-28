@@ -1,0 +1,11 @@
+# Story Members - User metadata for personalized AI stories
+# Format: <discord_user_id>: fact1; fact2; fact3; ...
+#
+# Example:
+# 123456789012345678: programátor; miluje kavu; má psa Rexe; fanoušek Star Wars
+# 987654321098765432: designer; nesnáší porady; fanda Sparty; hraje na kytaru
+#
+# Facts can be anything: profession, hobbies, pets, preferences, jokes, etc.
+# The AI will pick 2-3 random facts to include in the story.
+#
+# Add your Discord ID and facts below:

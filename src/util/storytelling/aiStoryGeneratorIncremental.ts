@@ -75,7 +75,7 @@ function getVerbs(): string[] {
 /**
  * Pick N random words from a list using secure random.
  */
-function pickRandomWords(words: string[], count: number): string[] {
+export function pickRandomWords(words: string[], count: number): string[] {
 	if (words.length === 0) return [];
 	const picked: string[] = [];
 	const available = [...words];
@@ -269,6 +269,102 @@ export type Layer2Response = z.infer<typeof Layer2ResponseSchema>;
 export type Layer3Response = z.infer<typeof Layer3ResponseSchema>;
 
 // =============================================================================
+// Story DNA System — Combinatorial variety for AI story generation
+// =============================================================================
+
+export interface StoryDNA {
+	setting: string;
+	twist: string;
+	role: string;
+}
+
+export const STORY_SETTINGS: readonly string[] = [
+	"ve středověkém hradu",
+	"na opuštěné vesmírné stanici",
+	"v podmořské laboratoři",
+	"v kanceláři pojišťovny",
+	"v džungli na ostrově",
+	"na palubě pirátské lodi",
+	"v podzemním bunkru",
+	"na horské chatě za sněhové bouře",
+	"v televizním studiu",
+	"na farmě uprostřed ničeho",
+	"v nemocnici o půlnoci",
+	"na stavbě mrakodrapu",
+	"v muzeu voskových figurín",
+	"v supermarketu po zavírací době",
+	"v letadle, které nemůže přistát",
+	"na lodi uprostřed oceánu",
+	"v opuštěném zábavním parku",
+	"v podzemí metra",
+	"ve škole plné duchů",
+	"na svatbě, kde se nic nedaří",
+	"v továrně na čokoládu",
+	"v kasinu plném podvodníků",
+	"na policejní stanici",
+	"v zoo po útěku zvířat",
+	"na střeše paneláku",
+];
+
+export const STORY_TWISTS: readonly string[] = [
+	"kde někdo podstrčil falešný důkaz",
+	"kde se dva lidé prohodili identitami",
+	"kde probíhá tajná soutěž o poklad",
+	"kde se všichni snaží utéct",
+	"kde zmizela důležitá věc a nikdo neví kde",
+	"kde se objevil záhadný dopis s ultimátem",
+	"kde se porouchala veškerá technika",
+	"kde probíhá inspekce a nic nefunguje",
+	"kde se všichni tváří normálně ale něco je špatně",
+	"kde jeden člověk ví víc než ostatní",
+	"kde se rozjela řetězová reakce nešťastných náhod",
+	"kde se dva rivalové musí spolupracovat",
+	"kde probíhá sabotáž zevnitř",
+	"kde se blíží deadline a nic není hotové",
+	"kde přijela neohlášená kontrola",
+	"kde se rozšířila absurdní fáma",
+	"kde se jeden nevinný lék změnil v chaos",
+	"kde se hlasuje o něčem důležitém",
+	"kde si dva lidé vyměnili kufry/tašky",
+	"kde se pokazilo jídlo na důležité akci",
+];
+
+export const STORY_ROLES: readonly string[] = [
+	"nový stážista první den v práci",
+	"vyděšený účetní",
+	"pizzák, co zabloudil",
+	"bývalý špion v důchodu",
+	"nervózní praktikant",
+	"recepční s tajným plánem",
+	"hasič na dovolené",
+	"uklízeč, který všechno slyší",
+	"kuchař s ambicemi",
+	"taxikář, co nikdy nebyl v tomhle městě",
+	"veterinář bez pacientů",
+	"pilot bez letadla",
+	"profesor, co zapomněl co učí",
+	"dětský animátor na firemní akci",
+	"influencer s nulovými followery",
+	"sportovní komentátor mimo studio",
+	"bezpečnostní technik, co se bojí tmy",
+	"operní zpěvák co ztratil hlas",
+	"vědec s pochybným vynálezem",
+	"čerstvý absolvent bez zkušeností",
+	"babička s překvapivými schopnostmi",
+	"robot co se chová jako člověk",
+	"průvodce v muzeu co nic neví",
+	"šéfkuchař na dietě",
+	"programátor co nemá rád počítače",
+];
+
+export function generateStoryDNA(): StoryDNA {
+	const setting = STORY_SETTINGS[getSecureRandomIndex(STORY_SETTINGS.length)] ?? STORY_SETTINGS[0] ?? "";
+	const twist = STORY_TWISTS[getSecureRandomIndex(STORY_TWISTS.length)] ?? STORY_TWISTS[0] ?? "";
+	const role = STORY_ROLES[getSecureRandomIndex(STORY_ROLES.length)] ?? STORY_ROLES[0] ?? "";
+	return { setting, twist, role };
+}
+
+// =============================================================================
 // Retry and Normalization Utilities
 // =============================================================================
 
@@ -352,13 +448,13 @@ function normalizeLayer3Response(response: Layer3Response): Layer3Response {
 // =============================================================================
 
 /**
- * Build Layer 1 prompt with random words and user facts for variety.
+ * Build Layer 1 prompt with story DNA, random words, and user facts for variety.
  */
-function buildLayer1Prompt(randomWords: { nouns: string[]; verbs: string[] }, userFacts: string[]): string {
+export function buildLayer1Prompt(dna: StoryDNA, randomWords: { nouns: string[]; verbs: string[] }, userFacts: string[]): string {
 	const wordsSection = randomWords.nouns.length > 0 || randomWords.verbs.length > 0
-		? `\nUse these words as inspiration (incorporate at least 3 into the story):
-Nouns: ${randomWords.nouns.join(", ")}
-Verbs: ${randomWords.verbs.join(", ")}\n`
+		? `\nREQUIRED ELEMENTS - You MUST weave these into the plot (not just mention them):
+Key nouns (use at least 5): ${randomWords.nouns.join(", ")}
+Key actions (use at least 1): ${randomWords.verbs.join(", ")}\n`
 		: "";
 
 	const userSection = userFacts.length > 0
@@ -367,7 +463,12 @@ Verbs: ${randomWords.verbs.join(", ")}\n`
 
 	return `You are a creative writer for a Discord game. Write in CZECH language.
 
-Create a SHORT funny interactive story. Be completely original - invent any scenario you want.
+STORY SETUP:
+- Setting: ${dna.setting}
+- Situation: ${dna.twist}
+- Main character: ${dna.role}
+
+Create a SHORT funny interactive story following this setup. The story MUST take place in this setting, with this situation, and the player is this character.
 ${wordsSection}${userSection}
 NARRATIVE COHERENCE RULES (MUST FOLLOW):
 1. decision1.narrative must present a CLEAR situation requiring action
@@ -410,6 +511,7 @@ Decision: ${context.decision1.narrative}
 Player chose: "${choiceMade.label}" - ${choiceMade.description}
 Outcome: ${outcome}
 
+Stay in the same setting, tone, and situation as the story so far.
 Generate the NEXT PART: a brief outcome narrative and the second decision point.
 
 JSON FORMAT:
@@ -464,6 +566,7 @@ Second decision: ${context.decision2?.narrative ?? "..."}
 Player chose: "${secondChoice.label}"
 Final outcome: ${outcome}
 
+Stay in the same setting, tone, and situation as the story so far.
 Generate the ENDING: outcome narrative and terminal (final result).
 
 JSON FORMAT:
@@ -569,6 +672,10 @@ async function callOpenRouter<T>(
  * Called when starting a new AI story
  */
 export async function generateLayer1(discordUserId?: string): Promise<GenerationResult<Layer1Response> & { context?: AIStoryContext }> {
+	// Generate story DNA for variety
+	const dna = generateStoryDNA();
+	console.log(`[AIStory] Story DNA — setting: "${dna.setting}", twist: "${dna.twist}", role: "${dna.role}"`);
+
 	// Get random words and user facts for variety
 	const randomWords = getRandomStoryWords();
 	const userFacts = discordUserId ? getUserFacts(discordUserId) : [];
@@ -580,8 +687,8 @@ export async function generateLayer1(discordUserId?: string): Promise<Generation
 		console.log(`[AIStory] User facts for ${discordUserId}: ${userFacts.join(", ")}`);
 	}
 
-	// Build dynamic prompt with words and facts
-	const prompt = buildLayer1Prompt(randomWords, userFacts);
+	// Build dynamic prompt with DNA, words, and facts
+	const prompt = buildLayer1Prompt(dna, randomWords, userFacts);
 
 	const result = await callOpenRouter(prompt, "Generate a new story.", Layer1ResponseSchema);
 

@@ -19,6 +19,17 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after 4cb28f5 -->
 
 
+## [2.8.0] - 2026-02-28
+
+### Změněno
+- Kombinatorický systém "Story DNA" pro AI příběhy — náhodná kombinace prostředí (25), zápletky (20) a role postavy (25) = 12 500 unikátních kombinací místo opakujících se témat
+- AI příběhy nyní musí povinně zapracovat náhodná slova do děje (min. 5 podstatných jmen, 1 sloveso) místo volitelné "inspirace"
+- Pokračovací vrstvy příběhu (Layer 2, 3) nyní mají instrukci dodržovat prostředí a tón prvního dílu
+
+### Opraveno
+- Opakující se témata AI příběhů (vždy vesmírní králíci apod.) — model nyní dostává konkrétní zadání místo vágního "buď originální"
+
+
 ## [2.7.0] - 2025-01-17
 
 ### Přidáno

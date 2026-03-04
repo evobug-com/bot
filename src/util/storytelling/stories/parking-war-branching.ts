@@ -131,7 +131,7 @@ To tě naštvalo ještě víc.`,
 				description: "Půjdeš oficiální cestou. HR musí mít pravidla pro parkování.",
 				baseReward: 250,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_official_spot",
+				nextNodeId: "outcome_report_hr",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -155,7 +155,7 @@ To tě naštvalo ještě víc.`,
 Je tam jedno vzadu u popelnic. Není ideální, ale...`,
 		successChance: 70,
 		successNodeId: "decision_2c_peace",
-		failNodeId: "terminal_long_walk",
+		failNodeId: "decision_2d_no_spot",
 	},
 
 	// =========================================================================
@@ -182,7 +182,7 @@ Je tam jedno vzadu u popelnic. Není ideální, ale...`,
 				description: "Projdeš kolem bez pozdravu. Nemáš zájem o přátelství s BMW člověkem.",
 				baseReward: 100,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_new_routine",
+				nextNodeId: "outcome_ignore",
 			},
 		},
 	},
@@ -241,6 +241,87 @@ Dáváš ho za stěrač BMW. Možná přidáš i... emoji?`,
 		successChance: 70,
 		successNodeId: "terminal_new_friend",
 		failNodeId: "terminal_rejected",
+	},
+
+	// =========================================================================
+	// OUTCOME: Reporting to HR
+	// =========================================================================
+	outcome_report_hr: {
+		id: "outcome_report_hr",
+		type: "outcome",
+		narrative: `📋 Jdeš za HR manažerkou. "Potřebujeme systém parkování, tohle je chaos..."
+
+HR otevírá složku s předpisy...`,
+		successChance: 70,
+		successNodeId: "terminal_official_spot",
+		failNodeId: "terminal_hr_bureaucracy",
+	},
+
+	// =========================================================================
+	// OUTCOME: Ignoring forever
+	// =========================================================================
+	outcome_ignore: {
+		id: "outcome_ignore",
+		type: "outcome",
+		narrative: `🚶 Projdeš kolem bez pozdravu. BMW člověk se na tebe podívá, ale nic neříká...
+
+Dny plynou a ty si zvykáš na nové místo...`,
+		successChance: 70,
+		successNodeId: "terminal_new_routine",
+		failNodeId: "terminal_parking_grudge",
+	},
+
+	// =========================================================================
+	// DECISION 2d: No parking spot found
+	// =========================================================================
+	decision_2d_no_spot: {
+		id: "decision_2d_no_spot",
+		type: "decision",
+		narrative: `😤 **Žádné volné místo!** Celé parkoviště je plné. Musíš parkovat na ulici daleko od kanceláře.
+
+Prší a ty nemáš deštník. Co uděláš?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Zaparkovat na ulici",
+				description: "Vzdálené místo, ale aspoň je zdarma. Budeš promočený.",
+				baseReward: 50,
+				riskMultiplier: 0.8,
+				nextNodeId: "outcome_street_parking",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Jet do placené garáže",
+				description: "Blízko kanceláře, ale stojí to peníze.",
+				baseReward: 100,
+				riskMultiplier: 0.6,
+				nextNodeId: "outcome_paid_garage",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Street parking
+	// =========================================================================
+	outcome_street_parking: {
+		id: "outcome_street_parking",
+		type: "outcome",
+		narrative: `🌧️ Parkuješ na ulici a běžíš deštěm do kanceláře. Doufáš, že auto bude v pořádku...`,
+		successChance: 70,
+		successNodeId: "terminal_survived_rain",
+		failNodeId: "terminal_long_walk",
+	},
+
+	// =========================================================================
+	// OUTCOME: Paid garage
+	// =========================================================================
+	outcome_paid_garage: {
+		id: "outcome_paid_garage",
+		type: "outcome",
+		narrative: `🏢 Vjíždíš do placené garáže. Sucho a blízko, ale cena kousne...`,
+		successChance: 70,
+		successNodeId: "terminal_garage_comfort",
+		failNodeId: "terminal_garage_expensive",
 	},
 
 	// =========================================================================
@@ -351,6 +432,71 @@ Získáváš **+250 mincí** a virální příběh.`,
 		coinsChange: 250,
 		isPositiveEnding: true,
 		xpMultiplier: 1.1,
+	},
+
+	terminal_hr_bureaucracy: {
+		id: "terminal_hr_bureaucracy",
+		type: "terminal",
+		narrative: `📎 **Byrokracie**
+
+HR říká: "Budeme to řešit na příštím kvartálním meetingu." To je za 3 měsíce.
+
+Mezitím nic. Ztrácíš **-50 mincí** za ztracený čas.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_parking_grudge: {
+		id: "terminal_parking_grudge",
+		type: "terminal",
+		narrative: `😒 **Tichá zášť**
+
+Ignorování vyústilo v nepříjemnou atmosféru. BMW člověk si na tebe stěžoval u šéfa.
+
+"Mohl bys být míň odměřený k novým kolegům." Ztrácíš **-100 mincí**.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_survived_rain: {
+		id: "terminal_survived_rain",
+		type: "terminal",
+		narrative: `🌤️ **Přežil jsi déšť**
+
+Sice jsi promokl, ale auto je v pořádku a den se zlepšil.
+
+Kolega ti půjčil svetr. Získáváš **+50 mincí** za vytrvalost.`,
+		coinsChange: 50,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
+	},
+
+	terminal_garage_comfort: {
+		id: "terminal_garage_comfort",
+		type: "terminal",
+		narrative: `🅿️ **Pohodlná garáž**
+
+Garáž je skvělá! Sucho, bezpečno, blízko. Stálo to pár korun, ale stálo to za to.
+
+Získáváš **+100 mincí** za klid.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_garage_expensive: {
+		id: "terminal_garage_expensive",
+		type: "terminal",
+		narrative: `💸 **Drahá garáž**
+
+Zapomněl jsi, že garáž účtuje po hodinách. Celý den tam stálo auto.
+
+Účet je šokující. Ztrácíš **-200 mincí** za parkování.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 
 	// Negative endings (4)

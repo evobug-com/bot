@@ -135,7 +135,7 @@ Nejsi si jistý, jak silné argumenty vlastně máš.`,
 				description: "Počkáš, až budeš mít lepší data. Tentokrát to prostě nevyjde.",
 				baseReward: 0,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_another_day",
+				nextNodeId: "outcome_postpone",
 			},
 		},
 	},
@@ -195,7 +195,7 @@ Nejsi si jistý, jak silné argumenty vlastně máš.`,
 Nadechneš se... "Chci mluvit o svém platu."`,
 		successChance: 70,
 		successNodeId: "decision_2c_impressed",
-		failNodeId: "terminal_bad_timing",
+		failNodeId: "decision_2d_bad_timing",
 	},
 
 	// =========================================================================
@@ -224,7 +224,7 @@ Je to slušná nabídka, ale cítíš, že by mohlo být víc...`,
 				description: "10 % je slušné. Vezmeš to a budeš spokojený.",
 				baseReward: 350,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_fair_deal",
+				nextNodeId: "outcome_accept_offer",
 			},
 		},
 	},
@@ -241,6 +241,89 @@ Je to slušná nabídka, ale cítíš, že by mohlo být víc...`,
 		successChance: 70,
 		successNodeId: "terminal_promotion",
 		failNodeId: "terminal_greedy",
+	},
+
+	// =========================================================================
+	// OUTCOME: Postponing
+	// =========================================================================
+	outcome_postpone: {
+		id: "outcome_postpone",
+		type: "outcome",
+		narrative: `📅 Rozhoduješ se počkat. Zavíráš laptop a jdeš si dát kafe...
+
+Za měsíc se vrátíš s lepšími daty...`,
+		successChance: 70,
+		successNodeId: "terminal_another_day",
+		failNodeId: "terminal_missed_window",
+	},
+
+	// =========================================================================
+	// OUTCOME: Accepting the offer
+	// =========================================================================
+	outcome_accept_offer: {
+		id: "outcome_accept_offer",
+		type: "outcome",
+		narrative: `🤝 "Díky, 10 % beru." Podáváte si ruce. Šéf se usmívá...`,
+		successChance: 70,
+		successNodeId: "terminal_fair_deal",
+		failNodeId: "terminal_regret",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Bad timing situation
+	// =========================================================================
+	decision_2d_bad_timing: {
+		id: "decision_2d_bad_timing",
+		type: "decision",
+		narrative: `😬 Šéf se zamračí. "Zrovna teď? Máme krizi na projektu a klient řve!"
+
+Atmosféra je napjatá. Jak zareaguješ?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Omluvit se a odejít",
+				description: "Přiznej chybu a vrať se jindy.",
+				baseReward: 50,
+				riskMultiplier: 0.7,
+				nextNodeId: "outcome_apologize_leave",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Trvat na svém",
+				description: "Řekneš, že to je důležité a potřebuješ odpověď.",
+				baseReward: 200,
+				riskMultiplier: 1.4,
+				nextNodeId: "outcome_insist",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Apologizing and leaving
+	// =========================================================================
+	outcome_apologize_leave: {
+		id: "outcome_apologize_leave",
+		type: "outcome",
+		narrative: `🙏 "Omlouvám se, špatně jsem odhadl situaci. Vrátím se jindy."
+
+Šéf přikývne...`,
+		successChance: 70,
+		successNodeId: "terminal_graceful_retreat",
+		failNodeId: "terminal_bad_timing",
+	},
+
+	// =========================================================================
+	// OUTCOME: Insisting
+	// =========================================================================
+	outcome_insist: {
+		id: "outcome_insist",
+		type: "outcome",
+		narrative: `💪 "Vím, že je situace náročná, ale tohle je pro mě důležité..."
+
+Šéf se na tebe dívá...`,
+		successChance: 70,
+		successNodeId: "terminal_respect_for_courage",
+		failNodeId: "terminal_bad_timing",
 	},
 
 	// =========================================================================
@@ -351,6 +434,58 @@ Získáváš **+50 mincí** za snahu.`,
 		coinsChange: 50,
 		isPositiveEnding: true,
 		xpMultiplier: 0.9,
+	},
+
+	terminal_missed_window: {
+		id: "terminal_missed_window",
+		type: "terminal",
+		narrative: `⏰ **Zmeškaná příležitost**
+
+Za měsíc firma oznámila zmrazení platů. Tvá šance je pryč.
+
+Ztrácíš **-50 mincí** na ztracené motivaci.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_regret: {
+		id: "terminal_regret",
+		type: "terminal",
+		narrative: `😕 **Lítost**
+
+Za týden se dozvíš, že kolega vyjednal 20 %. Mohl jsi taky, kdybys tlačil víc.
+
+Získáváš sice zvýšení, ale cítíš se špatně. **-50 mincí** na frustraci.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_graceful_retreat: {
+		id: "terminal_graceful_retreat",
+		type: "terminal",
+		narrative: `🤝 **Diplomatický ústup**
+
+Šéf oceňuje tvůj takt. Za týden tě sám zavolá: "Pojďme to probrat."
+
+Získáváš **+150 mincí** za trpělivost a správné načasování.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.1,
+	},
+
+	terminal_respect_for_courage: {
+		id: "terminal_respect_for_courage",
+		type: "terminal",
+		narrative: `💪 **Odvaha se cení**
+
+Šéf se zastaví a řekne: "Máš koule. OK, dám ti 8 % hned a zbytek po krizi."
+
+Získáváš **+250 mincí** za odvahu.`,
+		coinsChange: 250,
+		isPositiveEnding: true,
+		xpMultiplier: 1.2,
 	},
 
 	// Negative endings (3)

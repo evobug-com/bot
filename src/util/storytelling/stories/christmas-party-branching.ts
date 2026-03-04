@@ -124,7 +124,7 @@ Právě jsi srazil drahocennou vázu z podstavce! Rozbila se na kusy. HR manager
 				description: "Upřímně se omluvíš a nabídneš náhradu škody.",
 				baseReward: 0,
 				riskMultiplier: 1.0,
-				nextNodeId: "terminal_forgiven",
+				nextNodeId: "outcome_apologize",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -132,9 +132,61 @@ Právě jsi srazil drahocennou vázu z podstavce! Rozbila se na kusy. HR manager
 				description: "Panikáříš a zkusíš se nenápadně vytratit.",
 				baseReward: -500,
 				riskMultiplier: 1.0,
-				nextNodeId: "terminal_fired",
+				nextNodeId: "outcome_sneak_out",
 			},
 		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Apologizing for the vase
+	// =========================================================================
+	outcome_apologize: {
+		id: "outcome_apologize",
+		type: "outcome",
+		narrative: `🙏 Sbíráš odvahu a jdeš za HR manažerem. "Omlouvám se, zaplatím škodu..."
+
+HR manager tě pozorně poslouchá a hodnotí tvou upřímnost...`,
+		successChance: 70,
+		successNodeId: "terminal_forgiven",
+		failNodeId: "terminal_apologize_fail",
+	},
+
+	terminal_apologize_fail: {
+		id: "terminal_apologize_fail",
+		type: "terminal",
+		narrative: `😞 **Omluva nestačila**
+
+HR manager pokýval hlavou, ale ředitel hotelu žádá plnou náhradu. Váza byla starožitná.
+
+Musíš zaplatit **-400 mincí** za škodu. Aspoň máš čisté svědomí.`,
+		coinsChange: -400,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	// =========================================================================
+	// OUTCOME: Sneaking out
+	// =========================================================================
+	outcome_sneak_out: {
+		id: "outcome_sneak_out",
+		type: "outcome",
+		narrative: `🏃 Zkusíš se nenápadně vytratit směrem k východu. Security stojí u dveří...`,
+		successChance: 70,
+		successNodeId: "terminal_fired",
+		failNodeId: "terminal_sneak_out_fail",
+	},
+
+	terminal_sneak_out_fail: {
+		id: "terminal_sneak_out_fail",
+		type: "terminal",
+		narrative: `🚨 **Chycen na útěku**
+
+Security tě zastavila a zavolala policii. Ředitel hotelu podává trestní oznámení za úmyslné poškození majetku.
+
+Ztrácíš **-600 mincí** a čelíš právním následkům.`,
+		coinsChange: -600,
+		isPositiveEnding: false,
+		xpMultiplier: 0.3,
 	},
 
 	// =========================================================================
@@ -176,7 +228,99 @@ Organizátor začíná losovat. Postupně vytahuje čísla...`,
 Všimneš si, že CEO firmy stojí sám v koutě...`,
 		successChance: 70,
 		successNodeId: "decision_2c_networking",
+		failNodeId: "decision_2d_awkward_recovery",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Awkward recovery after failed professionalism
+	// =========================================================================
+	decision_2d_awkward_recovery: {
+		id: "decision_2d_awkward_recovery",
+		type: "decision",
+		narrative: `😬 Celý večer působíš jako robotický outsider. CEO si tě nevšiml a kolegové se ti vyhýbají.
+
+Pak tě osloví kolegyně z marketingu: "Nechceš si dát aspoň jeden drink? Uvolni se trochu."`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Přijmout nabídku",
+				description: "Dáš si jeden drink a zkusíš se začlenit mezi kolegy.",
+				baseReward: 150,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_loosen_up",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Odmítnout a odejít",
+				description: "Držíš si svůj postoj a raději odejdeš domů.",
+				baseReward: 0,
+				riskMultiplier: 0.7,
+				nextNodeId: "outcome_leave_early",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Loosen up after awkward evening
+	// =========================================================================
+	outcome_loosen_up: {
+		id: "outcome_loosen_up",
+		type: "outcome",
+		narrative: `🍷 Dáš si drink a začneš konverzovat s kolegyní. Atmosféra se trochu uvolní...`,
+		successChance: 70,
+		successNodeId: "terminal_late_connection",
 		failNodeId: "terminal_awkward",
+	},
+
+	// =========================================================================
+	// OUTCOME: Leave early
+	// =========================================================================
+	outcome_leave_early: {
+		id: "outcome_leave_early",
+		type: "outcome",
+		narrative: `🚶 Rozloučíš se a tiše odcházíš. Na chodbě potkáš svého nadřízeného, který právě přichází...`,
+		successChance: 70,
+		successNodeId: "terminal_quiet_exit",
+		failNodeId: "terminal_awkward_departure",
+	},
+
+	terminal_late_connection: {
+		id: "terminal_late_connection",
+		type: "terminal",
+		narrative: `🤝 **Pozdní spojení**
+
+Nakonec jsi se uvolnil a strávil zbytek večera v příjemné konverzaci. Kolegyně tě představila dalším lidem.
+
+Získáváš **+150 mincí** a pár nových kontaktů.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_quiet_exit: {
+		id: "terminal_quiet_exit",
+		type: "terminal",
+		narrative: `🌙 **Tichý odchod**
+
+Nadřízený tě zastavil: "Už odcházíš? Škoda, ale oceňuju, že jsi přišel."
+
+Nic extra nezískáváš, ale aspoň jsi si zachoval tvář. **+50 mincí**.`,
+		coinsChange: 50,
+		isPositiveEnding: true,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_awkward_departure: {
+		id: "terminal_awkward_departure",
+		type: "terminal",
+		narrative: `😬 **Trapný odchod**
+
+Nadřízený se na tebe podíval: "Už jdeš? Večírek sotva začal..."
+
+Tvůj předčasný odchod vypadal neuctivě. **-50 mincí** a divné pohledy v pondělí.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 
 	// =========================================================================
@@ -410,7 +554,7 @@ export const christmasPartyBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 22,
+	expectedPaths: 30,
 	averageReward: 400,
 	maxPossibleReward: 1500, // Socialize + Secret Santa + Bitcoin
 	minPossibleReward: -500, // Socialize + Drunk + Fired

@@ -136,7 +136,7 @@ Teď máš **${amount} mincí** navíc. Co s nimi uděláš?`;
 				description: "Nabídneš mu polovinu, ať drží hubu.",
 				baseReward: 250,
 				riskMultiplier: 1.0,
-				nextNodeId: "terminal_bribed",
+				nextNodeId: "outcome_bribe",
 			},
 		},
 	},
@@ -186,7 +186,7 @@ Teď máš **${amount} mincí** navíc. Co s nimi uděláš?`;
 		narrative: `👵 "Paní, počkejte! Upustila jste peněženku!" voláš a běžíš za ní...`,
 		successChance: 70,
 		successNodeId: "decision_2c_reward",
-		failNodeId: "terminal_suspicious",
+		failNodeId: "decision_2d_suspicious",
 	},
 
 	// =========================================================================
@@ -208,7 +208,7 @@ Sahá do peněženky a nabízí ti **${reward} mincí** jako odměnu.`;
 				description: "Zasloužíš si to za poctivost.",
 				baseReward: 200,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_accepted_reward",
+				nextNodeId: "outcome_accept_reward",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -233,6 +233,85 @@ Cestou domů najdeš na zemi něco zajímavého...`,
 		successChance: 70,
 		successNodeId: "terminal_karma_reward",
 		failNodeId: "terminal_nothing",
+	},
+
+	// =========================================================================
+	// OUTCOME: Bribing the witness
+	// =========================================================================
+	outcome_bribe: {
+		id: "outcome_bribe",
+		type: "outcome",
+		narrative: `🤫 Vytahuješ peníze a nabízíš je svědkovi. "Tady máš, a zapomeň, co jsi viděl..."`,
+		successChance: 70,
+		successNodeId: "terminal_bribed",
+		failNodeId: "terminal_bribe_failed",
+	},
+
+	// =========================================================================
+	// OUTCOME: Accepting the reward
+	// =========================================================================
+	outcome_accept_reward: {
+		id: "outcome_accept_reward",
+		type: "outcome",
+		narrative: `🙏 Natáhneš ruku pro odměnu. Paní se usmívá a sahá do peněženky...`,
+		successChance: 70,
+		successNodeId: "terminal_accepted_reward",
+		failNodeId: "terminal_reward_awkward",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Suspicious lady - how to react
+	// =========================================================================
+	decision_2d_suspicious: {
+		id: "decision_2d_suspicious",
+		type: "decision",
+		narrative: `🤨 Paní se na tebe dívá podezíravě. "Kde jste tu peněženku vzal? Viděla jsem, jak jste ji sebral ze země!"
+
+Situace je napjatá. Jak zareaguješ?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Vysvětlit situaci",
+				description: "Klidně jí vysvětlíš, že jsi viděl, jak jí peněženka vypadla.",
+				baseReward: 150,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_explain",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Vrátit a odejít",
+				description: "Podáš jí peněženku, nic neříkáš a rychle odcházíš.",
+				baseReward: 50,
+				riskMultiplier: 0.7,
+				nextNodeId: "outcome_leave_quickly",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Explaining to suspicious lady
+	// =========================================================================
+	outcome_explain: {
+		id: "outcome_explain",
+		type: "outcome",
+		narrative: `🗣️ "Paní, viděl jsem, jak vám vypadla. Běžel jsem za vámi, abych vám ji vrátil..."
+
+Paní tě pozorně poslouchá...`,
+		successChance: 70,
+		successNodeId: "terminal_suspicious_resolved",
+		failNodeId: "terminal_suspicious",
+	},
+
+	// =========================================================================
+	// OUTCOME: Leaving quickly
+	// =========================================================================
+	outcome_leave_quickly: {
+		id: "outcome_leave_quickly",
+		type: "outcome",
+		narrative: `🚶 Podáváš peněženku a otáčíš se k odchodu. Paní něco volá za tebou...`,
+		successChance: 70,
+		successNodeId: "terminal_quiet_exit",
+		failNodeId: "terminal_suspicious_police",
 	},
 
 	// =========================================================================
@@ -342,6 +421,71 @@ Než stihneš něco říct, odchází s podezíravým výrazem. Žádná odměna
 		coinsChange: 0,
 		isPositiveEnding: true, // Still positive - no loss
 		xpMultiplier: 0.8,
+	},
+
+	terminal_bribe_failed: {
+		id: "terminal_bribe_failed",
+		type: "terminal",
+		narrative: `🚔 **Úplatek selhal!**
+
+Svědek se naštval: "Ty mě chceš podplatit?! Volám policii!"
+
+Přijíždí hlídka a musíš zaplatit pokutu. Ztrácíš **-200 mincí**.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_reward_awkward: {
+		id: "terminal_reward_awkward",
+		type: "terminal",
+		narrative: `😅 **Trapný moment**
+
+Paní otevře peněženku a zjistí, že má jen drobné. "Ach, je mi to trapné, nemám moc..."
+
+Dostaneš pár korun a oba se cítíte nesvůj. Získáváš **+50 mincí**.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_suspicious_resolved: {
+		id: "terminal_suspicious_resolved",
+		type: "terminal",
+		narrative: `😊 **Nedorozumění vyřešeno!**
+
+Paní ti nakonec uvěřila. "Promiňte, jsem stará a podezíravá. Děkuji vám!"
+
+Získáváš **+100 mincí** jako malou odměnu za trpělivost.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_quiet_exit: {
+		id: "terminal_quiet_exit",
+		type: "terminal",
+		narrative: `🚶 **Tichý odchod**
+
+Paní za tebou volá poděkování, ale ty už jsi pryč. Dobrý skutek bez odměny.
+
+Nezískal jsi nic, ale svědomí máš čisté. **+0 mincí**.`,
+		coinsChange: 0,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
+	},
+
+	terminal_suspicious_police: {
+		id: "terminal_suspicious_police",
+		type: "terminal",
+		narrative: `🚔 **Policie!**
+
+Paní si myslela, že utíkáš, a zavolala policii. Musíš vysvětlovat situaci na stanici.
+
+Ztratil jsi čas a nervy. Ztrácíš **-100 mincí**.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 
 	// Negative endings (3)

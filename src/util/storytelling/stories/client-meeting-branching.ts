@@ -135,7 +135,7 @@ Klient dorazí za 15 minut. Co uděláš?`,
 				description: "Máš starší backup laptop se starší verzí, která funguje.",
 				baseReward: 250,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_backup_laptop",
+				nextNodeId: "outcome_backup_laptop",
 			},
 		},
 	},
@@ -176,7 +176,7 @@ Klient dorazí za 15 minut. Co uděláš?`,
 				description: "Budeš upřímný: 'To vám přesně nezodpovím, ale zjistím.'",
 				baseReward: 300,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_honest_approach",
+				nextNodeId: "outcome_honest",
 			},
 		},
 	},
@@ -197,7 +197,7 @@ Klient zvedá obočí. "To se stává často?" ptá se skepticky.`,
 				description: '"Je to problém s jejich WiFi, normálně to funguje perfektně..."',
 				baseReward: 100,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_poor_excuse",
+				nextNodeId: "outcome_blame_infra",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -268,6 +268,46 @@ Klient zvedá obočí. "To se stává často?" ptá se skepticky.`,
 		successChance: 70,
 		successNodeId: "terminal_brilliant_recovery",
 		failNodeId: "terminal_complete_disaster",
+	},
+
+	// =========================================================================
+	// OUTCOME: Backup laptop
+	// =========================================================================
+	outcome_backup_laptop: {
+		id: "outcome_backup_laptop",
+		type: "outcome",
+		narrative: `💻 Rychle vytahuješ záložní laptop a spouštíš starší verzi dema. Klient čeká...`,
+		successChance: 70,
+		successNodeId: "terminal_backup_laptop",
+		failNodeId: "terminal_backup_too_old",
+	},
+
+	// =========================================================================
+	// OUTCOME: Honest approach
+	// =========================================================================
+	outcome_honest: {
+		id: "outcome_honest",
+		type: "outcome",
+		narrative: `🤝 "Upřímně, na tuto otázku vám teď přesně neodpovím. Ale zjistím to a pošlu vám detailní odpověď do zítřka."
+
+Klient tě pozorně sleduje...`,
+		successChance: 70,
+		successNodeId: "terminal_honest_approach",
+		failNodeId: "terminal_honesty_backfired",
+	},
+
+	// =========================================================================
+	// OUTCOME: Blaming infrastructure
+	// =========================================================================
+	outcome_blame_infra: {
+		id: "outcome_blame_infra",
+		type: "outcome",
+		narrative: `🌐 "Omlouvám se, je to problém s jejich WiFi. Normálně to funguje perfektně..."
+
+Klient zvedá obočí a kontroluje svůj telefon...`,
+		successChance: 70,
+		successNodeId: "terminal_excuse_accepted",
+		failNodeId: "terminal_poor_excuse",
 	},
 
 	// =========================================================================
@@ -393,6 +433,47 @@ Slíbí, že se ozve, ale víš, že to znamená ne. Aspoň jsi nedostal košem 
 		coinsChange: 50,
 		isPositiveEnding: true,
 		xpMultiplier: 0.8,
+	},
+
+	terminal_backup_too_old: {
+		id: "terminal_backup_too_old",
+		type: "terminal",
+		narrative: `📟 **ZASTARALÁ VERZE**
+
+Záložní laptop běží příliš starou verzi. Klient vidí chybějící funkce a zastaralý design.
+
+"Tohle vypadá jako z roku 2015..." komentuje skepticky.
+
+**Kontrakt ztracen, ztráta -150 mincí.**`,
+		coinsChange: -150,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_honesty_backfired: {
+		id: "terminal_honesty_backfired",
+		type: "terminal",
+		narrative: `😕 **UPŘÍMNOST NESTAČILA**
+
+Klient se zamračí. "Potřebujeme dodavatele, který zná odpovědi hned. Nemáme čas čekat."
+
+Tvá upřímnost byla oceněná, ale nestačila. **Ztráta -100 mincí.**`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_excuse_accepted: {
+		id: "terminal_excuse_accepted",
+		type: "terminal",
+		narrative: `🤷 **VÝMLUVA PROŠLA**
+
+Klient pokrčí rameny. "Dobře, ukažte mi to příště, až bude WiFi lepší."
+
+Dostal jsi druhou šanci. Získáváš **+100 mincí** za přežití.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
 	},
 
 	// Negative endings (4)

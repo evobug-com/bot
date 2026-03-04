@@ -135,7 +135,7 @@ CEO už je v hovoru a čeká...`,
 				description: "Odpojíš počítač a připojíš se z mobilu. Nižší kvalita, ale funguje.",
 				baseReward: 200,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_phone_backup",
+				nextNodeId: "outcome_phone_switch",
 			},
 		},
 	},
@@ -151,7 +151,7 @@ CEO už je v hovoru a čeká...`,
 CEO se připojuje... "Tak, jak to vypadá s projektem?"`,
 		successChance: 70,
 		successNodeId: "decision_2c_interruption",
-		failNodeId: "terminal_total_disaster",
+		failNodeId: "decision_2d_chaos",
 	},
 
 	// =========================================================================
@@ -180,7 +180,7 @@ Jak zareaguješ?`,
 				description: "Odklidíš kočku a omlouvatelně pokračuješ jako profesionál.",
 				baseReward: 250,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_focus_master",
+				nextNodeId: "outcome_mute_continue",
 			},
 		},
 	},
@@ -241,6 +241,87 @@ Všichni se smějí...`,
 		successChance: 70,
 		successNodeId: "terminal_cat_famous",
 		failNodeId: "terminal_cat_chaos",
+	},
+
+	// =========================================================================
+	// OUTCOME: Switching to phone
+	// =========================================================================
+	outcome_phone_switch: {
+		id: "outcome_phone_switch",
+		type: "outcome",
+		narrative: `📱 Rychle přepínáš na telefon. Aplikace se načítá... CEO čeká...`,
+		successChance: 70,
+		successNodeId: "terminal_phone_backup",
+		failNodeId: "terminal_phone_fail",
+	},
+
+	// =========================================================================
+	// OUTCOME: Muting and continuing
+	// =========================================================================
+	outcome_mute_continue: {
+		id: "outcome_mute_continue",
+		type: "outcome",
+		narrative: `🔇 Rychle ztlumíš mikrofon, odklidíš kočku a vracíš se k prezentaci...
+
+"Omlouvám se, kde jsem skončil..."`,
+		successChance: 70,
+		successNodeId: "terminal_focus_master",
+		failNodeId: "terminal_lost_focus",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Total chaos
+	// =========================================================================
+	decision_2d_chaos: {
+		id: "decision_2d_chaos",
+		type: "decision",
+		narrative: `🔥 **Chaos!** Kočka shodila kávu, dítě vběhlo do pokoje a kurýr zvoní. CEO vidí všechno.
+
+"Ehm... je tam vše v pořádku?" ptá se CEO.`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Přiznat situaci",
+				description: "Upřímně řekneš, co se děje, a poprosíš o pauzu.",
+				baseReward: 100,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_admit_chaos",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Předstírat klid",
+				description: "Tvrdíš, že je vše v pořádku a snažíš se pokračovat.",
+				baseReward: 50,
+				riskMultiplier: 1.3,
+				nextNodeId: "outcome_fake_calm",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Admitting chaos
+	// =========================================================================
+	outcome_admit_chaos: {
+		id: "outcome_admit_chaos",
+		type: "outcome",
+		narrative: `😅 "Omlouvám se, mám tu doma menší katastrofu. Můžu mít 5 minut?"
+
+CEO přemýšlí...`,
+		successChance: 70,
+		successNodeId: "terminal_chaos_forgiven",
+		failNodeId: "terminal_total_disaster",
+	},
+
+	// =========================================================================
+	// OUTCOME: Faking calm
+	// =========================================================================
+	outcome_fake_calm: {
+		id: "outcome_fake_calm",
+		type: "outcome",
+		narrative: `😬 "Vše v pořádku!" říkáš, zatímco kočka skáče přes stůl a dítě křičí...`,
+		successChance: 70,
+		successNodeId: "terminal_somehow_survived",
+		failNodeId: "terminal_total_disaster",
 	},
 
 	// =========================================================================
@@ -348,6 +429,58 @@ Prezentace je perfektní, ale... nudná. CEO několikrát zívne.
 "Díky za informace," říká bez emocí. Nic špatného, ale ani nic výjimečného.
 
 Získáváš **+100 mincí**. Mohlo to být lepší.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
+	},
+
+	terminal_phone_fail: {
+		id: "terminal_phone_fail",
+		type: "terminal",
+		narrative: `📵 **Telefon selhal!**
+
+Aplikace na telefonu se neustále seká. CEO tě neslyší.
+
+"Pojďme dál bez něj," říká CEO. Ztrácíš **-250 mincí**.`,
+		coinsChange: -250,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_lost_focus: {
+		id: "terminal_lost_focus",
+		type: "terminal",
+		narrative: `😵 **Ztráta koncentrace**
+
+Po incidentu s kočkou ses už nedokázal soustředit. Tvá prezentace byla chaotická.
+
+"Měl jsi se lépe připravit," píše ti kolega. Ztrácíš **-100 mincí**.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_chaos_forgiven: {
+		id: "terminal_chaos_forgiven",
+		type: "terminal",
+		narrative: `😊 **Pochopení!**
+
+CEO se zasměje. "Mám taky děti a kočku, chápu. Dej si 5 minut."
+
+Po pauze dokončíš prezentaci. Získáváš **+150 mincí** za upřímnost.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_somehow_survived: {
+		id: "terminal_somehow_survived",
+		type: "terminal",
+		narrative: `😮‍💨 **Jakžtakž přežito**
+
+Navzdory chaosu jsi dokončil prezentaci. CEO nic nekomentoval.
+
+Kolega ti píše: "Respekt za nervy z oceli." Získáváš **+100 mincí**.`,
 		coinsChange: 100,
 		isPositiveEnding: true,
 		xpMultiplier: 0.9,

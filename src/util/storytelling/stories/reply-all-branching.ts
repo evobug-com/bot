@@ -133,7 +133,7 @@ Běžíš za IT oddělením...`,
 				description: "Pošleš upřímnou omluvu celé firmě. Aspoň s čistým svědomím.",
 				baseReward: 150,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_forgiven_apology",
+				nextNodeId: "outcome_send_apology",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -159,7 +159,7 @@ Za 10 minut ti přijde email od CEO: "Zastavte se u mé kanceláře."
 Jdeš...`,
 		successChance: 70,
 		successNodeId: "decision_2c_ceo_responds",
-		failNodeId: "terminal_career_over",
+		failNodeId: "decision_2d_bad_reaction",
 	},
 
 	// =========================================================================
@@ -186,7 +186,7 @@ Jdeš...`,
 				description: '"Máte pravdu, omlouvám se za formu. Měl jsem to řešit jinak."',
 				baseReward: 350,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_humble",
+				nextNodeId: "outcome_apologize_ceo",
 			},
 		},
 	},
@@ -248,7 +248,84 @@ CEO mlčí. Zvedá obočí...`,
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (11 endings)
+	// DECISION 2d: Bad reaction to owning it
+	// =========================================================================
+	decision_2d_bad_reaction: {
+		id: "decision_2d_bad_reaction",
+		type: "decision",
+		narrative: `😨 **ŠPATNÁ REAKCE!** CEO ti píše: "Zastavte se u mé kanceláře. Hned."
+
+Šéf tě potkal na chodbě a ignoruje tě. HR ti volá. Co uděláš?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Jít za CEO",
+				description: "Půjdeš přímo za CEO a pokusíš se situaci zachránit.",
+				baseReward: 200,
+				riskMultiplier: 1.2,
+				nextNodeId: "outcome_face_ceo",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Kontaktovat HR první",
+				description: "Zavoláš HR a pokusíš se to vyřešit diplomaticky.",
+				baseReward: 150,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_contact_hr",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Facing CEO directly
+	// =========================================================================
+	outcome_face_ceo: {
+		id: "outcome_face_ceo",
+		type: "outcome",
+		narrative: `🚶 Jdeš za CEO. Klepeš na dveře. "Dále," ozývá se ledový hlas...`,
+		successChance: 70,
+		successNodeId: "terminal_ceo_second_chance",
+		failNodeId: "terminal_career_over",
+	},
+
+	// =========================================================================
+	// OUTCOME: Contacting HR first
+	// =========================================================================
+	outcome_contact_hr: {
+		id: "outcome_contact_hr",
+		type: "outcome",
+		narrative: `📞 Voláš HR. "Chtěl bych projednat ten email... Vím, že to byla chyba."`,
+		successChance: 70,
+		successNodeId: "terminal_hr_mediation",
+		failNodeId: "terminal_hr_termination",
+	},
+
+	// =========================================================================
+	// OUTCOME: Sending apology email
+	// =========================================================================
+	outcome_send_apology: {
+		id: "outcome_send_apology",
+		type: "outcome",
+		narrative: `📧 Píšeš upřímný omluvný email celé firmě. Ruce se ti třesou...`,
+		successChance: 70,
+		successNodeId: "terminal_forgiven_apology",
+		failNodeId: "terminal_apology_backfire",
+	},
+
+	// =========================================================================
+	// OUTCOME: Apologizing to CEO
+	// =========================================================================
+	outcome_apologize_ceo: {
+		id: "outcome_apologize_ceo",
+		type: "outcome",
+		narrative: `🙇 "Omlouvám se, měl jsem to řešit jinak." CEO přemýšlí...`,
+		successChance: 70,
+		successNodeId: "terminal_humble",
+		failNodeId: "terminal_humble_rejected",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (11 endings + 5 new terminals)
 	// =========================================================================
 
 	// Positive endings (7)
@@ -410,6 +487,71 @@ Ztrácíš **-600 mincí** a kariéru v oboru.`,
 		coinsChange: -600,
 		isPositiveEnding: false,
 		xpMultiplier: 0.2,
+	},
+
+	terminal_ceo_second_chance: {
+		id: "terminal_ceo_second_chance",
+		type: "terminal",
+		narrative: `🤝 **DRUHÁ ŠANCE**
+
+CEO oceňuje tvou odvahu přijít osobně. "Dávám ti poslední šanci. Ale příště přijď za mnou přímo."
+
+Získáváš **+100 mincí** a cennou lekci.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_hr_mediation: {
+		id: "terminal_hr_mediation",
+		type: "terminal",
+		narrative: `🤝 **HR MEDIACE**
+
+HR zorganizovalo schůzku mezi tebou a šéfem. Probrali jste problémy konstruktivně.
+
+Situace se uklidnila. Získáváš **+80 mincí** za diplomatický přístup.`,
+		coinsChange: 80,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_hr_termination: {
+		id: "terminal_hr_termination",
+		type: "terminal",
+		narrative: `📋 **HR UKONČENÍ**
+
+HR ti oznámilo, že firma přistupuje k výpovědi. "Ten email porušil kodex chování."
+
+Ztrácíš **-450 mincí** a práci.`,
+		coinsChange: -450,
+		isPositiveEnding: false,
+		xpMultiplier: 0.3,
+	},
+
+	terminal_apology_backfire: {
+		id: "terminal_apology_backfire",
+		type: "terminal",
+		narrative: `💥 **OMLUVA SE OBRÁTILA PROTI TOBĚ**
+
+Omluvný email znovu připomněl všem ten původní. Lidi, co ho nečetli, si ho teď přečetli.
+
+Šéf je dvakrát naštvanější. Ztrácíš **-250 mincí**.`,
+		coinsChange: -250,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_humble_rejected: {
+		id: "terminal_humble_rejected",
+		type: "terminal",
+		narrative: `😞 **OMLUVA NEPŘIJATA**
+
+CEO kroutí hlavou. "Omluva nestačí. Způsob, jakým jsi to udělal, je nepřijatelný."
+
+Dostáváš oficiální napomenutí. Ztrácíš **-200 mincí**.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
 	},
 };
 

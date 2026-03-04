@@ -141,7 +141,7 @@ Máš nápad na žertík, ale musíš se rozhodnout - jít na jistotu s něčím
 				description: "Přiznej to a pomoz to rychle spravit.",
 				baseReward: 0,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_forgiven",
+				nextNodeId: "outcome_apologize",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -179,7 +179,7 @@ Máš nápad na žertík, ale musíš se rozhodnout - jít na jistotu s něčím
 				description: "Přiznej se, ale bez nároků. Buduj reputaci.",
 				baseReward: 300,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_respected",
+				nextNodeId: "outcome_stay_humble",
 			},
 		},
 	},
@@ -208,7 +208,7 @@ Máš nápad na žertík, ale musíš se rozhodnout - jít na jistotu s něčím
 				description: "Přiznej se a nech to na profesionálech.",
 				baseReward: -200,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_saved_costly",
+				nextNodeId: "outcome_call_expert",
 			},
 		},
 	},
@@ -284,7 +284,45 @@ Honza se zamyslí. Volá do IT oddělení...`,
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (11 endings)
+	// OUTCOME: Apologizing to Honza
+	// =========================================================================
+	outcome_apologize: {
+		id: "outcome_apologize",
+		type: "outcome",
+		narrative: `🙏 "Honzo, promiň, to jsem udělal já. Pomůžu ti to hned vrátit..."
+
+Honza se na tebe dívá. Záleží na jeho náladě...`,
+		successChance: 70,
+		successNodeId: "terminal_forgiven",
+		failNodeId: "terminal_apology_rejected",
+	},
+
+	// =========================================================================
+	// OUTCOME: Staying humble after boss impressed
+	// =========================================================================
+	outcome_stay_humble: {
+		id: "outcome_stay_humble",
+		type: "outcome",
+		narrative: `😊 "To jsem jen tak zkusil, nic velkého," říkáš skromně. Šéf přikyvuje...`,
+		successChance: 70,
+		successNodeId: "terminal_respected",
+		failNodeId: "terminal_humble_overlooked",
+	},
+
+	// =========================================================================
+	// OUTCOME: Calling IT expert for server crash
+	// =========================================================================
+	outcome_call_expert: {
+		id: "outcome_call_expert",
+		type: "outcome",
+		narrative: `📞 Přiznáváš se a voláš IT experta. "Udělal jsem chybu, potřebuju pomoc..."`,
+		successChance: 70,
+		successNodeId: "terminal_saved_costly",
+		failNodeId: "terminal_expert_too_late",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (11 endings + 3 new failure terminals)
 	// =========================================================================
 
 	// Positive endings (8)
@@ -454,6 +492,45 @@ Tvůj pokus o opravu vše zhoršil. CTO musel volat externí firmu. Oprava stál
 
 Zaplatil jsi **-400 mincí** a máš výpověď na stole. Totální katastrofa.`,
 		coinsChange: -400,
+		isPositiveEnding: false,
+		xpMultiplier: 0.4,
+	},
+
+	terminal_apology_rejected: {
+		id: "terminal_apology_rejected",
+		type: "terminal",
+		narrative: `😡 **OMLUVA ODMÍTNUTA**
+
+Honza je příliš naštvaný. "Kvůli tobě jsem pokazil prezentaci před klientem!"
+
+HR řeší stížnost. Ztrácíš **-180 mincí** a důvěru kolegy.`,
+		coinsChange: -180,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_humble_overlooked: {
+		id: "terminal_humble_overlooked",
+		type: "terminal",
+		narrative: `😐 **PŘEHLÉDNUT**
+
+Tvá pokora byla příliš velká. Šéf si tě nezapamatoval a zásluhy připsal "týmové kultuře".
+
+Žádný bonus, žádné uznání. Ztrácíš **-50 mincí** za promarněnou příležitost.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_expert_too_late: {
+		id: "terminal_expert_too_late",
+		type: "terminal",
+		narrative: `⏰ **EXPERT PŘIŠEL POZDĚ**
+
+IT expert dorazil, ale firma byla offline příliš dlouho. Klienti si stěžují.
+
+CTO nařizuje audit. Ztrácíš **-350 mincí** a máš záznam v HR.`,
+		coinsChange: -350,
 		isPositiveEnding: false,
 		xpMultiplier: 0.4,
 	},

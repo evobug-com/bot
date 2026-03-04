@@ -146,7 +146,7 @@ Kolega nervózně sleduje obrazovku. Co zkusíš?`,
 				description: "Raději požádám o pomoc zkušenějšího kolegu.",
 				baseReward: 50,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_senior_help",
+				nextNodeId: "outcome_call_senior",
 			},
 		},
 	},
@@ -176,7 +176,7 @@ Co to je?`,
 				description: "Někdo změnil registry nastavení. Vrátím výchozí hodnoty.",
 				baseReward: 200,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_config_fix",
+				nextNodeId: "outcome_config_fix",
 			},
 		},
 	},
@@ -205,7 +205,7 @@ Kolega se ptá, co bude dál. Máš nápad?`,
 				description: "Podívám se na fóra a dokumentaci výrobce.",
 				baseReward: 180,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_online_solution",
+				nextNodeId: "outcome_search_online",
 			},
 		},
 	},
@@ -271,7 +271,43 @@ Kolega se ptá, co bude dál. Máš nápad?`,
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (12 endings: 8 positive, 4 negative)
+	// OUTCOME: Calling senior colleague
+	// =========================================================================
+	outcome_call_senior: {
+		id: "outcome_call_senior",
+		type: "outcome",
+		narrative: `📞 Voláš seniorního kolegu. "Hele, mám tu problém, se kterým si nevím rady..."`,
+		successChance: 70,
+		successNodeId: "terminal_senior_help",
+		failNodeId: "terminal_senior_unavailable",
+	},
+
+	// =========================================================================
+	// OUTCOME: Fixing configuration
+	// =========================================================================
+	outcome_config_fix: {
+		id: "outcome_config_fix",
+		type: "outcome",
+		narrative: `⚙️ Otevíráš registry editor a hledáš změněné hodnoty. Opatrně vracíš výchozí nastavení...`,
+		successChance: 70,
+		successNodeId: "terminal_config_fix",
+		failNodeId: "terminal_config_worse",
+	},
+
+	// =========================================================================
+	// OUTCOME: Searching online
+	// =========================================================================
+	outcome_search_online: {
+		id: "outcome_search_online",
+		type: "outcome",
+		narrative: `🔎 Otevíráš prohlížeč a hledáš příznaky na fórech a v dokumentaci výrobce...`,
+		successChance: 70,
+		successNodeId: "terminal_online_solution",
+		failNodeId: "terminal_online_fail",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (12 endings + 3 new failure terminals)
 	// =========================================================================
 
 	// Positive endings (8)
@@ -443,6 +479,45 @@ Kolega je naštvaný, šéf je naštvaný, všichni jsou naštvaní. Pokuta: **-
 		coinsChange: -800,
 		isPositiveEnding: false,
 		xpMultiplier: 0.4,
+	},
+
+	terminal_senior_unavailable: {
+		id: "terminal_senior_unavailable",
+		type: "terminal",
+		narrative: `📵 **SENIOR NEDOSTUPNÝ**
+
+Senior kolega je na dovolené a nikdo jiný nemá čas. Problém zůstává nevyřešený celý den.
+
+Kolega si stěžuje šéfovi. Ztrácíš **-80 mincí** za neefektivitu.`,
+		coinsChange: -80,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_config_worse: {
+		id: "terminal_config_worse",
+		type: "terminal",
+		narrative: `💥 **REGISTRY ROZBITÉ!**
+
+Změnil jsi špatnou hodnotu v registry a systém se teď vůbec nespustí.
+
+IT oddělení musí zasáhnout. Pokuta: **-180 mincí** za neopatrnou práci.`,
+		coinsChange: -180,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_online_fail: {
+		id: "terminal_online_fail",
+		type: "terminal",
+		narrative: `🌐 **ŠPATNÁ RADA Z INTERNETU**
+
+Našel jsi návod na fóru, ale byl zastaralý. Řešení problém ještě zhoršilo.
+
+Musíš volat IT oddělení. Ztrácíš **-100 mincí** za ztracený čas.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 };
 

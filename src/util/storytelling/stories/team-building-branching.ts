@@ -127,7 +127,7 @@ Organizátor se ptá: "Kdo byl mozek týmu?"`,
 				description: '"Kdybys poslouchal, Karel..." Klasická obrana.',
 				baseReward: 100,
 				riskMultiplier: 1.3,
-				nextNodeId: "terminal_scapegoat",
+				nextNodeId: "outcome_blame_others",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -135,7 +135,7 @@ Organizátor se ptá: "Kdo byl mozek týmu?"`,
 				description: '"Měl jsem to vést jinak. Sorry, tým." Těžké, ale čestné.',
 				baseReward: 200,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_respected_failure",
+				nextNodeId: "outcome_own_mistake",
 			},
 		},
 	},
@@ -151,7 +151,86 @@ Organizátor se ptá: "Kdo byl mozek týmu?"`,
 Najednou uvidíš vzor, který ostatní přehlédli...`,
 		successChance: 70,
 		successNodeId: "decision_2c_shine",
+		failNodeId: "decision_2d_wallflower",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Wallflower situation - passive and invisible
+	// =========================================================================
+	decision_2d_wallflower: {
+		id: "decision_2d_wallflower",
+		type: "decision",
+		narrative: `👻 Nikdo si tě nevšímá. Petra vede tým a ty stojíš v rohu. Čas běží a ty jsi neviditelný.
+
+Najednou Petra zmatkuje a potřebuje pomoc. Je to tvoje šance?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Nabídnout pomoc",
+				description: "Tiše se nabídneš, že pomůžeš s konkrétním úkolem.",
+				baseReward: 150,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_offer_help",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Zůstat neviditelný",
+				description: "Necháš to být. Není to tvůj problém.",
+				baseReward: 0,
+				riskMultiplier: 0.5,
+				nextNodeId: "outcome_stay_invisible",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Offering help from background
+	// =========================================================================
+	outcome_offer_help: {
+		id: "outcome_offer_help",
+		type: "outcome",
+		narrative: `🤝 "Petro, můžu ti s tím pomoct?" nabízíš tiše. Petra se otočí...`,
+		successChance: 70,
+		successNodeId: "terminal_quiet_contributor",
 		failNodeId: "terminal_invisible",
+	},
+
+	terminal_quiet_contributor: {
+		id: "terminal_quiet_contributor",
+		type: "terminal",
+		narrative: `🙂 **Tichý přispěvatel**
+
+Petra ocenila tvou pomoc. Společně jste vyřešili hádanku a tým postoupil dál.
+
+Získáváš **+150 mincí** a Petřin respekt.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	// =========================================================================
+	// OUTCOME: Staying invisible
+	// =========================================================================
+	outcome_stay_invisible: {
+		id: "outcome_stay_invisible",
+		type: "outcome",
+		narrative: `🚶 Zůstáváš v rohu a sleduješ, jak tým zápasí s hádankou. Čas vyprší...`,
+		successChance: 70,
+		successNodeId: "terminal_peaceful_observer",
+		failNodeId: "terminal_invisible",
+	},
+
+	terminal_peaceful_observer: {
+		id: "terminal_peaceful_observer",
+		type: "terminal",
+		narrative: `😌 **Klidný pozorovatel**
+
+Tým prohrál, ale ty ses aspoň neblamoval. Na bowlingu pak dáš pár striků a zachráníš si den.
+
+Získáváš **+50 mincí** za bowling.`,
+		coinsChange: 50,
+		isPositiveEnding: true,
+		xpMultiplier: 0.8,
 	},
 
 	// =========================================================================
@@ -178,7 +257,7 @@ Najednou uvidíš vzor, který ostatní přehlédli...`,
 				description: "Pošeptáš Petře svůj nápad, ať si vezme zásluhy.",
 				baseReward: 250,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_humble_hero",
+				nextNodeId: "outcome_whisper_idea",
 			},
 		},
 	},
@@ -223,6 +302,85 @@ Organizátor kývá. Kolegové se tváří... různě.`,
 		successChance: 70,
 		successNodeId: "terminal_hidden_talent",
 		failNodeId: "terminal_awkward_spotlight",
+	},
+
+	// =========================================================================
+	// OUTCOME: Blaming others
+	// =========================================================================
+	outcome_blame_others: {
+		id: "outcome_blame_others",
+		type: "outcome",
+		narrative: `😤 "Karel, kdybys poslouchal! A Petra, ty jsi se pořád hádala..."
+
+Tým se na tebe dívá. HR manažerka si něco zapisuje...`,
+		successChance: 70,
+		successNodeId: "terminal_scapegoat",
+		failNodeId: "terminal_blame_backfire",
+	},
+
+	terminal_blame_backfire: {
+		id: "terminal_blame_backfire",
+		type: "terminal",
+		narrative: `🔥 **Obvinění se obrátilo**
+
+Karel se ozve: "To ty jsi nás vedl špatně!" Celý tým souhlasí. HR manažerka kývá.
+
+Ztrácíš **-300 mincí** a důvěru celého oddělení.`,
+		coinsChange: -300,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	// =========================================================================
+	// OUTCOME: Owning your mistake
+	// =========================================================================
+	outcome_own_mistake: {
+		id: "outcome_own_mistake",
+		type: "outcome",
+		narrative: `😔 "Sorry, tým. Měl jsem to vést jinak. Je to moje chyba."
+
+Všichni se na tebe dívají...`,
+		successChance: 70,
+		successNodeId: "terminal_respected_failure",
+		failNodeId: "terminal_pity",
+	},
+
+	terminal_pity: {
+		id: "terminal_pity",
+		type: "terminal",
+		narrative: `😐 **Lítost místo respektu**
+
+Tým přijal omluvu, ale Petra si myslí, že jsi slabý. "Příště radši nech vést někoho jiného."
+
+Získáváš **+50 mincí** a pochybnosti o sobě.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Whispering idea to Petra
+	// =========================================================================
+	outcome_whisper_idea: {
+		id: "outcome_whisper_idea",
+		type: "outcome",
+		narrative: `🤫 Nakloníš se k Petře a pošeptáš jí řešení. Petra se rozjasní a zkouší to...`,
+		successChance: 70,
+		successNodeId: "terminal_humble_hero",
+		failNodeId: "terminal_whisper_fail",
+	},
+
+	terminal_whisper_fail: {
+		id: "terminal_whisper_fail",
+		type: "terminal",
+		narrative: `😬 **Špatně pochopeno**
+
+Petra tvůj nápad pochopila špatně a použila ho obráceně. Hádanka se zablokovala.
+
+"Co jsi jí to říkal?!" ptá se Karel. Trapas za **-50 mincí**.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
 	},
 
 	// =========================================================================
@@ -372,7 +530,7 @@ export const teamBuildingBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 18,
+	expectedPaths: 28,
 	averageReward: 200,
 	maxPossibleReward: 500, // Lead -> Share credit -> Team hero
 	minPossibleReward: -200, // Lead -> Failure -> Scapegoat

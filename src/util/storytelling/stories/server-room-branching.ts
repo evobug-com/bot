@@ -131,7 +131,7 @@ Možná je čas zavolat posily, nebo to zkusit řešit sám jinak...`,
 				description: "Senior admin ti pomůže. Bezpečná volba.",
 				baseReward: 150,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_team_effort",
+				nextNodeId: "outcome_call_backup",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -208,7 +208,7 @@ Co teď?`,
 				description: "Oznam to bezpečnostnímu týmu. Správná cesta.",
 				baseReward: 300,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_whistleblower",
+				nextNodeId: "outcome_report_security",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -237,7 +237,7 @@ Někdo určitě ví, že jsi u toho serveru. Co uděláš?`,
 				description: "Vrať se k hlavnímu úkolu, jako by se nic nestalo.",
 				baseReward: 50,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_play_safe",
+				nextNodeId: "outcome_leave_quietly",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -245,7 +245,7 @@ Někdo určitě ví, že jsi u toho serveru. Co uděláš?`,
 				description: "Vypni ten podezřelý server. Může to být bezpečnostní riziko.",
 				baseReward: 200,
 				riskMultiplier: 1.4,
-				nextNodeId: "terminal_caught_tampering",
+				nextNodeId: "outcome_disconnect",
 			},
 		},
 	},
@@ -260,6 +260,108 @@ Někdo určitě ví, že jsi u toho serveru. Co uděláš?`,
 		successChance: 70,
 		successNodeId: "terminal_evidence",
 		failNodeId: "terminal_caught_snooping",
+	},
+
+	// =========================================================================
+	// OUTCOME: Calling backup
+	// =========================================================================
+	outcome_call_backup: {
+		id: "outcome_call_backup",
+		type: "outcome",
+		narrative: `📞 Voláš senior adminovi. "Potřebuju pomoc v serverovně, nemůžu najít zdroj problému..."
+
+Čekáš na jeho příchod...`,
+		successChance: 70,
+		successNodeId: "terminal_team_effort",
+		failNodeId: "terminal_backup_too_late",
+	},
+
+	terminal_backup_too_late: {
+		id: "terminal_backup_too_late",
+		type: "terminal",
+		narrative: `⏰ **Pomoc přišla pozdě**
+
+Senior admin měl meeting a přišel až za hodinu. Mezitím monitoring eskaloval problém a klient se ozval dřív.
+
+Dostáváš **+50 mincí** za snahu, ale ztratil jsi čas.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Reporting to security
+	// =========================================================================
+	outcome_report_security: {
+		id: "outcome_report_security",
+		type: "outcome",
+		narrative: `🔒 Voláš bezpečnostnímu týmu a hlásíš nález. Čekáš na jejich reakci...`,
+		successChance: 70,
+		successNodeId: "terminal_whistleblower",
+		failNodeId: "terminal_report_ignored",
+	},
+
+	terminal_report_ignored: {
+		id: "terminal_report_ignored",
+		type: "terminal",
+		narrative: `🤷 **Hlášení ignorováno**
+
+Security tým to prošetřil, ale server mezitím někdo odvezl. Žádné důkazy, žádná odměna.
+
+Získáváš **+50 mincí** za správný postup, ale výsledek je zklamání.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Leaving quietly after alarm
+	// =========================================================================
+	outcome_leave_quietly: {
+		id: "outcome_leave_quietly",
+		type: "outcome",
+		narrative: `🚶 Otáčíš se a tiše odcházíš od serveru zpět k hlavním rackům. Alarm stále bliká...`,
+		successChance: 70,
+		successNodeId: "terminal_play_safe",
+		failNodeId: "terminal_alarm_escalated",
+	},
+
+	terminal_alarm_escalated: {
+		id: "terminal_alarm_escalated",
+		type: "terminal",
+		narrative: `🚨 **Alarm eskaloval**
+
+Tvůj odchod nezastavil alarm. Security přišla a zjistila, že jsi byl u serveru jako poslední.
+
+Musíš vysvětlovat situaci. Ztráta času a nervy: **-50 mincí**.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	// =========================================================================
+	// OUTCOME: Disconnecting suspicious server
+	// =========================================================================
+	outcome_disconnect: {
+		id: "outcome_disconnect",
+		type: "outcome",
+		narrative: `🔌 Sahneš po napájecím kabelu a odpojuješ server. Ventilátory se zastavují...`,
+		successChance: 70,
+		successNodeId: "terminal_caught_tampering",
+		failNodeId: "terminal_disconnect_disaster",
+	},
+
+	terminal_disconnect_disaster: {
+		id: "terminal_disconnect_disaster",
+		type: "terminal",
+		narrative: `💥 **Katastrofální odpojení**
+
+Server byl napojený na záložní napájení dalších systémů. Odpojením jsi vyřadil půlku serverovny.
+
+Škoda na vybavení: **-400 mincí** a disciplinární řízení.`,
+		coinsChange: -400,
+		isPositiveEnding: false,
+		xpMultiplier: 0.4,
 	},
 
 	// =========================================================================
@@ -457,7 +559,7 @@ export const serverRoomBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 22,
+	expectedPaths: 30,
 	averageReward: 250,
 	maxPossibleReward: 650, // Hero ending
 	minPossibleReward: -500, // Major outage

@@ -136,7 +136,7 @@ Meeting začíná za 30 sekund. Co uděláš?`,
 				description: "Připojíš se z telefonu. Méně profesionální, ale funguje.",
 				baseReward: 250,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_phone_hero",
+				nextNodeId: "outcome_phone_backup",
 			},
 		},
 	},
@@ -222,7 +222,7 @@ Team leader se směje: "Aww, who's that?"`,
 				description: "Představíš kočku jako 'nového člena týmu' a uděláš z toho vtip.",
 				baseReward: 400,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_relatable",
+				nextNodeId: "outcome_humor",
 			},
 		},
 	},
@@ -245,7 +245,7 @@ Jak zareaguješ?`,
 				description: "Přiznej chybu, omluv se a navrhni pokračovat přes chat nebo přeplánovat.",
 				baseReward: 100,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_forgiven",
+				nextNodeId: "outcome_apologize",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -253,7 +253,7 @@ Jak zareaguješ?`,
 				description: "Řekneš, že IT oddělení nezajistilo správný software a není to tvoje vina.",
 				baseReward: 0,
 				riskMultiplier: 1.0,
-				nextNodeId: "terminal_unprofessional",
+				nextNodeId: "outcome_blame_tech",
 			},
 		},
 	},
@@ -270,6 +270,60 @@ Marketing tým si toho všiml...`,
 		successChance: 70,
 		successNodeId: "terminal_cat_star",
 		failNodeId: "terminal_cat_disaster",
+	},
+
+	// =========================================================================
+	// OUTCOME: Phone backup
+	// =========================================================================
+	outcome_phone_backup: {
+		id: "outcome_phone_backup",
+		type: "outcome",
+		narrative: `📱 Rychle vytahuješ telefon a připojuješ se přes mobilní aplikaci. Obraz je menší, ale funkční...`,
+		successChance: 70,
+		successNodeId: "terminal_phone_hero",
+		failNodeId: "terminal_phone_fail",
+	},
+
+	// =========================================================================
+	// OUTCOME: Humor with cat
+	// =========================================================================
+	outcome_humor: {
+		id: "outcome_humor",
+		type: "outcome",
+		narrative: `😸 "Meet our newest team member!" Zvedáš kočku ke kameře a všichni se smějí...
+
+Team leader reaguje...`,
+		successChance: 70,
+		successNodeId: "terminal_relatable",
+		failNodeId: "terminal_humor_fail",
+	},
+
+	// =========================================================================
+	// OUTCOME: Apologizing
+	// =========================================================================
+	outcome_apologize: {
+		id: "outcome_apologize",
+		type: "outcome",
+		narrative: `🙏 "Omlouvám se, měl jsem si vše lépe připravit. Můžeme to přeplánovat?"
+
+Team leader chvíli přemýšlí...`,
+		successChance: 70,
+		successNodeId: "terminal_forgiven",
+		failNodeId: "terminal_apology_rejected",
+	},
+
+	// =========================================================================
+	// OUTCOME: Blaming tech
+	// =========================================================================
+	outcome_blame_tech: {
+		id: "outcome_blame_tech",
+		type: "outcome",
+		narrative: `🖥️ "IT oddělení nám nedalo správný software. Není to moje chyba..."
+
+Team leader si tě měří pohledem...`,
+		successChance: 70,
+		successNodeId: "terminal_blame_accepted",
+		failNodeId: "terminal_unprofessional",
 	},
 
 	// =========================================================================
@@ -377,6 +431,58 @@ Prezentace byla korektní, ale... "It was okay. We'll review and get back to you
 
 Žádný bonus, ale aspoň jsi neudělal chybu. **+0 mincí**. Příště zkus přidat energii.`,
 		coinsChange: 0,
+		isPositiveEnding: true,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_phone_fail: {
+		id: "terminal_phone_fail",
+		type: "terminal",
+		narrative: `📵 **Telefon selhal!**
+
+Mobilní aplikace se zasekla a nedokázal ses připojit. Data na telefonu nestačila.
+
+"We'll continue without you," napíše team leader do chatu. Ztrácíš **-200 mincí**.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_humor_fail: {
+		id: "terminal_humor_fail",
+		type: "terminal",
+		narrative: `😬 **Vtip nesedl**
+
+Kočka se vylekala a poškrábala tě. Na kameru to vypadalo divně.
+
+"Can we get back to business?" říká team leader chladně. Ztrácíš **-100 mincí**.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_apology_rejected: {
+		id: "terminal_apology_rejected",
+		type: "terminal",
+		narrative: `😞 **Omluva nestačila**
+
+"We don't have time to reschedule. This was your chance." Team leader je frustrovaný.
+
+Projekt jde dál bez tebe. Ztrácíš **-250 mincí**.`,
+		coinsChange: -250,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_blame_accepted: {
+		id: "terminal_blame_accepted",
+		type: "terminal",
+		narrative: `🤷 **Výmluva prošla**
+
+Team leader pokrčí rameny. "OK, IT should fix this. Let's reschedule for next week."
+
+Dostal jsi druhou šanci. Získáváš **+50 mincí** za přežití.`,
+		coinsChange: 50,
 		isPositiveEnding: true,
 		xpMultiplier: 0.8,
 	},

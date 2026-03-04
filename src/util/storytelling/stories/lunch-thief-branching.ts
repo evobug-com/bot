@@ -135,7 +135,7 @@ Security ti nemůže pomoci. Co teď?`,
 				description: "Není to za to. Prostě si koupíš něco nového.",
 				baseReward: 0,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_let_it_go",
+				nextNodeId: "outcome_give_up",
 			},
 		},
 	},
@@ -193,7 +193,88 @@ Většina krčí rameny, ale pak se jedna kolegyně zarazí...`,
 Počkat, co to tam je?`,
 		successChance: 70,
 		successNodeId: "decision_2c_ate_it",
+		failNodeId: "decision_2d_no_clue",
+	},
+
+	// =========================================================================
+	// DECISION 2d: No clue what happened to your lunch
+	// =========================================================================
+	decision_2d_no_clue: {
+		id: "decision_2d_no_clue",
+		type: "decision",
+		narrative: `🤷 Zkontroloval jsi všude - pod stolem, v koši, v autě. Nic. Tvůj oběd zmizel beze stopy.
+
+Kolegyně se tě ptá: "Co je? Vypadáš naštvaně."`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Poslat email všem",
+				description: "Napíšeš email celé kanceláři s prosbou o informace.",
+				baseReward: 100,
+				riskMultiplier: 1.0,
+				nextNodeId: "outcome_email_everyone",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Nechat to být",
+				description: "Prostě si koupíš nový oběd a zapomeneš na to.",
+				baseReward: 0,
+				riskMultiplier: 0.5,
+				nextNodeId: "outcome_move_on",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Emailing everyone
+	// =========================================================================
+	outcome_email_everyone: {
+		id: "outcome_email_everyone",
+		type: "outcome",
+		narrative: `📧 Píšeš email: "Dobrý den, dnes mi z lednice zmizel oběd. Pokud někdo něco ví, ozvěte se."
+
+Čekáš na odpovědi...`,
+		successChance: 70,
+		successNodeId: "terminal_email_success",
 		failNodeId: "terminal_someone_took_it",
+	},
+
+	terminal_email_success: {
+		id: "terminal_email_success",
+		type: "terminal",
+		narrative: `📬 **Email pomohl**
+
+Uklízečka odpověděla: "Promiňte, lednici jsme čistili kvůli inspekci. Váš oběd je v náhradní lednici na 3. patře!"
+
+Získáváš svůj oběd zpět a **+100 mincí** za detektivní práci.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	// =========================================================================
+	// OUTCOME: Moving on
+	// =========================================================================
+	outcome_move_on: {
+		id: "outcome_move_on",
+		type: "outcome",
+		narrative: `🚶 Jdeš si koupit sendvič do bufetu. Cestou potkáváš kolegu, který vypadá provinile...`,
+		successChance: 70,
+		successNodeId: "terminal_accidental_discovery",
+		failNodeId: "terminal_someone_took_it",
+	},
+
+	terminal_accidental_discovery: {
+		id: "terminal_accidental_discovery",
+		type: "terminal",
+		narrative: `🔍 **Náhodný objev**
+
+Kolega se přiznal sám od sebe: "Promiň, myslel jsem, že je to ničí, vypadala jako zbytky..."
+
+Koupil ti oběd jako omluvu. Získáváš **+80 mincí** a klid na duši.`,
+		coinsChange: 80,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
 	},
 
 	// =========================================================================
@@ -212,7 +293,7 @@ Počkat, co to tam je?`,
 				description: "Zachráníš si důstojnost tím, že všem koupíš pizzu.",
 				baseReward: -200,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_pizza_dignity",
+				nextNodeId: "outcome_order_pizza",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -237,6 +318,56 @@ Počkat, co to tam je?`,
 		successChance: 70,
 		successNodeId: "terminal_good_laughs",
 		failNodeId: "terminal_mocked",
+	},
+
+	// =========================================================================
+	// OUTCOME: Giving up search
+	// =========================================================================
+	outcome_give_up: {
+		id: "outcome_give_up",
+		type: "outcome",
+		narrative: `🍞 Jdeš do bufetu koupit sendvič. Na chodbě potkáš kolegu, který se tě ptá, proč vypadáš naštvaně...`,
+		successChance: 70,
+		successNodeId: "terminal_let_it_go",
+		failNodeId: "terminal_hangry_mistake",
+	},
+
+	terminal_hangry_mistake: {
+		id: "terminal_hangry_mistake",
+		type: "terminal",
+		narrative: `😤 **Hlad = špatné rozhodnutí**
+
+Hladový a naštvaný jsi nechtěně odsekl šéfovi. "Nemám čas, řeším důležitější věci!"
+
+Šéf se zarazil. Ztrácíš **-100 mincí** za neuctivost.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Ordering pizza for everyone
+	// =========================================================================
+	outcome_order_pizza: {
+		id: "outcome_order_pizza",
+		type: "outcome",
+		narrative: `🍕 Objednáváš 5 pizz pro celou kancelář. Doručovatel přijíždí za 30 minut...`,
+		successChance: 70,
+		successNodeId: "terminal_pizza_dignity",
+		failNodeId: "terminal_pizza_disaster",
+	},
+
+	terminal_pizza_disaster: {
+		id: "terminal_pizza_disaster",
+		type: "terminal",
+		narrative: `🔥 **Pizza katastrofa**
+
+Doručovatel se ztratil a pizza dorazila studená po 2 hodinách. Kolegové se smějí: "Nejdřív ztratíš oběd, pak i pizzu!"
+
+Stojí tě to **-300 mincí** a další trapas.`,
+		coinsChange: -300,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 
 	// =========================================================================
@@ -409,7 +540,7 @@ export const lunchThiefBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 18,
+	expectedPaths: 28,
 	averageReward: 150,
 	maxPossibleReward: 400, // Security -> Public confrontation success
 	minPossibleReward: -350, // Security -> Public confrontation fail (backfire)

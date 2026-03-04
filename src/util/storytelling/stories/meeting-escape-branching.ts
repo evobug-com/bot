@@ -129,7 +129,7 @@ Telefon schovávás a zůstáváš. Meeting pokračuje.`,
 				description: "Vypneš mozek a čekáš, až to skončí. Přežití mode.",
 				baseReward: 50,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_survived",
+				nextNodeId: "outcome_zone_out",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -137,7 +137,7 @@ Telefon schovávás a zůstáváš. Meeting pokračuje.`,
 				description: '"Promiňte, ale jaký je vlastně cíl tohoto meetingu?"',
 				baseReward: 200,
 				riskMultiplier: 1.3,
-				nextNodeId: "terminal_meeting_ended",
+				nextNodeId: "outcome_complain",
 			},
 		},
 	},
@@ -153,7 +153,7 @@ Telefon schovávás a zůstáváš. Meeting pokračuje.`,
 Všichni se otáčí. Šéfův šéf přikyvuje. "Samozřejmě!"`,
 		successChance: 70,
 		successNodeId: "decision_2c_hero",
-		failNodeId: "terminal_endless_meeting",
+		failNodeId: "decision_2d_backfired",
 	},
 
 	// =========================================================================
@@ -242,7 +242,84 @@ Všichni vypadají nadějně. Šéfův šéf přemýšlí...`,
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (11 endings)
+	// DECISION 2d: Participation backfired
+	// =========================================================================
+	decision_2d_backfired: {
+		id: "decision_2d_backfired",
+		type: "decision",
+		narrative: `😬 **ZPĚTNÝ EFEKT!** Tvůj vstup spustil lavinu otázek. Šéfův šéf chce, abys "rozvil myšlenku".
+
+Meeting se protahuje a ty jsi v centru pozornosti. Co teď?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Improvizovat",
+				description: "Zkusíš nějak smysluplně odpovědět a doufáš v konec.",
+				baseReward: 150,
+				riskMultiplier: 1.1,
+				nextNodeId: "outcome_improvise",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Přiznat neznalost",
+				description: '"Vlastně jsem jen chtěl říct, že nemám dostatek kontextu."',
+				baseReward: 50,
+				riskMultiplier: 0.8,
+				nextNodeId: "outcome_admit_ignorance",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Improvising in meeting
+	// =========================================================================
+	outcome_improvise: {
+		id: "outcome_improvise",
+		type: "outcome",
+		narrative: `🎭 Začínáš improvizovat. Používáš buzzwordy jako "synergie" a "stakeholder alignment"...`,
+		successChance: 70,
+		successNodeId: "terminal_improvise_success",
+		failNodeId: "terminal_endless_meeting",
+	},
+
+	// =========================================================================
+	// OUTCOME: Admitting ignorance
+	// =========================================================================
+	outcome_admit_ignorance: {
+		id: "outcome_admit_ignorance",
+		type: "outcome",
+		narrative: `🤷 "Vlastně... nemám k tomu dostatek informací." Šéfův šéf zvedá obočí...`,
+		successChance: 70,
+		successNodeId: "terminal_honest_escape",
+		failNodeId: "terminal_embarrassed",
+	},
+
+	// =========================================================================
+	// OUTCOME: Zoning out
+	// =========================================================================
+	outcome_zone_out: {
+		id: "outcome_zone_out",
+		type: "outcome",
+		narrative: `😶 Vypínáš mozek. Díváš se z okna a přemýšlíš o večeři...`,
+		successChance: 70,
+		successNodeId: "terminal_survived",
+		failNodeId: "terminal_caught_zoning",
+	},
+
+	// =========================================================================
+	// OUTCOME: Complaining loudly
+	// =========================================================================
+	outcome_complain: {
+		id: "outcome_complain",
+		type: "outcome",
+		narrative: `🗣️ "Promiňte, ale jaký je vlastně cíl tohoto meetingu?" Ticho. Všichni se otáčí...`,
+		successChance: 70,
+		successNodeId: "terminal_meeting_ended",
+		failNodeId: "terminal_complain_backfire",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (11 endings + 5 new terminals)
 	// =========================================================================
 
 	// Positive endings (7)
@@ -410,6 +487,71 @@ Ztrácíš **-150 mincí** na kafe, abys přežil.`,
 		coinsChange: -150,
 		isPositiveEnding: false,
 		xpMultiplier: 0.6,
+	},
+
+	terminal_improvise_success: {
+		id: "terminal_improvise_success",
+		type: "terminal",
+		narrative: `🎯 **IMPROVIZACE ZABILA!**
+
+Tvoje buzzwordy fungovaly! Šéfův šéf přikyvuje. "Přesně tohle jsem chtěl slyšet."
+
+Meeting končí. Získáváš **+200 mincí** za přesvědčivý výkon.`,
+		coinsChange: 200,
+		isPositiveEnding: true,
+		xpMultiplier: 1.2,
+	},
+
+	terminal_honest_escape: {
+		id: "terminal_honest_escape",
+		type: "terminal",
+		narrative: `🙏 **ČESTNÝ ÚNIK**
+
+Šéfův šéf kývá. "Oceňuju upřímnost. Pošleme ti zápis."
+
+Jsi volný! Získáváš **+80 mincí** za diplomatický přístup.`,
+		coinsChange: 80,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_embarrassed: {
+		id: "terminal_embarrassed",
+		type: "terminal",
+		narrative: `😳 **TRAPAS**
+
+"A proč jsi tu, když nemáš kontext?" ptá se šéfův šéf. Všichni se dívají.
+
+Sedíš zbytek meetingu v rozpacích. Ztrácíš **-80 mincí** respektu.`,
+		coinsChange: -80,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_caught_zoning: {
+		id: "terminal_caught_zoning",
+		type: "terminal",
+		narrative: `😴 **PŘISTIŽEN!**
+
+"A ty, co si o tom myslíš?" ptá se šéfův šéf. Nemáš tušení, o čem mluví.
+
+Trapné ticho. Ztrácíš **-100 mincí** a důvěryhodnost.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_complain_backfire: {
+		id: "terminal_complain_backfire",
+		type: "terminal",
+		narrative: `😡 **STÍŽNOST SE OBRÁTILA PROTI TOBĚ**
+
+"Cíl meetingu je jasný každému, kdo dává pozor!" říká šéfův šéf naštvaně.
+
+Dostáváš důtku za nerespekt. Ztrácíš **-120 mincí**.`,
+		coinsChange: -120,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
 	},
 };
 

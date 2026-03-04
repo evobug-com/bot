@@ -125,7 +125,7 @@ Co teď?`,
 				description: "Ti určitě budou vědět. Profesionální přístup.",
 				baseReward: 100,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_it_guru",
+				nextNodeId: "outcome_call_it",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -213,7 +213,7 @@ Tohle je zlatý důl! Budeš to sdílet s kolegy, nebo si to necháš pro sebe?`
 				description: "Tvůj vlastní tajný barista. Nikdo se nedozví.",
 				baseReward: 150,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_personal_barista",
+				nextNodeId: "outcome_keep_secret",
 			},
 		},
 	},
@@ -242,7 +242,7 @@ Co uděláš?!`,
 				description: "Tohle není tvůj problém. Záchrana vlastní kůže!",
 				baseReward: -100,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_coward",
+				nextNodeId: "outcome_run_away",
 			},
 		},
 	},
@@ -274,7 +274,43 @@ Lidé se začínají scházet...`,
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (12 endings)
+	// OUTCOME: Calling IT department
+	// =========================================================================
+	outcome_call_it: {
+		id: "outcome_call_it",
+		type: "outcome",
+		narrative: `📞 Voláš IT oddělení. "Hele, ten nový kávovar... nevíte jak na něj?"`,
+		successChance: 70,
+		successNodeId: "terminal_it_guru",
+		failNodeId: "terminal_it_no_help",
+	},
+
+	// =========================================================================
+	// OUTCOME: Keeping the secret
+	// =========================================================================
+	outcome_keep_secret: {
+		id: "outcome_keep_secret",
+		type: "outcome",
+		narrative: `🤫 Rozhlížíš se, jestli tě někdo nesleduje. Tajně si děláš svou speciální kávu...`,
+		successChance: 70,
+		successNodeId: "terminal_personal_barista",
+		failNodeId: "terminal_secret_discovered",
+	},
+
+	// =========================================================================
+	// OUTCOME: Running away from kitchen
+	// =========================================================================
+	outcome_run_away: {
+		id: "outcome_run_away",
+		type: "outcome",
+		narrative: `🏃 Otáčíš se a běžíš ke dveřím. Kávovar za tebou stále pípe...`,
+		successChance: 70,
+		successNodeId: "terminal_coward",
+		failNodeId: "terminal_coward_caught",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (12 endings + 3 new failure terminals)
 	// =========================================================================
 
 	// Positive endings (8)
@@ -446,6 +482,45 @@ Všichni viděli jak jsi utekl. **-100 mincí** ztráty respektu a pár vtipů n
 		coinsChange: -100,
 		isPositiveEnding: false,
 		xpMultiplier: 0.7,
+	},
+
+	terminal_it_no_help: {
+		id: "terminal_it_no_help",
+		type: "terminal",
+		narrative: `📵 **IT NEPOMŮŽE**
+
+IT oddělení ti říká, že kávovary nejsou v jejich kompetenci. "Zavolej facility management."
+
+Nikdo nepřijde a ty odcházíš bez kávy. **-30 mincí** za promarněný čas.`,
+		coinsChange: -30,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_secret_discovered: {
+		id: "terminal_secret_discovered",
+		type: "terminal",
+		narrative: `👀 **ODHALENO!**
+
+Kolegyně tě přistihla, jak si děláš tajnou kávu. "A proč to nesdílíš s ostatními?"
+
+Teď tě všichni považují za sobce. **-80 mincí** ztráty respektu.`,
+		coinsChange: -80,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_coward_caught: {
+		id: "terminal_coward_caught",
+		type: "terminal",
+		narrative: `🚨 **CHYCEN NA ÚTĚKU!**
+
+Šéf tě vidí, jak utíkáš z kuchyňky. "Co se děje?" Vrátí tě zpět, kde kávovar stále pípe.
+
+Musíš to uklidit sám. **-150 mincí** za úklid a servisní zásah.`,
+		coinsChange: -150,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
 	},
 };
 

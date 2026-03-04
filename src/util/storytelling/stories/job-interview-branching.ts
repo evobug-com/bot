@@ -135,7 +135,7 @@ Teď přichází live coding test. Můžeš dát náročný úkol a zjistit skut
 				description: "Není to ono, nemá cenu ztrácet čas.",
 				baseReward: 150,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_missed_opportunity",
+				nextNodeId: "outcome_end_early",
 			},
 		},
 	},
@@ -218,7 +218,7 @@ Máš kontakty na reference. Chceš je zkontrolovat, nebo už mu věříš?`,
 				description: "První dojem je důležitý, reference jsou formalita.",
 				baseReward: 300,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_trust_success",
+				nextNodeId: "outcome_trust_intuition",
 			},
 		},
 	},
@@ -239,7 +239,7 @@ Máš kontakty na reference. Chceš je zkontrolovat, nebo už mu věříš?`,
 				description: "Řekneš CEO pravdu - není to dobrý kandidát.",
 				baseReward: 200,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_respect_earned",
+				nextNodeId: "outcome_honest_feedback",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -276,6 +276,48 @@ Počkáš, jak to dopadne...`,
 		successChance: 70,
 		successNodeId: "terminal_networking_bonus",
 		failNodeId: "terminal_ceo_angry",
+	},
+
+	// =========================================================================
+	// OUTCOME: Ending interview early
+	// =========================================================================
+	outcome_end_early: {
+		id: "outcome_end_early",
+		type: "outcome",
+		narrative: `🤝 "Děkujeme za váš čas, ozveme se vám." Ukončuješ pohovor diplomaticky...
+
+Kandidát odchází a ty přemýšlíš, jestli to bylo správné rozhodnutí...`,
+		successChance: 70,
+		successNodeId: "terminal_missed_opportunity",
+		failNodeId: "terminal_bad_review",
+	},
+
+	// =========================================================================
+	// OUTCOME: Trusting intuition
+	// =========================================================================
+	outcome_trust_intuition: {
+		id: "outcome_trust_intuition",
+		type: "outcome",
+		narrative: `🤝 Rozhodneš se věřit svému instinktu a přeskočíš reference. Nabízíš kandidátovi pozici...
+
+Čekáš, jak se zapojí do týmu...`,
+		successChance: 70,
+		successNodeId: "terminal_trust_success",
+		failNodeId: "terminal_trust_failed",
+	},
+
+	// =========================================================================
+	// OUTCOME: Honest feedback to CEO
+	// =========================================================================
+	outcome_honest_feedback: {
+		id: "outcome_honest_feedback",
+		type: "outcome",
+		narrative: `📞 Voláš CEO zpět: "Musím být upřímný - váš synovec na pohovoru nebyl profesionální..."
+
+CEO na druhé straně mlčí...`,
+		successChance: 70,
+		successNodeId: "terminal_respect_earned",
+		failNodeId: "terminal_ceo_offended",
 	},
 
 	// =========================================================================
@@ -385,6 +427,45 @@ Nic nezískáváš ani neztrácíš. Ale přemýšlíš, co kdyby...`,
 		coinsChange: 0,
 		isPositiveEnding: true,
 		xpMultiplier: 0.8,
+	},
+
+	terminal_bad_review: {
+		id: "terminal_bad_review",
+		type: "terminal",
+		narrative: `📝 **Špatná recenze**
+
+Kandidát napsal negativní review: "Pohovor trval 10 minut, ani mi nedali šanci."
+
+HR tě volá na kobereček. Ztrácíš **-100 mincí** na opravu reputace.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_trust_failed: {
+		id: "terminal_trust_failed",
+		type: "terminal",
+		narrative: `😕 **Intuice selhala**
+
+Kandidát vypadal skvěle, ale po měsíci se ukázalo, že lhal o zkušenostech. Musíš ho propustit.
+
+Ztrácíš **-150 mincí** na nový nábor.`,
+		coinsChange: -150,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_ceo_offended: {
+		id: "terminal_ceo_offended",
+		type: "terminal",
+		narrative: `😤 **CEO uražen**
+
+"Jak si dovoluješ takhle mluvit o mé rodině?" CEO je naštvaný.
+
+Přišel jsi o jeho přízeň. Ztrácíš **-200 mincí** na ušlých bonusech.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
 	},
 
 	// Negative endings (4)

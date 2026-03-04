@@ -158,7 +158,7 @@ Co je lepší - vyladit to, co máš, nebo přidat další cool features?`,
 				description: "Rychle udělat jednodušší demo, které funguje. Kreativní řešení.",
 				baseReward: 250,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_creative_pivot",
+				nextNodeId: "outcome_pivot",
 			},
 		},
 	},
@@ -190,7 +190,7 @@ Jít na hlavní cenu, nebo zkusit prodat projekt?`,
 				description: "Zaměřit se na ten startup. Jistá odměna, možná menší než hlavní cena.",
 				baseReward: 400,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_acquisition",
+				nextNodeId: "outcome_sell",
 			},
 		},
 	},
@@ -219,7 +219,7 @@ Frontend dev s ním souhlasí, ale backend dev říká, že je to nesmysl. Všic
 				description: "Rozhodnout sám a ignorovat námitky. Rychlé, ale může rozbít tým.",
 				baseReward: 100,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_leadership_fail",
+				nextNodeId: "outcome_takeover",
 			},
 		},
 	},
@@ -292,6 +292,87 @@ Tým se dívá jeden na druhého...`,
 		successChance: 70,
 		successNodeId: "terminal_teamwork",
 		failNodeId: "terminal_team_drama",
+	},
+
+	// =========================================================================
+	// OUTCOME: Pivoting to new idea
+	// =========================================================================
+	outcome_pivot: {
+		id: "outcome_pivot",
+		type: "outcome",
+		narrative: `🔄 Zahodíš původní plán a začneš od nuly. Jednoduchý nápad, rychlá implementace...
+
+Hodinu před deadlinem máš funkční demo. Bude to stačit?`,
+		successChance: 70,
+		successNodeId: "terminal_creative_pivot",
+		failNodeId: "terminal_pivot_flop",
+	},
+
+	terminal_pivot_flop: {
+		id: "terminal_pivot_flop",
+		type: "terminal",
+		narrative: `😞 **Pivot selhal**
+
+Nový nápad byl příliš jednoduchý. Porota to ohodnotila jako "školní projekt".
+
+Získáváš **+50 mincí** za účast, ale je to zklamání.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Selling project to startup
+	// =========================================================================
+	outcome_sell: {
+		id: "outcome_sell",
+		type: "outcome",
+		narrative: `💼 Oslovuješ zástupce startupu. Představuješ projekt a jeho potenciál...
+
+Zástupce si prohlíží kód a přemýšlí...`,
+		successChance: 70,
+		successNodeId: "terminal_acquisition",
+		failNodeId: "terminal_lowball_offer",
+	},
+
+	terminal_lowball_offer: {
+		id: "terminal_lowball_offer",
+		type: "terminal",
+		narrative: `💸 **Směšná nabídka**
+
+Startup nabídl zlomek toho, co projekt stojí. "Bereme to za 50 babek nebo nic."
+
+Odmítáš, ale prohráváš i soutěž. Získáváš **+50 mincí** za zkušenost.`,
+		coinsChange: 50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	// =========================================================================
+	// OUTCOME: Taking over the team
+	// =========================================================================
+	outcome_takeover: {
+		id: "outcome_takeover",
+		type: "outcome",
+		narrative: `👊 "Dost diskuzí! Děláme to takhle!" Rozhodneš sám a ignoruješ námitky.
+
+Tým pracuje, ale atmosféra je ledová...`,
+		successChance: 70,
+		successNodeId: "terminal_leadership_fail",
+		failNodeId: "terminal_team_revolt",
+	},
+
+	terminal_team_revolt: {
+		id: "terminal_team_revolt",
+		type: "terminal",
+		narrative: `💥 **Vzpoura týmu**
+
+Designer odešel. Frontend dev ho následoval. Zůstal jsi sám s backend devem, který ti řekl: "Jsi toxic."
+
+Projekt nedokončen. Ztrácíš **-300 mincí** a reputaci.`,
+		coinsChange: -300,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
 	},
 
 	// =========================================================================
@@ -484,7 +565,7 @@ export const hackathonBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 24,
+	expectedPaths: 30,
 	averageReward: 300,
 	maxPossibleReward: 1000, // Team + success + present + winner (150 + 100 + 700)
 	minPossibleReward: -300, // Solo + failure + fix fail (complete crash)

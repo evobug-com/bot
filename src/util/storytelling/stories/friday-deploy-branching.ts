@@ -195,7 +195,7 @@ Produkce není dotčená, ale máš problém. Už je 17:00...`,
 		narrative: `⏰ Rozhodneš se počkat do pondělí. Víkend v klidu, ale šéf se ptá, proč to není hotové...`,
 		successChance: 70,
 		successNodeId: "decision_2c_monday",
-		failNodeId: "terminal_boss_angry",
+		failNodeId: "decision_2d_boss_angry",
 	},
 
 	// =========================================================================
@@ -249,6 +249,61 @@ Co teď s deployem?`,
 		successChance: 70,
 		successNodeId: "terminal_bug_found_early",
 		failNodeId: "terminal_overthinking",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Boss is angry about delay
+	// =========================================================================
+	decision_2d_boss_angry: {
+		id: "decision_2d_boss_angry",
+		type: "decision",
+		narrative: `😤 Šéf ti píše v pátek večer: "Feature měla být dnes! Zákazník čeká!"
+
+Jak zareaguješ?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Vysvětlit rozhodnutí",
+				description: "Klidně vysvětlíš, proč jsi čekal - bezpečnost je na prvním místě.",
+				baseReward: 100,
+				riskMultiplier: 0.9,
+				nextNodeId: "outcome_explain_decision",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Nasadit přes víkend",
+				description: "Zkusíš to nasadit v sobotu ráno a zachránit situaci.",
+				baseReward: 200,
+				riskMultiplier: 1.2,
+				nextNodeId: "outcome_weekend_deploy",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Explaining decision
+	// =========================================================================
+	outcome_explain_decision: {
+		id: "outcome_explain_decision",
+		type: "outcome",
+		narrative: `📧 "Rozhodl jsem se počkat kvůli riziku. V pondělí to nasadím hned ráno."
+
+Šéf čte tvou zprávu...`,
+		successChance: 70,
+		successNodeId: "terminal_understood",
+		failNodeId: "terminal_boss_angry",
+	},
+
+	// =========================================================================
+	// OUTCOME: Weekend deploy
+	// =========================================================================
+	outcome_weekend_deploy: {
+		id: "outcome_weekend_deploy",
+		type: "outcome",
+		narrative: `☕ Sobota ráno, 8:00. Sedíš u počítače a spouštíš deploy...`,
+		successChance: 70,
+		successNodeId: "terminal_weekend_hero",
+		failNodeId: "terminal_boss_angry",
 	},
 
 	// =========================================================================
@@ -374,6 +429,32 @@ Získáváš **+50 mincí** za opatrnost, i když trochu přehnanou.`,
 		coinsChange: 50,
 		isPositiveEnding: true,
 		xpMultiplier: 0.9,
+	},
+
+	terminal_understood: {
+		id: "terminal_understood",
+		type: "terminal",
+		narrative: `👍 **Pochopení**
+
+Šéf odpovídá: "OK, chápu. Bezpečnost je důležitá. Ale v pondělí to musí být první věc."
+
+Získáváš **+100 mincí** za komunikaci.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
+	},
+
+	terminal_weekend_hero: {
+		id: "terminal_weekend_hero",
+		type: "terminal",
+		narrative: `🦸 **Víkendový hrdina!**
+
+Deploy v sobotu proběhl perfektně. Šéf je nadšený a zákazník spokojený.
+
+"Díky, že jsi to zvládl!" Získáváš **+300 mincí** za extra úsilí.`,
+		coinsChange: 300,
+		isPositiveEnding: true,
+		xpMultiplier: 1.3,
 	},
 
 	// Negative endings (5)

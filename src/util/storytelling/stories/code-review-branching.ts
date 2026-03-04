@@ -127,7 +127,7 @@ Diskuze se zahřívá. Ostatní kolegové sledují.`,
 				description: "Navrhuješ změnit polovinu věcí. Něco za něco.",
 				baseReward: 250,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_middle_ground",
+				nextNodeId: "outcome_compromise",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -135,7 +135,7 @@ Diskuze se zahřívá. Ostatní kolegové sledují.`,
 				description: "Nemáš energii na hádky. Přepíšeš to jak chce.",
 				baseReward: 50,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_defeated",
+				nextNodeId: "outcome_give_up",
 			},
 		},
 	},
@@ -151,7 +151,7 @@ Diskuze se zahřívá. Ostatní kolegové sledují.`,
 Trvá to další dva dny, ale PR je konečně approved.`,
 		successChance: 70,
 		successNodeId: "decision_2c_attitude",
-		failNodeId: "terminal_still_wrong",
+		failNodeId: "decision_2d_still_wrong",
 	},
 
 	// =========================================================================
@@ -178,7 +178,7 @@ Jak se k tomu postavíš?`,
 				description: "Vnitřně zuříš, ale mlčíš. Tenhle boj jsi prohrál.",
 				baseReward: 100,
 				riskMultiplier: 0.9,
-				nextNodeId: "terminal_bitter",
+				nextNodeId: "outcome_resentment",
 			},
 		},
 	},
@@ -223,6 +223,97 @@ Ráno posíláš výsledky Milanovi s komentářem: "Data mluví za vše."`,
 		successChance: 70,
 		successNodeId: "terminal_growth",
 		failNodeId: "terminal_imposter",
+	},
+
+	// =========================================================================
+	// OUTCOME: Compromise attempt
+	// =========================================================================
+	outcome_compromise: {
+		id: "outcome_compromise",
+		type: "outcome",
+		narrative: `🤝 "Milan, co kdybych změnil tyhle 3 věci, ale tyhle 2 nechal? Fair deal?"
+
+Milan přemýšlí...`,
+		successChance: 70,
+		successNodeId: "terminal_middle_ground",
+		failNodeId: "terminal_compromise_rejected",
+	},
+
+	// =========================================================================
+	// OUTCOME: Giving up
+	// =========================================================================
+	outcome_give_up: {
+		id: "outcome_give_up",
+		type: "outcome",
+		narrative: `😔 Začínáš přepisovat všechno podle Milanových požadavků. Tři dny práce navíc...`,
+		successChance: 70,
+		successNodeId: "terminal_defeated",
+		failNodeId: "terminal_burnout",
+	},
+
+	// =========================================================================
+	// OUTCOME: Silent resentment
+	// =========================================================================
+	outcome_resentment: {
+		id: "outcome_resentment",
+		type: "outcome",
+		narrative: `😤 Mlčíš, ale uvnitř zuříš. Snažíš se na to nemyslet a pokračovat v práci...`,
+		successChance: 70,
+		successNodeId: "terminal_bitter",
+		failNodeId: "terminal_passive_aggressive",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Code still wrong after accepting
+	// =========================================================================
+	decision_2d_still_wrong: {
+		id: "decision_2d_still_wrong",
+		type: "decision",
+		narrative: `🔴 **Problém!** Přepsal jsi kód podle Milana, ale v produkci to crashlo. Milan říká, že to není jeho chyba.
+
+Musíš to rychle opravit. Jak na to?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Vrátit původní kód",
+				description: "Tvůj původní kód fungoval. Vrátíš ho a dokážeš, že jsi měl pravdu.",
+				baseReward: 200,
+				riskMultiplier: 1.1,
+				nextNodeId: "outcome_revert_code",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Opravit Milanovu verzi",
+				description: "Zkusíš opravit problémy v Milanově přístupu.",
+				baseReward: 100,
+				riskMultiplier: 1.0,
+				nextNodeId: "outcome_fix_milan",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Reverting to original code
+	// =========================================================================
+	outcome_revert_code: {
+		id: "outcome_revert_code",
+		type: "outcome",
+		narrative: `↩️ Vracíš svůj původní kód a deployjuješ hotfix...`,
+		successChance: 70,
+		successNodeId: "terminal_vindicated_revert",
+		failNodeId: "terminal_still_wrong",
+	},
+
+	// =========================================================================
+	// OUTCOME: Fixing Milan's version
+	// =========================================================================
+	outcome_fix_milan: {
+		id: "outcome_fix_milan",
+		type: "outcome",
+		narrative: `🔧 Hledáš chybu v Milanově přístupu a snažíš se ji opravit...`,
+		successChance: 70,
+		successNodeId: "terminal_fixed_milan",
+		failNodeId: "terminal_still_wrong",
 	},
 
 	// =========================================================================
@@ -318,6 +409,71 @@ Získáváš **+50 mincí** za dokončení.`,
 		coinsChange: 50,
 		isPositiveEnding: true,
 		xpMultiplier: 0.7,
+	},
+
+	terminal_compromise_rejected: {
+		id: "terminal_compromise_rejected",
+		type: "terminal",
+		narrative: `❌ **Kompromis odmítnut**
+
+Milan nepřijímá. "Buď to přepíšeš celé, nebo to nemergneme."
+
+Musíš to přepsat. Ztrácíš **-100 mincí** a čas navíc.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_burnout: {
+		id: "terminal_burnout",
+		type: "terminal",
+		narrative: `🔥 **Vyhoření**
+
+Tři dny přepisování cizího kódu tě vyčerpaly. Cítíš se prázdný.
+
+Ztrácíš **-150 mincí** na léčbu stresu.`,
+		coinsChange: -150,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_passive_aggressive: {
+		id: "terminal_passive_aggressive",
+		type: "terminal",
+		narrative: `😒 **Pasivní agrese**
+
+Tvůj hněv se projevuje v komunikaci. Kolegové si všímají, že jsi jiný.
+
+Atmosféra v týmu se zhoršuje. Ztrácíš **-100 mincí** na team building.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
+	},
+
+	terminal_vindicated_revert: {
+		id: "terminal_vindicated_revert",
+		type: "terminal",
+		narrative: `✅ **Původní kód funguje!**
+
+Tvůj revert opravil produkci. Milan musí uznat, že jeho přístup měl chybu.
+
+Získáváš **+200 mincí** a respekt týmu za rychlý hotfix.`,
+		coinsChange: 200,
+		isPositiveEnding: true,
+		xpMultiplier: 1.2,
+	},
+
+	terminal_fixed_milan: {
+		id: "terminal_fixed_milan",
+		type: "terminal",
+		narrative: `🔧 **Opraveno!**
+
+Našel jsi chybu v Milanově přístupu a opravil ji. Produkce je zpět.
+
+Milan se neozval, ale ty víš, že jsi zachránil situaci. Získáváš **+150 mincí**.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.1,
 	},
 
 	// Negative endings (4)

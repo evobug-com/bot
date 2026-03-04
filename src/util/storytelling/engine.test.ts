@@ -311,17 +311,57 @@ describe("Story Engine", () => {
 						type: "outcome",
 						narrative: "Rolling...",
 						successChance: 70,
-						successNodeId: "terminal_1",
-						failNodeId: "terminal_2",
+						successNodeId: "decision_2a",
+						failNodeId: "decision_2b",
 					} as StoryNode,
 					outcome_2: {
 						id: "outcome_2",
 						type: "outcome",
 						narrative: "Rolling...",
 						successChance: 70,
-						successNodeId: "terminal_3",
-						failNodeId: "terminal_4",
+						successNodeId: "decision_2c",
+						failNodeId: "decision_2d",
 					} as StoryNode,
+					decision_2a: {
+						id: "decision_2a",
+						type: "decision",
+						narrative: "Choose again",
+						choices: {
+							choiceX: { id: "choiceX", label: "A1", description: "A1", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2a" },
+							choiceY: { id: "choiceY", label: "A2", description: "A2", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2a" },
+						},
+					} as StoryNode,
+					decision_2b: {
+						id: "decision_2b",
+						type: "decision",
+						narrative: "Choose again",
+						choices: {
+							choiceX: { id: "choiceX", label: "B1", description: "B1", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2b" },
+							choiceY: { id: "choiceY", label: "B2", description: "B2", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2b" },
+						},
+					} as StoryNode,
+					decision_2c: {
+						id: "decision_2c",
+						type: "decision",
+						narrative: "Choose again",
+						choices: {
+							choiceX: { id: "choiceX", label: "C1", description: "C1", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2c" },
+							choiceY: { id: "choiceY", label: "C2", description: "C2", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2c" },
+						},
+					} as StoryNode,
+					decision_2d: {
+						id: "decision_2d",
+						type: "decision",
+						narrative: "Choose again",
+						choices: {
+							choiceX: { id: "choiceX", label: "D1", description: "D1", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2d" },
+							choiceY: { id: "choiceY", label: "D2", description: "D2", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2d" },
+						},
+					} as StoryNode,
+					outcome_2a: { id: "outcome_2a", type: "outcome", narrative: "Rolling...", successChance: 70, successNodeId: "terminal_1", failNodeId: "terminal_2" } as StoryNode,
+					outcome_2b: { id: "outcome_2b", type: "outcome", narrative: "Rolling...", successChance: 70, successNodeId: "terminal_3", failNodeId: "terminal_4" } as StoryNode,
+					outcome_2c: { id: "outcome_2c", type: "outcome", narrative: "Rolling...", successChance: 70, successNodeId: "terminal_5", failNodeId: "terminal_6" } as StoryNode,
+					outcome_2d: { id: "outcome_2d", type: "outcome", narrative: "Rolling...", successChance: 70, successNodeId: "terminal_7", failNodeId: "terminal_8" } as StoryNode,
 					// 8 terminal nodes to pass minimum requirement
 					terminal_1: { id: "terminal_1", type: "terminal", narrative: "T1", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
 					terminal_2: { id: "terminal_2", type: "terminal", narrative: "T2", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
@@ -389,6 +429,114 @@ describe("Story Engine", () => {
 			const errors = engine.validateStory(testStory);
 			// testStory only has 4 terminals, minimum is 8
 			expect(errors.some(e => e.includes("terminal nodes"))).toBe(true);
+		});
+
+		it("should detect outcome1 → terminal shortcuts", () => {
+			const shortcutStory: BranchingStory = {
+				id: "shortcut_outcome1",
+				title: "Shortcut Story",
+				emoji: "⚠️",
+				startNodeId: "intro",
+				nodes: {
+					intro: { id: "intro", type: "intro", narrative: "Intro", nextNodeId: "decision_1" } as StoryNode,
+					decision_1: {
+						id: "decision_1", type: "decision", narrative: "Choose",
+						choices: {
+							choiceX: { id: "choiceX", label: "A", description: "A", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_1" },
+							choiceY: { id: "choiceY", label: "B", description: "B", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2" },
+						},
+					} as StoryNode,
+					outcome_1: { id: "outcome_1", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "decision_2", failNodeId: "terminal_shortcut" } as StoryNode,
+					outcome_2: { id: "outcome_2", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "decision_2b", failNodeId: "decision_2b" } as StoryNode,
+					decision_2: { id: "decision_2", type: "decision", narrative: "D2", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_3" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_3" } } } as StoryNode,
+					decision_2b: { id: "decision_2b", type: "decision", narrative: "D2b", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_3" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_3" } } } as StoryNode,
+					outcome_3: { id: "outcome_3", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_1", failNodeId: "terminal_2" } as StoryNode,
+					terminal_shortcut: { id: "terminal_shortcut", type: "terminal", narrative: "Shortcut", coinsChange: 0, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+					terminal_1: { id: "terminal_1", type: "terminal", narrative: "T1", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_2: { id: "terminal_2", type: "terminal", narrative: "T2", coinsChange: -100, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+				},
+				expectedPaths: 4, averageReward: 0, maxPossibleReward: 100, minPossibleReward: -100,
+			};
+
+			const errors = engine.validateStory(shortcutStory);
+			expect(errors.some(e => e.includes("Shortcut: outcome1") && e.includes("fail goes directly to terminal"))).toBe(true);
+		});
+
+		it("should detect decision2 → terminal shortcuts", () => {
+			const shortcutStory: BranchingStory = {
+				id: "shortcut_decision2",
+				title: "Shortcut Story",
+				emoji: "⚠️",
+				startNodeId: "intro",
+				nodes: {
+					intro: { id: "intro", type: "intro", narrative: "Intro", nextNodeId: "decision_1" } as StoryNode,
+					decision_1: {
+						id: "decision_1", type: "decision", narrative: "Choose",
+						choices: {
+							choiceX: { id: "choiceX", label: "A", description: "A", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_1" },
+							choiceY: { id: "choiceY", label: "B", description: "B", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_1" },
+						},
+					} as StoryNode,
+					outcome_1: { id: "outcome_1", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "decision_2", failNodeId: "decision_2" } as StoryNode,
+					decision_2: {
+						id: "decision_2", type: "decision", narrative: "D2",
+						choices: {
+							choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2" },
+							choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "terminal_shortcut" },
+						},
+					} as StoryNode,
+					outcome_2: { id: "outcome_2", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_1", failNodeId: "terminal_2" } as StoryNode,
+					terminal_shortcut: { id: "terminal_shortcut", type: "terminal", narrative: "Shortcut", coinsChange: 0, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+					terminal_1: { id: "terminal_1", type: "terminal", narrative: "T1", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_2: { id: "terminal_2", type: "terminal", narrative: "T2", coinsChange: -100, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+				},
+				expectedPaths: 4, averageReward: 0, maxPossibleReward: 100, minPossibleReward: -100,
+			};
+
+			const errors = engine.validateStory(shortcutStory);
+			expect(errors.some(e => e.includes("Shortcut: decision2") && e.includes("choiceY goes directly to terminal"))).toBe(true);
+		});
+
+		it("should not flag proper full-depth story as having shortcuts", () => {
+			const properStory: BranchingStory = {
+				id: "proper_story",
+				title: "Proper Story",
+				emoji: "✅",
+				startNodeId: "intro",
+				nodes: {
+					intro: { id: "intro", type: "intro", narrative: "Intro", nextNodeId: "decision_1" } as StoryNode,
+					decision_1: {
+						id: "decision_1", type: "decision", narrative: "Choose",
+						choices: {
+							choiceX: { id: "choiceX", label: "A", description: "A", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_1a" },
+							choiceY: { id: "choiceY", label: "B", description: "B", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_1b" },
+						},
+					} as StoryNode,
+					outcome_1a: { id: "outcome_1a", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "decision_2a", failNodeId: "decision_2b" } as StoryNode,
+					outcome_1b: { id: "outcome_1b", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "decision_2c", failNodeId: "decision_2d" } as StoryNode,
+					decision_2a: { id: "decision_2a", type: "decision", narrative: "D2a", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2a" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2b" } } } as StoryNode,
+					decision_2b: { id: "decision_2b", type: "decision", narrative: "D2b", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2c" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2d" } } } as StoryNode,
+					decision_2c: { id: "decision_2c", type: "decision", narrative: "D2c", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2a" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2b" } } } as StoryNode,
+					decision_2d: { id: "decision_2d", type: "decision", narrative: "D2d", choices: { choiceX: { id: "choiceX", label: "X", description: "X", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2c" }, choiceY: { id: "choiceY", label: "Y", description: "Y", baseReward: 100, riskMultiplier: 1.0, nextNodeId: "outcome_2d" } } } as StoryNode,
+					outcome_2a: { id: "outcome_2a", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_1", failNodeId: "terminal_2" } as StoryNode,
+					outcome_2b: { id: "outcome_2b", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_3", failNodeId: "terminal_4" } as StoryNode,
+					outcome_2c: { id: "outcome_2c", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_5", failNodeId: "terminal_6" } as StoryNode,
+					outcome_2d: { id: "outcome_2d", type: "outcome", narrative: "Roll", successChance: 70, successNodeId: "terminal_7", failNodeId: "terminal_8" } as StoryNode,
+					terminal_1: { id: "terminal_1", type: "terminal", narrative: "T1", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_2: { id: "terminal_2", type: "terminal", narrative: "T2", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_3: { id: "terminal_3", type: "terminal", narrative: "T3", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_4: { id: "terminal_4", type: "terminal", narrative: "T4", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_5: { id: "terminal_5", type: "terminal", narrative: "T5", coinsChange: 100, isPositiveEnding: true, xpMultiplier: 1.0 } as StoryNode,
+					terminal_6: { id: "terminal_6", type: "terminal", narrative: "T6", coinsChange: -100, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+					terminal_7: { id: "terminal_7", type: "terminal", narrative: "T7", coinsChange: -100, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+					terminal_8: { id: "terminal_8", type: "terminal", narrative: "T8", coinsChange: -100, isPositiveEnding: false, xpMultiplier: 1.0 } as StoryNode,
+				},
+				expectedPaths: 16, averageReward: 0, maxPossibleReward: 100, minPossibleReward: -100,
+			};
+
+			const errors = engine.validateStory(properStory);
+			const shortcutErrors = errors.filter(e => e.includes("Shortcut"));
+			expect(shortcutErrors.length).toBe(0);
 		});
 	});
 
@@ -655,7 +803,7 @@ describe("Story Engine - Stolen Money Branching", () => {
 		if (!story) return;
 
 		const terminals = Object.values(story.nodes).filter(n => n.type === "terminal");
-		expect(terminals.length).toBe(11); // 8 positive + 3 negative
+		expect(terminals.length).toBe(16); // 10 positive + 6 negative
 	});
 
 	it("should have ~70% positive endings", async () => {
@@ -912,6 +1060,20 @@ describe("All Branching Stories - Engine Flow Validation", () => {
 				// Allow 50-85% positive endings (some stories have more dramatic negative paths)
 				expect(ratio).toBeGreaterThanOrEqual(0.5);
 				expect(ratio).toBeLessThanOrEqual(0.85);
+			});
+
+			it("should have no shortcut paths (all paths go through 2 decisions and 2 rolls)", () => {
+				const story = engine.getStory(storyId);
+
+				expect(story).toBeDefined();
+				if (!story) return;
+
+				const errors = engine.validateStory(story);
+				const shortcutErrors = errors.filter(e => e.includes("Shortcut"));
+
+				if (shortcutErrors.length > 0) {
+					throw new Error(`Story ${storyId} has ${shortcutErrors.length} shortcut paths:\n${shortcutErrors.join("\n")}`);
+				}
 			});
 		});
 	}

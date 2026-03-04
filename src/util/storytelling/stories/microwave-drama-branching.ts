@@ -131,7 +131,7 @@ TY jsi ten viník!`,
 				description: "Sebeš odvahu a přiznáš pravdu. Aspoň s čistým svědomím.",
 				baseReward: 100,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_forgiven",
+				nextNodeId: "outcome_confess",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -155,7 +155,86 @@ TY jsi ten viník!`,
 Všichni spekulují, kdo to byl. Někdo říká: "Viděl jsem tě ráno v kuchyňce..."`,
 		successChance: 70,
 		successNodeId: "decision_2c_blame_game",
+		failNodeId: "decision_2d_suspicious",
+	},
+
+	// =========================================================================
+	// DECISION 2d: You look suspicious after running
+	// =========================================================================
+	decision_2d_suspicious: {
+		id: "decision_2d_suspicious",
+		type: "decision",
+		narrative: `🤨 Tvůj rychlý útěk vypadal podezřele. Kolegyně se na tebe dívá: "Proč ses tak hnal ven? Nebyl jsi náhodou v kuchyňce?"
+
+Musíš rychle reagovat.`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Vymyslet výmluvu",
+				description: '"Šel jsem na záchod, nestihl jsem to!" Zkusíš to zahrát.',
+				baseReward: 100,
+				riskMultiplier: 1.1,
+				nextNodeId: "outcome_excuse",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Mlčet a ignorovat",
+				description: "Prostě nic neřekneš a budeš se tvářit zmateně.",
+				baseReward: 50,
+				riskMultiplier: 0.8,
+				nextNodeId: "outcome_silent_treatment",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Making an excuse
+	// =========================================================================
+	outcome_excuse: {
+		id: "outcome_excuse",
+		type: "outcome",
+		narrative: `🎭 "Šel jsem na záchod, to je celé!" říkáš přesvědčivě. Kolegyně tě měří pohledem...`,
+		successChance: 70,
+		successNodeId: "terminal_excuse_worked",
 		failNodeId: "terminal_suspected",
+	},
+
+	terminal_excuse_worked: {
+		id: "terminal_excuse_worked",
+		type: "terminal",
+		narrative: `😌 **Výmluva zabrala**
+
+Kolegyně pokrčila rameny a odešla. Nikdo tě dál nepodezírá.
+
+Získáváš **+100 mincí** a poučení, že příště nemáš utíkat.`,
+		coinsChange: 100,
+		isPositiveEnding: true,
+		xpMultiplier: 0.9,
+	},
+
+	// =========================================================================
+	// OUTCOME: Silent treatment
+	// =========================================================================
+	outcome_silent_treatment: {
+		id: "outcome_silent_treatment",
+		type: "outcome",
+		narrative: `😶 Mlčíš a tváříš se zmateně. "Co? Jaká kuchyňka?" Kolegyně tě pozoruje...`,
+		successChance: 70,
+		successNodeId: "terminal_forgotten_suspect",
+		failNodeId: "terminal_suspected",
+	},
+
+	terminal_forgotten_suspect: {
+		id: "terminal_forgotten_suspect",
+		type: "terminal",
+		narrative: `🤷 **Zapomenuto**
+
+Za pár minut se pozornost přesunula jinam. Nikdo si na tebe nevzpomněl.
+
+Získáváš **+50 mincí** za nervy, ale přežil jsi.`,
+		coinsChange: 50,
+		isPositiveEnding: true,
+		xpMultiplier: 0.8,
 	},
 
 	// =========================================================================
@@ -182,7 +261,7 @@ Někdo ukazuje na Martina z IT. Vypadá, že se nebrání...`,
 				description: "Nebudeš se účastnit honu. Prostě mlčíš a sleduješ.",
 				baseReward: 100,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_neutral",
+				nextNodeId: "outcome_stay_quiet",
 			},
 		},
 	},
@@ -241,6 +320,56 @@ Ostatní přitakávají. Martin vypadá zničeně.`,
 		successChance: 70,
 		successNodeId: "terminal_mob_justice",
 		failNodeId: "terminal_wrong_person",
+	},
+
+	// =========================================================================
+	// OUTCOME: Confessing to the fish crime
+	// =========================================================================
+	outcome_confess: {
+		id: "outcome_confess",
+		type: "outcome",
+		narrative: `😔 "Lidi... to jsem byl já. Zapomněl jsem na tu rybu." Všichni se otáčí...`,
+		successChance: 70,
+		successNodeId: "terminal_forgiven",
+		failNodeId: "terminal_confess_punishment",
+	},
+
+	terminal_confess_punishment: {
+		id: "terminal_confess_punishment",
+		type: "terminal",
+		narrative: `⚠️ **Přísný trest**
+
+HR manažerka ti dala oficiální napomenutí a pokutu za poškození firemního majetku.
+
+Ztrácíš **-200 mincí** a musíš zaplatit novou mikrovlnku.`,
+		coinsChange: -200,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	// =========================================================================
+	// OUTCOME: Staying quiet during blame game
+	// =========================================================================
+	outcome_stay_quiet: {
+		id: "outcome_stay_quiet",
+		type: "outcome",
+		narrative: `🤐 Mlčíš a sleduješ, jak se situace vyvíjí. Dav se pomalu uklidňuje...`,
+		successChance: 70,
+		successNodeId: "terminal_neutral",
+		failNodeId: "terminal_guilt_eats_you",
+	},
+
+	terminal_guilt_eats_you: {
+		id: "terminal_guilt_eats_you",
+		type: "terminal",
+		narrative: `😣 **Špatné svědomí**
+
+Martin dostal neprávem vinu a ty jsi mlčel. Každý den ho vidíš a cítíš vinu.
+
+Kupuješ mu anonymní dárkový koš jako omluvu. Ztrácíš **-100 mincí** a klidný spánek.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.7,
 	},
 
 	// =========================================================================
@@ -423,7 +552,7 @@ export const microwaveDramaBranchingStory: BranchingStory = {
 	nodes,
 
 	// Balance metadata
-	expectedPaths: 20,
+	expectedPaths: 28,
 	averageReward: 150,
 	maxPossibleReward: 400, // Investigate -> Confront -> Justice
 	minPossibleReward: -400, // Investigate -> Hide evidence -> Caught

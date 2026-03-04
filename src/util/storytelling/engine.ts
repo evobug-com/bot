@@ -810,5 +810,84 @@ export function validateStory(story: BranchingStory): string[] {
 		errors.push(`Positive ending ratio is ${(ratio * 100).toFixed(0)}% (should be 60-80%)`);
 	}
 
+	// =========================================================================
+	// Shortcut path detection
+	// Stories should follow: intro → decision1 → outcome1 → decision2 → outcome2 → terminal
+	// Shortcuts cause stories to end prematurely (fewer decisions/rolls than expected)
+	// =========================================================================
+
+	// Find the first decision node (decision1)
+	const startNode = story.nodes[story.startNodeId];
+	if (!startNode || !isIntroNode(startNode)) {
+		return errors;
+	}
+
+	const decision1 = story.nodes[startNode.nextNodeId];
+	if (!decision1 || !isDecisionNode(decision1)) {
+		return errors;
+	}
+
+	// Find outcome1 nodes (directly referenced by decision1 choices)
+	const outcome1Ids: string[] = [];
+	for (const choiceKey of ["choiceX", "choiceY"] as const) {
+		const nextId = decision1.choices[choiceKey].nextNodeId;
+		const nextNode = story.nodes[nextId];
+		if (nextNode && isOutcomeNode(nextNode)) {
+			outcome1Ids.push(nextId);
+		}
+	}
+
+	// Check outcome1 → terminal shortcuts
+	// outcome1 success/fail should lead to decision2 nodes, not terminals
+	for (const outcome1Id of outcome1Ids) {
+		const outcome1 = story.nodes[outcome1Id];
+		if (!outcome1 || !isOutcomeNode(outcome1)) continue;
+
+		const successNode = story.nodes[outcome1.successNodeId];
+		if (successNode && isTerminalNode(successNode)) {
+			errors.push(
+				`Shortcut: outcome1 '${outcome1Id}' success goes directly to terminal '${outcome1.successNodeId}' (skips decision2)`,
+			);
+		}
+
+		const failNode = story.nodes[outcome1.failNodeId];
+		if (failNode && isTerminalNode(failNode)) {
+			errors.push(
+				`Shortcut: outcome1 '${outcome1Id}' fail goes directly to terminal '${outcome1.failNodeId}' (skips decision2)`,
+			);
+		}
+	}
+
+	// Find all decision2 nodes (reachable from outcome1 success/fail)
+	const decision2Ids = new Set<string>();
+	for (const outcome1Id of outcome1Ids) {
+		const outcome1 = story.nodes[outcome1Id];
+		if (!outcome1 || !isOutcomeNode(outcome1)) continue;
+
+		for (const targetId of [outcome1.successNodeId, outcome1.failNodeId]) {
+			const targetNode = story.nodes[targetId];
+			if (targetNode && isDecisionNode(targetNode)) {
+				decision2Ids.add(targetId);
+			}
+		}
+	}
+
+	// Check decision2 → terminal shortcuts
+	// decision2 choices should lead to outcome nodes, not terminals
+	for (const decision2Id of decision2Ids) {
+		const decision2 = story.nodes[decision2Id];
+		if (!decision2 || !isDecisionNode(decision2)) continue;
+
+		for (const choiceKey of ["choiceX", "choiceY"] as const) {
+			const nextId = decision2.choices[choiceKey].nextNodeId;
+			const nextNode = story.nodes[nextId];
+			if (nextNode && isTerminalNode(nextNode)) {
+				errors.push(
+					`Shortcut: decision2 '${decision2Id}' ${choiceKey} goes directly to terminal '${nextId}' (skips outcome2 roll)`,
+				);
+			}
+		}
+	}
+
 	return errors;
 }

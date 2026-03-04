@@ -19,6 +19,14 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after 4cb28f5 -->
 
 
+## [2.8.1] - 2026-03-04
+
+### Opraveno
+- Příběhy se předčasně ukončovaly po prvním rozhodnutí — chybělo druhé rozhodnutí a/nebo druhý hod kostkou
+- Všech 22 hardcoded příběhů opraveno tak, aby vždy procházely kompletní cestou: úvod → rozhodnutí 1 → hod 1 → rozhodnutí 2 → hod 2 → závěr
+- Přidána validace do `validateStory()` pro detekci zkratkových cest (outcome→terminal, decision→terminal)
+
+
 ## [2.8.0] - 2026-02-28
 
 ### Změněno

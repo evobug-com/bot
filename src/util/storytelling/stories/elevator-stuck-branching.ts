@@ -83,7 +83,7 @@ Otočíš se a teprve teď si všimneš, kdo je s tebou v kabině...`,
 CEO zvedne hlavu z telefonu a podívá se na tebe...`,
 		successChance: 70,
 		successNodeId: "decision_2a_pitch",
-		failNodeId: "terminal_awkward_silence",
+		failNodeId: "decision_2c_awkward",
 	},
 
 	// =========================================================================
@@ -150,7 +150,7 @@ Tohle je tvoje šance představit svůj side project! Jak na to půjdeš?`,
 Podívá se na tebe a usmívá se...`,
 		successChance: 70,
 		successNodeId: "decision_2b_topics",
-		failNodeId: "terminal_phone_distraction",
+		failNodeId: "decision_2d_ignored",
 	},
 
 	// =========================================================================
@@ -266,6 +266,116 @@ Kolega/kolegyně reaguje...`,
 	},
 
 	// =========================================================================
+	// DECISION 2c: Awkward CEO situation
+	// =========================================================================
+	decision_2c_awkward: {
+		id: "decision_2c_awkward",
+		type: "decision",
+		narrative: `😬 CEO se otočí zpátky k telefonu. Tvůj pokus o konverzaci neuspěl.
+
+Je trapné ticho. Máte tu ještě hodinu. Co uděláš?`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Zkusit to znovu",
+				description: "Počkáš chvíli a zkusíš jiné téma. Třeba sport.",
+				baseReward: 150,
+				riskMultiplier: 1.1,
+				nextNodeId: "outcome_retry_ceo",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Přijmout ticho",
+				description: "Vytáhneš telefon a budeš si scrollovat. Aspoň klid.",
+				baseReward: 50,
+				riskMultiplier: 0.6,
+				nextNodeId: "outcome_accept_silence",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Retrying with CEO
+	// =========================================================================
+	outcome_retry_ceo: {
+		id: "outcome_retry_ceo",
+		type: "outcome",
+		narrative: `⚽ "Ehm... díváte se na fotbal? Včerejší zápas byl šílený..."
+
+CEO zvedne hlavu...`,
+		successChance: 70,
+		successNodeId: "terminal_small_talk_win",
+		failNodeId: "terminal_awkward_silence",
+	},
+
+	// =========================================================================
+	// OUTCOME: Accepting silence
+	// =========================================================================
+	outcome_accept_silence: {
+		id: "outcome_accept_silence",
+		type: "outcome",
+		narrative: `📱 Vytahuješ telefon a začínáš scrollovat. CEO dělá to samé. Hodina v tichu...`,
+		successChance: 70,
+		successNodeId: "terminal_quiet_peace",
+		failNodeId: "terminal_awkward_silence",
+	},
+
+	// =========================================================================
+	// DECISION 2d: Colleague ignoring you
+	// =========================================================================
+	decision_2d_ignored: {
+		id: "decision_2d_ignored",
+		type: "decision",
+		narrative: `📱 Kolega/kolegyně se podíval/a na tebe, usmál/a se, ale hned se vrátil/a k telefonu.
+
+Vypadá to, že nemá zájem o konverzaci. Máte tu ještě hodinu...`,
+		choices: {
+			choiceX: {
+				id: "choiceX",
+				label: "Být vytrvalý",
+				description: "Zkusíš zaujmout zajímavým tématem.",
+				baseReward: 200,
+				riskMultiplier: 1.0,
+				nextNodeId: "outcome_persist_colleague",
+			},
+			choiceY: {
+				id: "choiceY",
+				label: "Nechat to být",
+				description: "Respektuješ osobní prostor a čekáš v tichu.",
+				baseReward: 50,
+				riskMultiplier: 0.5,
+				nextNodeId: "outcome_respect_space",
+			},
+		},
+	},
+
+	// =========================================================================
+	// OUTCOME: Persisting with colleague
+	// =========================================================================
+	outcome_persist_colleague: {
+		id: "outcome_persist_colleague",
+		type: "outcome",
+		narrative: `💬 "Hele, viděl/a jsi ten nový projekt od marketingu? Prý je to bomba..."
+
+Kolega/kolegyně zvedne oči od telefonu...`,
+		successChance: 70,
+		successNodeId: "terminal_persistence_pays",
+		failNodeId: "terminal_phone_distraction",
+	},
+
+	// =========================================================================
+	// OUTCOME: Respecting space
+	// =========================================================================
+	outcome_respect_space: {
+		id: "outcome_respect_space",
+		type: "outcome",
+		narrative: `🤫 Sedíš tiše a čekáš. Po půl hodině kolega/kolegyně odloží telefon...`,
+		successChance: 70,
+		successNodeId: "terminal_natural_conversation",
+		failNodeId: "terminal_phone_distraction",
+	},
+
+	// =========================================================================
 	// TERMINAL NODES (11 endings)
 	// =========================================================================
 
@@ -376,6 +486,58 @@ I když investice nepřišla, CEO si tě zapamatoval. Bonus: **+200 mincí**.`,
 		coinsChange: 200,
 		isPositiveEnding: true,
 		xpMultiplier: 1.2,
+	},
+
+	terminal_small_talk_win: {
+		id: "terminal_small_talk_win",
+		type: "terminal",
+		narrative: `⚽ **Small talk funguje!**
+
+CEO je fotbalový fanoušek! Celou hodinu mluvíte o sportu.
+
+"Jsi fajn člověk," říká CEO při odchodu. Získáváš **+200 mincí** za networking.`,
+		coinsChange: 200,
+		isPositiveEnding: true,
+		xpMultiplier: 1.1,
+	},
+
+	terminal_quiet_peace: {
+		id: "terminal_quiet_peace",
+		type: "terminal",
+		narrative: `🧘 **Klidná hodina**
+
+Strávil jsi hodinu v tichu, ale nebyl to špatný čas. CEO ti při odchodu přikývl.
+
+Získáváš **+50 mincí** za klid a respektování prostoru.`,
+		coinsChange: 50,
+		isPositiveEnding: true,
+		xpMultiplier: 0.8,
+	},
+
+	terminal_persistence_pays: {
+		id: "terminal_persistence_pays",
+		type: "terminal",
+		narrative: `💬 **Vytrvalost se vyplatila!**
+
+Kolega/kolegyně se rozmluvil/a a strávili jste skvělou hodinu.
+
+"Ráda bych s tebou zašla na kafe," říká. Získáváš **+250 mincí** a nový kontakt.`,
+		coinsChange: 250,
+		isPositiveEnding: true,
+		xpMultiplier: 1.2,
+	},
+
+	terminal_natural_conversation: {
+		id: "terminal_natural_conversation",
+		type: "terminal",
+		narrative: `😊 **Přirozená konverzace**
+
+Po chvíli ticha kolega/kolegyně sám/sama začal/a mluvit. Bylo to příjemné.
+
+"Díky za trpělivost," usmívá se. Získáváš **+150 mincí**.`,
+		coinsChange: 150,
+		isPositiveEnding: true,
+		xpMultiplier: 1.0,
 	},
 
 	// Negative endings (3)

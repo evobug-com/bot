@@ -107,7 +107,7 @@ Můžeš buď pokračovat v investigaci, nebo nechat report jak je.`,
 				description: "Pošleš to co máš a doufáš, že to stačí.",
 				baseReward: 200,
 				riskMultiplier: 0.8,
-				nextNodeId: "terminal_quick_report",
+				nextNodeId: "outcome_quick_report",
 			},
 		},
 	},
@@ -136,7 +136,7 @@ Tvůj report byl odmítnut. Můžeš se pokusit získat víc důkazů, nebo to v
 				description: "Není to tvůj problém. Jdeš dál.",
 				baseReward: 0,
 				riskMultiplier: 0.5,
-				nextNodeId: "terminal_ignored",
+				nextNodeId: "outcome_give_up",
 			},
 		},
 	},
@@ -204,7 +204,7 @@ Nabízí ti úplatek. Co uděláš?`;
 				description: "Nahlásíš ho adminům. Morálně správné.",
 				baseReward: 250,
 				riskMultiplier: 0.7,
-				nextNodeId: "terminal_moral_victory",
+				nextNodeId: "outcome_refuse_bribe",
 			},
 		},
 	},
@@ -225,7 +225,7 @@ Hrozí, že tě nařkne ze stejného. Je to blef, ale může být nebezpečný.`
 				description: "Raději to nech být. Není to tvůj boj.",
 				baseReward: 0,
 				riskMultiplier: 0.6,
-				nextNodeId: "terminal_intimidated",
+				nextNodeId: "outcome_back_down",
 			},
 			choiceY: {
 				id: "choiceY",
@@ -263,7 +263,55 @@ Hrozí, že tě nařkne ze stejného. Je to blef, ale může být nebezpečný.`
 	},
 
 	// =========================================================================
-	// TERMINAL NODES (11 endings)
+	// OUTCOME: Quick report submission
+	// =========================================================================
+	outcome_quick_report: {
+		id: "outcome_quick_report",
+		type: "outcome",
+		narrative: `📤 Posíláš adminovi to, co máš. Doufáš, že omezené důkazy budou stačit...`,
+		successChance: 70,
+		successNodeId: "terminal_quick_report",
+		failNodeId: "terminal_quick_report_fail",
+	},
+
+	// =========================================================================
+	// OUTCOME: Giving up on the case
+	// =========================================================================
+	outcome_give_up: {
+		id: "outcome_give_up",
+		type: "outcome",
+		narrative: `🚶 Zavíráš logy a odcházíš. Možná se to vyřeší samo...`,
+		successChance: 70,
+		successNodeId: "terminal_ignored",
+		failNodeId: "terminal_ignored_regret",
+	},
+
+	// =========================================================================
+	// OUTCOME: Refusing the bribe
+	// =========================================================================
+	outcome_refuse_bribe: {
+		id: "outcome_refuse_bribe",
+		type: "outcome",
+		narrative: `🚫 "Ne. Tohle nahlásím." Podvodník zbledne. Připravuješ report pro adminy...`,
+		successChance: 70,
+		successNodeId: "terminal_moral_victory",
+		failNodeId: "terminal_moral_victory_fail",
+	},
+
+	// =========================================================================
+	// OUTCOME: Backing down from confrontation
+	// =========================================================================
+	outcome_back_down: {
+		id: "outcome_back_down",
+		type: "outcome",
+		narrative: `😔 Ustupuješ a snažíš se z toho vycouváat. Podvodník sleduje tvůj každý krok...`,
+		successChance: 70,
+		successNodeId: "terminal_intimidated",
+		failNodeId: "terminal_intimidated_worse",
+	},
+
+	// =========================================================================
+	// TERMINAL NODES (11 endings + 4 new failure terminals)
 	// =========================================================================
 
 	// Positive endings (8)
@@ -420,6 +468,58 @@ Podvodník splnil svou hrozbu! Zveřejnil falešné důkazy proti tobě a vznikl
 
 Admin vás oba potrestá za veřejné drama. **-800 mincí** pokuta. Příště to řeš soukromě.`,
 		coinsChange: -800,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_quick_report_fail: {
+		id: "terminal_quick_report_fail",
+		type: "terminal",
+		narrative: `📝 **Nedostatečný report**
+
+Admin si přečetl tvůj rychlý report, ale bez dalších důkazů ho smetl ze stolu. Ztratil jsi čas a důvěryhodnost.
+
+**-50 mincí** za zbytečné obtěžování.`,
+		coinsChange: -50,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_ignored_regret: {
+		id: "terminal_ignored_regret",
+		type: "terminal",
+		narrative: `😞 **Špatné svědomí**
+
+Vzdal jsi to, ale podvodník si všiml tvého zájmu. Začal šířit fámy, že jsi to ty, kdo podvádí.
+
+Musíš se bránit a ztrácíš **-100 mincí** na očištění svého jména.`,
+		coinsChange: -100,
+		isPositiveEnding: false,
+		xpMultiplier: 0.5,
+	},
+
+	terminal_moral_victory_fail: {
+		id: "terminal_moral_victory_fail",
+		type: "terminal",
+		narrative: `😤 **Komplikované odmítnutí**
+
+Odmítl jsi úplatek a nahlásil podvodníka, ale ten mezitím smazal důkazy. Admin ti nevěří.
+
+Žádná odměna a ztráta **-80 mincí** za čas strávený marným reportem.`,
+		coinsChange: -80,
+		isPositiveEnding: false,
+		xpMultiplier: 0.6,
+	},
+
+	terminal_intimidated_worse: {
+		id: "terminal_intimidated_worse",
+		type: "terminal",
+		narrative: `😰 **Zastrašen a ponížen**
+
+Ustoupil jsi, ale podvodník tě stejně nahlásil adminům za "obtěžování". Musíš se obhajovat.
+
+Ztrácíš **-120 mincí** a spoustu nervů.`,
+		coinsChange: -120,
 		isPositiveEnding: false,
 		xpMultiplier: 0.5,
 	},

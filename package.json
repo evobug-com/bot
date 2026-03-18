@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@discordjs/voice": "^0.19.2",
-		"@orpc/client": "^1.13.6",
+		"@orpc/client": "^1.13.7",
 		"@orpc/server": "^1.13.6",
 		"discord.js": "dev",
 		"dotenv": "^17.3.1",

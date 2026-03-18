@@ -13,7 +13,7 @@
 		"lint": "oxlint --type-aware"
 	},
 	"dependencies": {
-		"@discordjs/voice": "^0.19.1",
+		"@discordjs/voice": "^0.19.2",
 		"@orpc/client": "^1.13.6",
 		"@orpc/server": "^1.13.6",
 		"discord.js": "dev",

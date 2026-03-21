@@ -15,12 +15,8 @@ import {
 	getProfitLossEmoji,
 } from "../util/bot/investment-helpers.ts";
 import type { CommandContext } from "../util/commands.ts";
+import { isAdmin } from "../utils/admin.ts";
 
-const getAdminIds = (): string[] => {
-	const adminIds = process.env.ADMIN_IDS;
-	if (!adminIds) return [];
-	return adminIds.split(",").map((id) => id.trim());
-};
 
 export const data = new ChatInputCommandBuilder()
 	.setName("invest")
@@ -1094,8 +1090,7 @@ async function handleSync(
 	_dbUser: CommandContext["dbUser"],
 ): Promise<void> {
 	// Check if user is admin
-	const adminIds = getAdminIds();
-	if (!adminIds.includes(interaction.user.id)) {
+	if (!isAdmin(interaction.user.id)) {
 		const embed = createErrorEmbed(
 			"⛔ Nemáš oprávnění",
 			"Pouze administrátoři mohou vynutit synchronizaci cen.",

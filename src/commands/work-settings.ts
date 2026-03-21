@@ -1,5 +1,6 @@
 import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
 import type { CommandContext } from "../util/commands";
+import { isAdmin } from "../utils/admin.ts";
 import {
 	getWorkSettings,
 	setAIStoryEnabled,
@@ -7,11 +8,6 @@ import {
 	setAIStoryChancePercent,
 } from "../services/workSettings/storage";
 
-const getAdminIds = (): string[] => {
-	const adminIds = process.env.ADMIN_IDS;
-	if (!adminIds) return [];
-	return adminIds.split(",").map((id) => id.trim());
-};
 
 export const data = new ChatInputCommandBuilder()
 	.setName("work-settings")
@@ -58,9 +54,7 @@ export const data = new ChatInputCommandBuilder()
 	);
 
 export const execute = async ({ interaction }: CommandContext): Promise<void> => {
-	const adminIds = getAdminIds();
-
-	if (!adminIds.includes(interaction.user.id)) {
+	if (!isAdmin(interaction.user.id)) {
 		await interaction.reply({
 			content: "Only admins can use this command.",
 			flags: MessageFlags.Ephemeral,

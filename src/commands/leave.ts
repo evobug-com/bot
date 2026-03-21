@@ -9,12 +9,7 @@ import {
 	SecondaryButtonBuilder,
 } from "discord.js";
 import type { CommandContext } from "../util/commands.ts";
-
-const getAdminIds = (): string[] => {
-	const adminIds = process.env.ADMIN_IDS;
-	if (!adminIds) return [];
-	return adminIds.split(",").map((id) => id.trim());
-};
+import { isAdmin } from "../utils/admin.ts";
 
 export const data = new ChatInputCommandBuilder()
 	.setName("leave")
@@ -26,8 +21,7 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction }: CommandContext): Promise<void> => {
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-	const adminIds = getAdminIds();
-	if (!adminIds.includes(interaction.user.id)) {
+	if (!isAdmin(interaction.user.id)) {
 		await interaction.editReply({
 			content: "❌ Nemáš oprávnění použít tento příkaz.",
 		});

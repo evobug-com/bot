@@ -10,6 +10,7 @@ import { orpc } from "../client/client.ts";
 import { createErrorEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";
 import { createInteraktivniPribehEmbed } from "../util/messages/embedBuilders.ts";
+import { isAdmin } from "../utils/admin.ts";
 import { getSecureRandomIndex } from "../utils/random.ts";
 // Branching story imports
 import * as storyEngine from "../util/storytelling/engine";
@@ -40,12 +41,6 @@ import "../util/storytelling/stories/reply-all-branching.ts";
 import "../util/storytelling/stories/salary-negotiation-branching.ts";
 import "../util/storytelling/stories/team-building-branching.ts";
 
-const getAdminIds = (): string[] => {
-	const adminIds = process.env.ADMIN_IDS;
-	if (!adminIds) return [];
-	return adminIds.split(",").map((id) => id.trim());
-};
-
 export const data = new ChatInputCommandBuilder()
 	.setName("test-story")
 	.setNameLocalizations({ cs: "test-příběh" })
@@ -60,8 +55,7 @@ export const data = new ChatInputCommandBuilder()
 
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
 	// Check admin permission
-	const adminIds = getAdminIds();
-	if (!adminIds.includes(interaction.user.id)) {
+	if (!isAdmin(interaction.user.id)) {
 		await interaction.reply({
 			content: "Only admins can use this command.",
 			flags: MessageFlags.Ephemeral,

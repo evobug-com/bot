@@ -21,6 +21,12 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [2.8.1] - 2026-03-04
 
+### Přidáno
+- Admin AI — admini mohou zmínit bota s přirozeným jazykem (např. `@bot přidej novou místnost do kategorie XY`) a Claude interpretuje požadavek a navrhne akce
+- Potvrzovací krok před provedením akcí (preview embed + tlačítka Potvrdit/Zrušit)
+- Podporované operace: vytvoření kanálu, přejmenování, přesunutí, nastavení oprávnění
+- Příkaz `/story` omezen pouze na adminy (testovací fáze)
+
 ### Opraveno
 - Příběhy se předčasně ukončovaly po prvním rozhodnutí — chybělo druhé rozhodnutí a/nebo druhý hod kostkou
 - Všech 22 hardcoded příběhů opraveno tak, aby vždy procházely kompletní cestou: úvod → rozhodnutí 1 → hod 1 → rozhodnutí 2 → hod 2 → závěr

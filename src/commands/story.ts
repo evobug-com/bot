@@ -1,6 +1,7 @@
 import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed, formatTimeRemaining } from "../util";
+import { isAdmin } from "../utils/admin.ts";
 import { getSecureRandomIndex } from "../utils/random.ts";
 import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-cheat-handler.ts";
 import type { CommandContext } from "../util/commands.ts";
@@ -76,6 +77,14 @@ export const data = new ChatInputCommandBuilder()
 export const execute = async ({ interaction, dbUser }: CommandContext): Promise<void> => {
 	// Defer as ephemeral - stories are personal
 	await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+	// Admin-only while in testing
+	if (!isAdmin(interaction.user.id)) {
+		await interaction.editReply({
+			content: "Tento příkaz je momentálně dostupný pouze pro adminy.",
+		});
+		return;
+	}
 
 	// Check for pending session that can be resumed
 	// This handles timeout scenarios where Discord buttons expired but session persists

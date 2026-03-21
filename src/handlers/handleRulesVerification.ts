@@ -17,23 +17,25 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-	ActionRowBuilder,
 	type ButtonInteraction,
 	type Client,
-	ContainerBuilder,
-	channelLink,
-	EmbedBuilder,
 	Events,
 	type GuildMember,
 	type Interaction,
 	MessageFlags,
 	type ModalSubmitInteraction,
-	PrimaryButtonBuilder,
-	SeparatorBuilder,
 	SeparatorSpacingSize,
-	StringSelectMenuBuilder,
 	type StringSelectMenuInteraction,
 } from "discord.js";
+import {
+	ActionRowBuilder,
+	ContainerBuilder,
+	EmbedBuilder,
+	PrimaryButtonBuilder,
+	SeparatorBuilder,
+	StringSelectMenuBuilder,
+} from "@discordjs/builders";
+import { channelLink } from "@discordjs/formatters";
 import {
 	getMixedRandomQuestions,
 	isCorrectAnswer,

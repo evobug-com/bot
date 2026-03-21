@@ -18,7 +18,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-	ActionRowBuilder,
 	type BaseChannel,
 	ChannelType,
 	type Client,
@@ -31,11 +30,10 @@ import {
 	type OverwriteResolvable,
 	OverwriteType,
 	PermissionFlagsBits,
-	PrimaryButtonBuilder,
-	SecondaryButtonBuilder,
 	type VoiceChannel,
 	type VoiceState,
 } from "discord.js";
+import { ActionRowBuilder, PrimaryButtonBuilder, SecondaryButtonBuilder } from "@discordjs/builders";
 import { ChannelManager, RoleManager, reportError } from "../util";
 import { createLogger } from "../util/logger.ts";
 
@@ -485,14 +483,21 @@ async function createVirtualVoiceChannel(state: VoiceState) {
 		// Calculate position
 		const position = await calculateChannelPosition(state.guild, state.channel?.parent?.id || null, channelNumber);
 
-		// Create the channel
-		const virtualChannel = await state.guild.channels.create({
-			name: channelName,
-			type: ChannelType.GuildVoice,
-			parent: state.channel?.parent,
-			permissionOverwrites,
-			position,
-		});
+		// Create the channel under the same parent category
+		const parentCategory = state.channel?.parent;
+		const virtualChannel = parentCategory
+			? await parentCategory.children.create({
+					name: channelName,
+					type: ChannelType.GuildVoice,
+					permissionOverwrites,
+					position,
+				})
+			: await state.guild.channels.create({
+					name: channelName,
+					type: ChannelType.GuildVoice,
+					permissionOverwrites,
+					position,
+				});
 
 		// Track the channel for this guild
 		if (!virtualVoiceChannelsByGuild.has(state.guild.id)) {

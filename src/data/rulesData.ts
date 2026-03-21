@@ -1,15 +1,13 @@
+import { type MessageCreateOptions, MessageFlags, SeparatorSpacingSize } from "discord.js";
 import {
 	ActionRowBuilder,
 	ContainerBuilder,
-	type MessageCreateOptions,
-	MessageFlags,
 	PrimaryButtonBuilder,
 	SecondaryButtonBuilder,
 	SectionBuilder,
 	SeparatorBuilder,
-	SeparatorSpacingSize,
 	TextDisplayBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 
 /**
  * Rules message using Discord's Components V2 system

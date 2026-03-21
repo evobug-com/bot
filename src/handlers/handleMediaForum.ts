@@ -16,18 +16,20 @@ import {
 	type AnyThreadChannel,
 	ChannelType,
 	type Client,
-	ContainerBuilder,
 	Events,
 	type ForumChannel,
-	LinkButtonBuilder,
 	type Message,
 	MessageFlags,
 	type PublicThreadChannel,
-	SectionBuilder,
 	type TextChannel,
+} from "discord.js";
+import {
+	ContainerBuilder,
+	LinkButtonBuilder,
+	SectionBuilder,
 	TextDisplayBuilder,
 	ThumbnailBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import { ChannelManager, reportError } from "../util";
 import { createLogger } from "../util/logger.ts";
 

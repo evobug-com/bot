@@ -1,4 +1,5 @@
-import { ChannelType, ChatInputCommandBuilder, MessageFlags, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { ChannelType, MessageFlags, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { createTicketButtonMessage } from "../handlers/handleTicketSystem.ts";
 import type { CommandContext } from "../util/commands";
 

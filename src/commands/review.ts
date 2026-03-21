@@ -1,12 +1,11 @@
+import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import {
 	ActionRowBuilder,
 	ChatInputCommandBuilder,
-	type ChatInputCommandInteraction,
 	DangerButtonBuilder,
-	MessageFlags,
 	PrimaryButtonBuilder,
 	SecondaryButtonBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import { getDbUser, orpc } from "../client/client.ts";
 import {
 	createReviewRequestConfirmation,

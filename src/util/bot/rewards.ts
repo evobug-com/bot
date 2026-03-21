@@ -1,4 +1,5 @@
-import type { ChatInputCommandInteraction, EmbedBuilder, TextBasedChannel } from "discord.js";
+import type { EmbedBuilder } from "@discordjs/builders";
+import type { ChatInputCommandInteraction, TextBasedChannel } from "discord.js";
 import { createLevelUpEmbed, createProgressBar } from "./embed-builder.ts";
 
 /**

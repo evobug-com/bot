@@ -1,4 +1,5 @@
-import { ContainerBuilder, type MessageCreateOptions, MessageFlags, SeparatorSpacingSize } from "discord.js";
+import { type MessageCreateOptions, MessageFlags, SeparatorSpacingSize } from "discord.js";
+import { ContainerBuilder } from "@discordjs/builders";
 
 /**
  * Violation System Data and Types

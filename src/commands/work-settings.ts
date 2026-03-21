@@ -1,4 +1,5 @@
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import type { CommandContext } from "../util/commands";
 import { isAdmin } from "../utils/admin.ts";
 import {

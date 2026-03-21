@@ -2,21 +2,19 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-	ActionRowBuilder,
 	type Activity,
 	ActivityType,
 	type ButtonInteraction,
 	type Client,
-	DangerButtonBuilder,
 	Events,
 	type Guild,
 	type GuildMember,
 	type Message,
 	MessageFlags,
 	type Presence,
-	SuccessButtonBuilder,
 	type TextChannel,
 } from "discord.js";
+import { ActionRowBuilder, DangerButtonBuilder, SuccessButtonBuilder } from "@discordjs/builders";
 import { ChannelManager, RoleManager } from "../util";
 import { DISCORD_ROLES } from "../util/config/roles.ts";
 import { createLogger } from "../util/logger.ts";

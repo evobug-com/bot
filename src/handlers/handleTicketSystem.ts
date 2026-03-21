@@ -13,11 +13,9 @@
  */
 
 import {
-	ActionRowBuilder,
 	type ButtonInteraction,
 	ChannelType,
 	type Client,
-	EmbedBuilder,
 	Events,
 	type Guild,
 	type Interaction,
@@ -25,9 +23,13 @@ import {
 	type OverwriteResolvable,
 	OverwriteType,
 	PermissionFlagsBits,
+} from "discord.js";
+import {
+	ActionRowBuilder,
+	EmbedBuilder,
 	PrimaryButtonBuilder,
 	DangerButtonBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import { ChannelManager, RoleManager, reportError } from "../util";
 import { createLogger } from "../util/logger.ts";
 
@@ -192,7 +194,7 @@ async function handleCreateTicket(interaction: ButtonInteraction): Promise<void>
 	try {
 		// Get ticket category
 		const ticketCategory = ChannelManager.getChannel(guild, "TICKET_CATEGORY");
-		if (!ticketCategory) {
+		if (!ticketCategory || ticketCategory.type !== ChannelType.GuildCategory) {
 			await interaction.reply({
 				content: "❌ Kategorie pro tickety nebyla nalezena. Kontaktuj administrátora.",
 				flags: MessageFlags.Ephemeral,
@@ -210,12 +212,11 @@ async function handleCreateTicket(interaction: ButtonInteraction): Promise<void>
 			return;
 		}
 
-		// Create the ticket channel
+		// Create the ticket channel under the ticket category
 		const channelName = generateTicketChannelName(user.username);
-		const ticketChannel = await guild.channels.create({
+		const ticketChannel = await ticketCategory.children.create({
 			name: channelName,
 			type: ChannelType.GuildText,
-			parent: ticketCategory.id,
 			permissionOverwrites,
 		});
 

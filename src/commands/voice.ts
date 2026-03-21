@@ -1,4 +1,5 @@
-import { ChatInputCommandBuilder, type GuildMember, MessageFlags, type VoiceChannel } from "discord.js";
+import { type GuildMember, MessageFlags, type VoiceChannel } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import {
 	getChannelOwner,
 	inviteUserToChannel,

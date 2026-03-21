@@ -5,7 +5,8 @@
  * Logs pricing/tokens to console.
  */
 
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed } from "../util";
 import type { CommandContext } from "../util/commands.ts";

@@ -1,7 +1,5 @@
 /* eslint-disable no-await-in-loop -- Paginated API fetching requires sequential requests */
-import {
-	ChatInputCommandBuilder,
-} from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed } from "../util";
 import {

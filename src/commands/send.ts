@@ -1,9 +1,5 @@
-import {
-	ChatInputCommandBuilder,
-	ModalBuilder,
-	PermissionFlagsBits,
-	TextInputStyle,
-} from "discord.js";
+import { PermissionFlagsBits, TextInputStyle } from "discord.js";
+import { ChatInputCommandBuilder, ModalBuilder } from "@discordjs/builders";
 import type { CommandContext } from "../util/commands.ts";
 
 export const data = new ChatInputCommandBuilder()

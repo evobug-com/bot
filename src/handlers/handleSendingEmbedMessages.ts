@@ -19,13 +19,13 @@
 
 import {
 	type Client,
-	EmbedBuilder,
 	Events,
 	type Interaction,
 	type MessageCreateOptions,
 	MessageFlags,
 	type MessagePayload,
 } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 import { createLogger } from "../util/logger.ts";
 
 const log = createLogger("EmbedMessages");

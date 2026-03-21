@@ -1,4 +1,5 @@
-import { type Client, Events, type Message, type TextChannel, userMention } from "discord.js";
+import { type Client, Events, type Message, type TextChannel } from "discord.js";
+import { userMention } from "@discordjs/formatters";
 import { formatPunishmentForAlert, processAutoPunishment } from "../services/autoPunishment/index.ts";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../util/config/channels.ts";
 import { DISCORD_ROLES } from "../util/config/roles.ts";

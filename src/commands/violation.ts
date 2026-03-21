@@ -1,11 +1,10 @@
 import {
-	ChatInputCommandBuilder,
 	type ChatInputCommandInteraction,
-	ContainerBuilder,
 	MessageFlags,
 	PermissionFlagsBits,
 	SeparatorSpacingSize,
 } from "discord.js";
+import { ChatInputCommandBuilder, ContainerBuilder } from "@discordjs/builders";
 import { getDbUser } from "../client/client.ts";
 import {
 	DefaultExpirationDays,

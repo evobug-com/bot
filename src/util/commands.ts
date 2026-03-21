@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { Glob } from "bun";
-import type { ApplicationCommand, ChatInputCommandBuilder, ChatInputCommandInteraction, Guild } from "discord.js";
+import type { ChatInputCommandBuilder } from "@discordjs/builders";
+import type { ApplicationCommand, ChatInputCommandInteraction, Guild } from "discord.js";
 import type { orpc } from "../client/client.ts";
 
 const commands: Record<

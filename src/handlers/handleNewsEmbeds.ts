@@ -6,18 +6,20 @@
  */
 
 import {
-	ActionRowBuilder,
 	type APIEmbed,
 	type ButtonInteraction,
 	type Client,
-	DangerButtonBuilder,
 	Events,
 	type Interaction,
 	MessageFlags,
 	type ModalSubmitInteraction,
+} from "discord.js";
+import {
+	ActionRowBuilder,
+	DangerButtonBuilder,
 	SecondaryButtonBuilder,
 	SuccessButtonBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import { generateAiResponse } from "../util/ai.js";
 import { createLogger } from "../util/logger.ts";
 import { parseJsonData } from "./handleSendingEmbedMessages.js";

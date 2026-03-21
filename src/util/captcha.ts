@@ -1,11 +1,5 @@
-import {
-	ActionRowBuilder,
-	type ChatInputCommandInteraction,
-	ComponentType,
-	EmbedBuilder,
-	MessageFlags,
-	SecondaryButtonBuilder,
-} from "discord.js";
+import { type ChatInputCommandInteraction, ComponentType, MessageFlags } from "discord.js";
+import { ActionRowBuilder, EmbedBuilder, SecondaryButtonBuilder } from "@discordjs/builders";
 import { captchaTracker } from "./captcha-tracker.ts";
 
 export type CaptchaType = "math" | "emoji" | "word";

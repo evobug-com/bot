@@ -1,4 +1,5 @@
-import { ChannelType, ChatInputCommandBuilder, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { ChannelType, PermissionFlagsBits, type TextChannel } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { infoData, rulesComponentsV2Simple, rulesData } from "../data/rulesData.ts";
 import type { CommandContext } from "../util/commands";
 

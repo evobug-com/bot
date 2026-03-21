@@ -6,16 +6,18 @@
  */
 
 import {
-	ActionRowBuilder,
 	type ButtonInteraction,
 	type Client,
-	DangerButtonBuilder,
 	Events,
 	type Interaction,
 	MessageFlags,
+} from "discord.js";
+import {
+	ActionRowBuilder,
+	DangerButtonBuilder,
 	PrimaryButtonBuilder,
 	SecondaryButtonBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import * as sessionManager from "../services/storySession";
 import * as storyEngine from "../util/storytelling/engine";
 import type { StoryAction, StoryActionResult, StorySession } from "../util/storytelling/types";

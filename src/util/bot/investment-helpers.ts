@@ -1,4 +1,4 @@
-import type { EmbedBuilder } from "discord.js";
+import type { EmbedBuilder } from "@discordjs/builders";
 import { createEmbed } from "./embed-builder.ts";
 
 /**

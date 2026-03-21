@@ -1,4 +1,5 @@
-import { ChatInputCommandBuilder, ContainerBuilder, type InteractionReplyOptions, MessageFlags } from "discord.js";
+import { type InteractionReplyOptions, MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder, ContainerBuilder } from "@discordjs/builders";
 import type { CommandContext } from "../util/commands.js";
 
 export const data = new ChatInputCommandBuilder()

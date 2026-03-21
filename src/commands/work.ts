@@ -1,4 +1,5 @@
-import {ChatInputCommandBuilder, type GuildMember, MessageFlags} from "discord.js";
+import { type GuildMember, MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { orpc } from "../client/client.ts";
 import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
 import { getSecureRandomIndex } from "../utils/random.ts";

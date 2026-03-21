@@ -1,12 +1,11 @@
+import { MessageFlags, ComponentType } from "discord.js";
 import {
 	ChatInputCommandBuilder,
 	EmbedBuilder,
-	MessageFlags,
 	ActionRowBuilder,
 	StringSelectMenuBuilder,
 	StringSelectMenuOptionBuilder,
-	ComponentType,
-} from "discord.js";
+} from "@discordjs/builders";
 import type { CommandContext } from "../util/commands.ts";
 import {
 	Career,

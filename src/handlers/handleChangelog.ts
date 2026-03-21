@@ -5,7 +5,8 @@
  * Reads from CHANGELOG.md file and tracks what has been sent.
  */
 
-import { type Client, EmbedBuilder } from "discord.js";
+import { type Client } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DISCORD_CHANNELS, getChannelByConfig } from "../util/config/channels.ts";

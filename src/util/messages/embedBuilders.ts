@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 export const createCeskyStatistickyUradEmbed = () => {
 	return new EmbedBuilder().setColor(0x004080).setAuthor({

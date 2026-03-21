@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/unbound-method -- Test patterns */
 import { afterEach, beforeEach, describe, expect, it, mock, type Mock } from "bun:test";
-import type { Client, EmbedBuilder, Guild, TextChannel } from "discord.js";
+import type { EmbedBuilder } from "@discordjs/builders";
+import type { Client, Guild, TextChannel } from "discord.js";
 import { createChangelogEmbed, getNewEntries, handleChangelog, parseChangelog } from "./handleChangelog.ts";
 
 interface SendOptions {

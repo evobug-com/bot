@@ -1,4 +1,5 @@
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { orpc } from "../client/client.ts";
 import { ChannelManager, createErrorEmbed, formatTimeRemaining } from "../util";
 import { checkUserBeforeCommand, enforceAntiCheatAction } from "../util/anti-cheat-handler.ts";

@@ -1,13 +1,11 @@
+import { ComponentType, type Guild, MessageFlags } from "discord.js";
 import {
 	ActionRowBuilder,
 	ChatInputCommandBuilder,
-	ComponentType,
 	DangerButtonBuilder,
 	EmbedBuilder,
-	type Guild,
-	MessageFlags,
 	SecondaryButtonBuilder,
-} from "discord.js";
+} from "@discordjs/builders";
 import type { CommandContext } from "../util/commands.ts";
 import { isAdmin } from "../utils/admin.ts";
 

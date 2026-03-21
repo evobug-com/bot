@@ -1,4 +1,5 @@
-import { ChatInputCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder, EmbedBuilder } from "@discordjs/builders";
 import type { CommandContext } from "../util/commands.ts";
 import { getUserSettings, setStoryWorkEnabled } from "../services/userSettings/storage.ts";
 

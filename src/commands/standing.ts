@@ -1,6 +1,7 @@
 import type { ComponentBuilder } from "@discordjs/builders";
 import { ORPCError } from "@orpc/client";
-import { ActionRowBuilder, ChatInputCommandBuilder, MessageFlags, SecondaryButtonBuilder } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ActionRowBuilder, ChatInputCommandBuilder, SecondaryButtonBuilder } from "@discordjs/builders";
 import { getDbUser, orpc } from "../client/client.ts";
 import {
 	AccountStanding,

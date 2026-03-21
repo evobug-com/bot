@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/client";
-import { ChatInputCommandBuilder, type Guild, MessageFlags } from "discord.js";
+import { type Guild, MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { orpc } from "../client/client.ts";
 import { createErrorEmbed, createProgressBar } from "../util";
 import { getProfitLossEmoji } from "../util/bot/investment-helpers.ts";

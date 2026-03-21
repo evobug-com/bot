@@ -130,12 +130,29 @@ async function executeCreateChannel(guild: Guild, args: Record<string, unknown>)
 	const parsed = CreateChannelArgsSchema.parse(args);
 	const channelType = parsed.type === "voice" ? ChannelType.GuildVoice : ChannelType.GuildText;
 
-	const channel = await guild.channels.create({
-		name: parsed.name,
-		type: channelType,
-		parent: parsed.category_id,
-		position: parsed.position,
-	});
+	let channel;
+	if (parsed.category_id) {
+		const category = guild.channels.cache.get(parsed.category_id);
+		if (category?.type === ChannelType.GuildCategory) {
+			channel = await category.children.create({
+				name: parsed.name,
+				type: channelType,
+				position: parsed.position,
+			});
+		} else {
+			channel = await guild.channels.create({
+				name: parsed.name,
+				type: channelType,
+				position: parsed.position,
+			});
+		}
+	} else {
+		channel = await guild.channels.create({
+			name: parsed.name,
+			type: channelType,
+			position: parsed.position,
+		});
+	}
 
 	return {
 		toolCallId: "",

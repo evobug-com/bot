@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 
 // Color constants for different embed types
 export const EMBED_COLORS = {

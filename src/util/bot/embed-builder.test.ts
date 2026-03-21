@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "@discordjs/builders";
 import {
 	createEconomyEmbed,
 	createEmbed,

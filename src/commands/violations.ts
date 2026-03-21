@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/client";
-import { ChatInputCommandBuilder, MessageFlags } from "discord.js";
+import { MessageFlags } from "discord.js";
+import { ChatInputCommandBuilder } from "@discordjs/builders";
 import { getDbUser, orpc } from "../client/client.ts";
 import {
 	createViolationListDisplay,

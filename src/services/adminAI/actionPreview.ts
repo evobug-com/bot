@@ -1,4 +1,4 @@
-import { ActionRowBuilder, DangerButtonBuilder, EmbedBuilder, PrimaryButtonBuilder } from "discord.js";
+import { ActionRowBuilder, DangerButtonBuilder, EmbedBuilder, PrimaryButtonBuilder } from "@discordjs/builders";
 import type { ActionResult, PlannedAction } from "./types.ts";
 
 export function buildPreviewEmbed(actions: PlannedAction[], aiMessage?: string): EmbedBuilder {

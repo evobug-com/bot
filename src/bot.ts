@@ -15,6 +15,7 @@ import { handleTicketSystem } from "./handlers/handleTicketSystem.ts";
 import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannels.ts";
 import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
+import { handleAdminAI } from "./handlers/handleAdminAI.ts";
 import { initStoryInteractions } from "./handlers/handleStoryInteractions.ts";
 import { ensureUserRegistered, reportError } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
@@ -56,6 +57,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 	// Initialize synchronous handlers first
 	initStoryInteractions(readyClient);
+	handleAdminAI(readyClient);
 
 	await Promise.all([
 		handleChangelog(readyClient),

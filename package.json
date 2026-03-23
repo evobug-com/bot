@@ -13,8 +13,8 @@
 		"lint": "oxlint --type-aware"
 	},
 	"dependencies": {
-		"@discordjs/builders": "^2.0.0-dev.1773446773-2a067216c",
-		"@discordjs/formatters": "^1.0.0-dev.1773446773-2a067216c",
+		"@discordjs/builders": "^2.0.0-pr-11006.1765452229-e636950b2",
+		"@discordjs/formatters": "^1.0.0-pr-11006.1765452229-e636950b2",
 		"@discordjs/voice": "^0.19.2",
 		"@orpc/client": "^1.13.9",
 		"@orpc/server": "^1.13.9",

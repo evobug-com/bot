@@ -16,7 +16,7 @@
 		"@discordjs/builders": "^2.0.0-pr-11006.1765452229-e636950b2",
 		"@discordjs/formatters": "^1.0.0-pr-11006.1765452229-e636950b2",
 		"@discordjs/voice": "^0.19.2",
-		"@orpc/client": "^1.13.9",
+		"@orpc/client": "^1.13.11",
 		"@orpc/server": "^1.13.11",
 		"discord.js": "dev",
 		"dotenv": "^17.3.1",

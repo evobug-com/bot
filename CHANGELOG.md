@@ -16,7 +16,15 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
-<!-- commits after 4cb28f5 -->
+<!-- commits after XXX -->
+
+
+## [2.8.2] - 2026-03-30
+
+### Přidáno
+- Mickle Voice Counter — nový voice kanál zobrazující počet aktivních uživatelů v hlasových místnostech Mickle (např. `Mickle-Voice:3`)
+- Automatická aktualizace každých 5 minut přes LiveKit Server API
+- Kanál se vytvoří automaticky při startu bota (view-only, nelze se připojit)
 
 
 ## [2.8.1] - 2026-03-04
@@ -115,7 +123,7 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Přidáno
 - Dockerfile a GitHub Actions workflow pro sestavení Docker obrazů
-- CHANGELOG.md pro sledování aktualizací bota (a v češtině!)
+- CHANGELOG.MD pro sledování aktualizací bota (a v češtině!)
 
 ### Změněno
 - Changelog nyní čte ze souboru místo z gitu (kompatibilní s Dockerem)

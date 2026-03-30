@@ -16,6 +16,7 @@ import { handleVirtualVoiceChannels } from "./handlers/handleVirtualVoiceChannel
 import { handleVoiceConnections } from "./handlers/handleVoiceConnections.ts";
 import { handleWarningSystem } from "./handlers/handleWarningSystem.ts";
 import { handleAdminAI } from "./handlers/handleAdminAI.ts";
+import { handleMickleVoiceCounter } from "./handlers/handleMickleVoiceCounter.ts";
 import { initStoryInteractions } from "./handlers/handleStoryInteractions.ts";
 import { ensureUserRegistered, reportError } from "./util";
 import { getCommand, registerCommands } from "./util/commands.ts";
@@ -76,6 +77,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 		handleCommandsForRoom(readyClient),
 		handleVoiceConnections(readyClient),
 		handleTicketSystem(readyClient),
+		handleMickleVoiceCounter(readyClient),
 	]);
 	log("info", "All handlers initialized successfully");
 

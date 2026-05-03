@@ -26,6 +26,11 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Admin AI: nový read-only nástroj `list_forum_threads` — vypíše posty (threads) ve forum kanálu pro získání jejich ID.
 - Admin AI: prompt context nyní u forum kanálů vypisuje i jejich `availableTags` (id, jméno, emoji), takže model může okamžitě přiřadit existující tagy bez extra fetche.
 
+## [2.8.5] - 2026-05-03
+
+### Přidáno
+- Admin AI: nový nástroj `update_channel` — upravuje nastavení kanálu (topic/popis, slowmode v sekundách, NSFW flag, voice user limit, voice bitrate). Mění pouze pole, která admin výslovně požádal.
+
 
 ## [2.8.4] - 2026-05-03
 

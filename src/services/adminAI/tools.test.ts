@@ -24,6 +24,7 @@ import {
 	ReopenThreadArgsSchema,
 	SetChannelPermissionArgsSchema,
 	UnlockThreadArgsSchema,
+	UpdateChannelArgsSchema,
 } from "./types.ts";
 import type { GuildContext } from "./types.ts";
 
@@ -464,6 +465,95 @@ describe("Zod schemas", () => {
 		it("rejects limit above 100", () => {
 			const r = ListForumThreadsArgsSchema.safeParse({ forum_channel_id: "f1", limit: 200 });
 			expect(r.success).toBe(false);
+	describe("UpdateChannelArgsSchema", () => {
+		it("accepts topic-only update", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "New description",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts slowmode-only update", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: 300,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts topic=null to clear it", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: null,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts multiple fields together", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "Voice room",
+				user_limit: 10,
+				bitrate: 64000,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects when no update fields are provided", () => {
+			const result = UpdateChannelArgsSchema.safeParse({ channel_id: "ch-1" });
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects slowmode above 21600 (Discord max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: 30000,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects negative slowmode", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: -1,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects user_limit above 99 (Discord max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				user_limit: 200,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("accepts topic between 1025 and 4096 chars (forum/media long-form)", () => {
+			// 1024 is the text-channel cap; 4096 is the forum/media cap. Schema
+			// uses the wider limit so legitimate forum guideline updates aren't
+			// rejected client-side. Discord enforces the per-type cap server-side.
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(2048),
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts topic at exactly 4096 chars (forum/media max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(4096),
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects topic over 4096 chars (above any Discord cap)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(4097),
+			});
+			expect(result.success).toBe(false);
 		});
 	});
 });
@@ -691,5 +781,38 @@ describe("generateActionSummary", () => {
 		expect(summary).toContain('"release"');
 		expect(summary).toContain("🚀");
 		expect(summary).toContain("(moderated)");
+	it("summarizes update_channel topic+slowmode", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", topic: "New desc", slowmode_seconds: 60 },
+			testContext,
+		);
+
+		expect(summary).toContain("Update");
+		expect(summary).toContain("#general");
+		expect(summary).toContain('topic="New desc"');
+		expect(summary).toContain("slowmode=60s");
+	});
+
+	it("summarizes update_channel topic cleared (null)", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", topic: null },
+			testContext,
+		);
+
+		expect(summary).toContain("topic=(cleared)");
+	});
+
+	it("summarizes update_channel voice fields", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", user_limit: 5, bitrate: 64000, nsfw: true },
+			testContext,
+		);
+
+		expect(summary).toContain("user_limit=5");
+		expect(summary).toContain("bitrate=64000");
+		expect(summary).toContain("nsfw=true");
 	});
 });

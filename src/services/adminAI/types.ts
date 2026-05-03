@@ -106,6 +106,35 @@ export const QueryAuditLogArgsSchema = z.object({
 	user_id: z.string().optional(),
 });
 
+export const UpdateChannelArgsSchema = z
+	.object({
+		channel_id: z.string(),
+		// Channel "topic" / description. Discord caps this at 1024 chars on
+		// text/announcement channels but allows up to 4096 chars on forum and
+		// media channels (their long-form post guidelines). We use the wider
+		// limit here so legitimate forum-guideline updates aren't rejected
+		// client-side; Discord enforces the per-type cap server-side anyway.
+		topic: z.string().max(4096).nullable().optional(),
+		// Slowmode in seconds. Discord allows 0–21600 (6 hours). 0 disables.
+		slowmode_seconds: z.number().int().min(0).max(21600).optional(),
+		nsfw: z.boolean().optional(),
+		// Voice channels only
+		user_limit: z.number().int().min(0).max(99).optional(),
+		// Voice channels only — bits per second (8000–96000 stage; 8000–384000 boosted)
+		bitrate: z.number().int().min(8000).max(384000).optional(),
+	})
+	.refine(
+		(v) =>
+			v.topic !== undefined ||
+			v.slowmode_seconds !== undefined ||
+			v.nsfw !== undefined ||
+			v.user_limit !== undefined ||
+			v.bitrate !== undefined,
+		{ message: "At least one update field must be provided" },
+	);
+
+export type UpdateChannelArgs = z.infer<typeof UpdateChannelArgsSchema>;
+
 export type QueryAuditLogArgs = z.infer<typeof QueryAuditLogArgsSchema>;
 
 export const ApplyForumTagsArgsSchema = z.object({

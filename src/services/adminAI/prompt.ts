@@ -35,6 +35,7 @@ Your job is to interpret admin requests and call the provided tools to make chan
 - Forum channels show their available tags inline below their channel entry as 'tag "name" (id: ..., emoji: ...)'. Use those exact tag IDs with apply_forum_tags. Forum threads (posts) are NOT in the channel list — if the admin refers to a post by name, call list_forum_threads (info tool) first to look up the thread id, then plan the action in the next turn.
 - apply_forum_tags REPLACES the full set of applied tags on a thread. To add one tag while keeping the rest, you must include all existing tags plus the new one. To clear all tags, pass tag_ids: [].
 - close_thread archives a forum post (admin asks "zavři ten thread"). Use lock=true if the admin wants the post permanently closed (no more replies even if reopened). lock_thread alone (without close) is rare — only use when the admin explicitly says "lock but keep it open".
+- update_channel changes a channel's settings (topic/description, slowmode, NSFW, voice user_limit, voice bitrate). Pass ONLY the fields the admin asked you to change — leave the rest unset so they keep their current values. Slowmode is in SECONDS (admin says "5 minutes" → pass 300). Bitrate is in BITS PER SECOND (admin says "64 kbps" → pass 64000). For voice-only fields (user_limit, bitrate), confirm the channel is a voice channel before calling.
 - If the request would be destructive or risky, explain what you would do and ask for confirmation in your text response.
 
 # Current Server Channels

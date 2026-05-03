@@ -91,10 +91,11 @@ describe("Story command filtering", () => {
 		expect(categories.has("story:adventure")).toBe(true);
 	});
 
-	it("should have 15 story activities total", () => {
+	it("should have 16 story activities total", () => {
 		const storyActivities = getStoryActivities();
-		// Based on the categorization: 10 work + 2 crime + 3 adventure = 15
-		expect(storyActivities.length).toBe(15);
+		// Based on the categorization: 11 work + 2 crime + 3 adventure = 16
+		// (+ McDonalds Mega Order added in v2.8.x as story:work)
+		expect(storyActivities.length).toBe(16);
 	});
 });
 

@@ -13,7 +13,11 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 
 const log = createLogger("AdminAI");
 
-const ADMIN_AI_MODEL = "anthropic/claude-sonnet-latest";
+// `~anthropic/claude-sonnet-latest` is OpenRouter's auto-routing alias that
+// always redirects to the newest Sonnet. The `~` prefix is part of the slug
+// (OpenRouter's marker for variant/alias models) — without it OpenRouter
+// rejects the request with "not a valid model ID".
+const ADMIN_AI_MODEL = "~anthropic/claude-sonnet-latest";
 const SESSION_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const ACTION_DELAY_MS = 300;
 const MAX_TOOL_LOOP_ITERATIONS = 5;

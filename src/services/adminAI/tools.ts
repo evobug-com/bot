@@ -8,21 +8,29 @@ import {
 } from "discord.js";
 import type { ActionResult, GuildContext } from "./types.ts";
 import {
+	AddForumChannelTagArgsSchema,
+	ApplyForumTagsArgsSchema,
 	AssignRoleArgsSchema,
 	CloneChannelArgsSchema,
+	CloseThreadArgsSchema,
 	CreateCategoryArgsSchema,
 	CreateChannelArgsSchema,
 	DeleteChannelArgsSchema,
+	ListForumThreadsArgsSchema,
+	LockThreadArgsSchema,
 	MoveChannelArgsSchema,
 	QueryAuditLogArgsSchema,
+	RemoveForumChannelTagArgsSchema,
 	RemoveRoleArgsSchema,
 	RenameChannelArgsSchema,
+	ReopenThreadArgsSchema,
 	SetChannelPermissionArgsSchema,
+	UnlockThreadArgsSchema,
 	UpdateChannelArgsSchema,
 } from "./types.ts";
 import type { ChatCompletionFunctionTool } from "openai/resources/chat/completions";
 
-export const INFO_TOOLS: ReadonlySet<string> = new Set(["query_audit_log"]);
+export const INFO_TOOLS: ReadonlySet<string> = new Set(["query_audit_log", "list_forum_threads"]);
 
 export const adminToolDefinitions: ChatCompletionFunctionTool[] = [
 	{
@@ -222,6 +230,133 @@ export const adminToolDefinitions: ChatCompletionFunctionTool[] = [
 					user_id: { type: "string", description: "Filter by executor (who performed the action)" },
 				},
 				required: [],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "apply_forum_tags",
+			description: "Replace the set of tags applied to a forum post (thread). Pass the FULL desired set of tag IDs — anything not in the list is removed. Tag IDs come from the forum channel's `forumTags` list in the context above.",
+			parameters: {
+				type: "object",
+				properties: {
+					thread_id: { type: "string", description: "ID of the forum post / thread to retag" },
+					tag_ids: {
+						type: "array",
+						items: { type: "string" },
+						description: "Full new set of tag IDs (max 5 per Discord). Pass [] to clear all tags.",
+					},
+				},
+				required: ["thread_id", "tag_ids"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "add_forum_channel_tag",
+			description: "Add a NEW tag to a forum channel's `availableTags` list (so it can later be applied to threads). For applying an existing tag to a single thread, use apply_forum_tags instead.",
+			parameters: {
+				type: "object",
+				properties: {
+					forum_channel_id: { type: "string", description: "ID of the forum channel" },
+					name: { type: "string", description: "Tag name (1-20 chars)" },
+					emoji_unicode: { type: "string", description: "Optional unicode emoji (e.g. '🔥', '✅'). Single codepoint." },
+					moderated: { type: "boolean", description: "If true, only mods can apply this tag. Default false." },
+				},
+				required: ["forum_channel_id", "name"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "remove_forum_channel_tag",
+			description: "Remove a tag from a forum channel's `availableTags`. Threads currently tagged with it lose the tag.",
+			parameters: {
+				type: "object",
+				properties: {
+					forum_channel_id: { type: "string", description: "ID of the forum channel" },
+					tag_id: { type: "string", description: "ID of the tag to remove" },
+				},
+				required: ["forum_channel_id", "tag_id"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "close_thread",
+			description: "Close (archive) a thread or forum post. Optionally lock it at the same time so members can't reopen by replying. Use lock=true for spam/resolved/permanently-closed posts.",
+			parameters: {
+				type: "object",
+				properties: {
+					thread_id: { type: "string", description: "ID of the thread / forum post to close" },
+					lock: { type: "boolean", description: "Also lock the thread. Default false." },
+					reason: { type: "string", description: "Audit-log reason (max 512 chars)." },
+				},
+				required: ["thread_id"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "reopen_thread",
+			description: "Reopen (unarchive) a closed thread or forum post. Optionally also unlock it.",
+			parameters: {
+				type: "object",
+				properties: {
+					thread_id: { type: "string", description: "ID of the thread / forum post to reopen" },
+					unlock: { type: "boolean", description: "Also unlock the thread. Default false." },
+				},
+				required: ["thread_id"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "lock_thread",
+			description: "Lock a thread (members can't post new messages) without archiving it.",
+			parameters: {
+				type: "object",
+				properties: {
+					thread_id: { type: "string", description: "ID of the thread / forum post to lock" },
+					reason: { type: "string", description: "Audit-log reason (max 512 chars)." },
+				},
+				required: ["thread_id"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "unlock_thread",
+			description: "Unlock a previously locked thread.",
+			parameters: {
+				type: "object",
+				properties: {
+					thread_id: { type: "string", description: "ID of the thread to unlock" },
+				},
+				required: ["thread_id"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "list_forum_threads",
+			description: "READ-ONLY info tool: list threads (posts) in a forum channel. Returns thread name, id, applied tag ids, archived/locked state. Use when admin refers to a post by name and you need its id, or when you need to enumerate all posts before acting.",
+			parameters: {
+				type: "object",
+				properties: {
+					forum_channel_id: { type: "string", description: "ID of the forum channel" },
+					include_archived: { type: "boolean", description: "Also fetch archived (closed) threads. Default false." },
+					limit: { type: "number", description: "Max threads to return (1-100, default 30)" },
+				},
+				required: ["forum_channel_id"],
 			},
 		},
 	},
@@ -611,6 +746,76 @@ async function executeQueryAuditLog(guild: Guild, args: Record<string, unknown>)
 	return lines.join("\n");
 }
 
+async function executeListForumThreads(guild: Guild, args: Record<string, unknown>): Promise<string> {
+	const parsed = ListForumThreadsArgsSchema.parse(args);
+	const channel = guild.channels.cache.get(parsed.forum_channel_id);
+
+	if (!channel) {
+		return `Forum channel ${parsed.forum_channel_id} not found.`;
+	}
+	if (channel.type !== ChannelType.GuildForum && channel.type !== ChannelType.GuildMedia) {
+		return `Channel "${channel.name}" (${parsed.forum_channel_id}) is not a forum/media channel.`;
+	}
+
+	type ThreadFetchTarget = {
+		threads: {
+			fetchActive: () => Promise<{ threads: Map<string, unknown> }>;
+			fetchArchived?: (options: { type?: "public"; limit?: number }) => Promise<{ threads: Map<string, unknown> }>;
+		};
+	};
+	const forum = channel as unknown as ThreadFetchTarget;
+	const limit = parsed.limit ?? 30;
+
+	const active = await forum.threads.fetchActive();
+	const collected: Array<{ id: string; name: string; archived: boolean; locked: boolean; appliedTags: string[] }> = [];
+	type ThreadShape = {
+		id: string;
+		name: string;
+		archived?: boolean | null;
+		locked?: boolean | null;
+		appliedTags?: string[] | null;
+	};
+	for (const t of active.threads.values()) {
+		const th = t as ThreadShape;
+		collected.push({
+			id: th.id,
+			name: th.name,
+			archived: Boolean(th.archived),
+			locked: Boolean(th.locked),
+			appliedTags: th.appliedTags ?? [],
+		});
+	}
+
+	if (parsed.include_archived && forum.threads.fetchArchived) {
+		const archived = await forum.threads.fetchArchived({ type: "public", limit });
+		for (const t of archived.threads.values()) {
+			const th = t as ThreadShape;
+			if (collected.some((c) => c.id === th.id)) continue;
+			collected.push({
+				id: th.id,
+				name: th.name,
+				archived: Boolean(th.archived),
+				locked: Boolean(th.locked),
+				appliedTags: th.appliedTags ?? [],
+			});
+		}
+	}
+
+	const trimmed = collected.slice(0, limit);
+	if (trimmed.length === 0) return "No threads found in this forum.";
+
+	const lines = trimmed.map((t) => {
+		const flags: string[] = [];
+		if (t.archived) flags.push("archived");
+		if (t.locked) flags.push("locked");
+		const flagStr = flags.length > 0 ? ` [${flags.join(", ")}]` : "";
+		const tagStr = t.appliedTags.length > 0 ? ` tags=[${t.appliedTags.join(",")}]` : "";
+		return `${t.id} | "${t.name}"${flagStr}${tagStr}`;
+	});
+
+	return lines.join("\n");
+}
+
 export async function executeInfoTool(
 	guild: Guild,
 	functionName: string,
@@ -619,6 +824,9 @@ export async function executeInfoTool(
 	try {
 		if (functionName === "query_audit_log") {
 			return await executeQueryAuditLog(guild, args);
+		}
+		if (functionName === "list_forum_threads") {
+			return await executeListForumThreads(guild, args);
 		}
 		return `Unknown info tool: ${functionName}`;
 	} catch (error) {
@@ -660,6 +868,202 @@ async function executeRemoveRole(guild: Guild, args: Record<string, unknown>): P
 	};
 }
 
+type ThreadLike = {
+	id: string;
+	name: string;
+	isThread?: () => boolean;
+	setAppliedTags?: (tags: string[], reason?: string) => Promise<unknown>;
+	setArchived?: (archived: boolean, reason?: string) => Promise<unknown>;
+	setLocked?: (locked: boolean, reason?: string) => Promise<unknown>;
+};
+
+type ForumLike = {
+	id: string;
+	name: string;
+	availableTags: Array<{ id: string; name: string }>;
+	setAvailableTags: (
+		tags: Array<{ id?: string; name: string; emoji?: { name: string | null; id: string | null } | null; moderated?: boolean }>,
+		reason?: string,
+	) => Promise<unknown>;
+};
+
+function getThread(guild: Guild, threadId: string): ThreadLike | null {
+	const channel = guild.channels.cache.get(threadId) as unknown as ThreadLike | undefined;
+	if (!channel) return null;
+	if (typeof channel.isThread === "function" && !channel.isThread()) return null;
+	return channel;
+}
+
+function getForum(guild: Guild, forumId: string): ForumLike | null {
+	const channel = guild.channels.cache.get(forumId);
+	if (!channel) return null;
+	if (channel.type !== ChannelType.GuildForum && channel.type !== ChannelType.GuildMedia) return null;
+	return channel as unknown as ForumLike;
+}
+
+async function executeApplyForumTags(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = ApplyForumTagsArgsSchema.parse(args);
+	const thread = getThread(guild, parsed.thread_id);
+	if (!thread || !thread.setAppliedTags) {
+		return {
+			toolCallId: "",
+			functionName: "apply_forum_tags",
+			success: false,
+			message: `Thread ${parsed.thread_id} not found or not a forum/media thread`,
+		};
+	}
+	await thread.setAppliedTags(parsed.tag_ids);
+	return {
+		toolCallId: "",
+		functionName: "apply_forum_tags",
+		success: true,
+		message: `Applied ${parsed.tag_ids.length} tag(s) to "${thread.name}"`,
+	};
+}
+
+async function executeAddForumChannelTag(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = AddForumChannelTagArgsSchema.parse(args);
+	const forum = getForum(guild, parsed.forum_channel_id);
+	if (!forum) {
+		return {
+			toolCallId: "",
+			functionName: "add_forum_channel_tag",
+			success: false,
+			message: `Forum channel ${parsed.forum_channel_id} not found`,
+		};
+	}
+	const newTag: { name: string; emoji?: { name: string | null; id: string | null } | null; moderated?: boolean } = {
+		name: parsed.name,
+	};
+	if (parsed.emoji_unicode) newTag.emoji = { name: parsed.emoji_unicode, id: null };
+	if (parsed.moderated !== undefined) newTag.moderated = parsed.moderated;
+
+	const next = [...forum.availableTags.map((t) => ({ id: t.id, name: t.name })), newTag];
+	await forum.setAvailableTags(next);
+	return {
+		toolCallId: "",
+		functionName: "add_forum_channel_tag",
+		success: true,
+		message: `Added tag "${parsed.name}" to forum "${forum.name}"`,
+	};
+}
+
+async function executeRemoveForumChannelTag(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = RemoveForumChannelTagArgsSchema.parse(args);
+	const forum = getForum(guild, parsed.forum_channel_id);
+	if (!forum) {
+		return {
+			toolCallId: "",
+			functionName: "remove_forum_channel_tag",
+			success: false,
+			message: `Forum channel ${parsed.forum_channel_id} not found`,
+		};
+	}
+	const removed = forum.availableTags.find((t) => t.id === parsed.tag_id);
+	if (!removed) {
+		return {
+			toolCallId: "",
+			functionName: "remove_forum_channel_tag",
+			success: false,
+			message: `Tag ${parsed.tag_id} not found on forum "${forum.name}"`,
+		};
+	}
+	const next = forum.availableTags.filter((t) => t.id !== parsed.tag_id).map((t) => ({ id: t.id, name: t.name }));
+	await forum.setAvailableTags(next);
+	return {
+		toolCallId: "",
+		functionName: "remove_forum_channel_tag",
+		success: true,
+		message: `Removed tag "${removed.name}" from forum "${forum.name}"`,
+	};
+}
+
+async function executeCloseThread(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = CloseThreadArgsSchema.parse(args);
+	const thread = getThread(guild, parsed.thread_id);
+	if (!thread || !thread.setArchived) {
+		return {
+			toolCallId: "",
+			functionName: "close_thread",
+			success: false,
+			message: `Thread ${parsed.thread_id} not found`,
+		};
+	}
+	if (parsed.lock && thread.setLocked) {
+		await thread.setLocked(true, parsed.reason);
+	}
+	await thread.setArchived(true, parsed.reason);
+	return {
+		toolCallId: "",
+		functionName: "close_thread",
+		success: true,
+		message: `Closed${parsed.lock ? " and locked" : ""} thread "${thread.name}"`,
+	};
+}
+
+async function executeReopenThread(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = ReopenThreadArgsSchema.parse(args);
+	const thread = getThread(guild, parsed.thread_id);
+	if (!thread || !thread.setArchived) {
+		return {
+			toolCallId: "",
+			functionName: "reopen_thread",
+			success: false,
+			message: `Thread ${parsed.thread_id} not found`,
+		};
+	}
+	await thread.setArchived(false);
+	if (parsed.unlock && thread.setLocked) {
+		await thread.setLocked(false);
+	}
+	return {
+		toolCallId: "",
+		functionName: "reopen_thread",
+		success: true,
+		message: `Reopened${parsed.unlock ? " and unlocked" : ""} thread "${thread.name}"`,
+	};
+}
+
+async function executeLockThread(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = LockThreadArgsSchema.parse(args);
+	const thread = getThread(guild, parsed.thread_id);
+	if (!thread || !thread.setLocked) {
+		return {
+			toolCallId: "",
+			functionName: "lock_thread",
+			success: false,
+			message: `Thread ${parsed.thread_id} not found`,
+		};
+	}
+	await thread.setLocked(true, parsed.reason);
+	return {
+		toolCallId: "",
+		functionName: "lock_thread",
+		success: true,
+		message: `Locked thread "${thread.name}"`,
+	};
+}
+
+async function executeUnlockThread(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = UnlockThreadArgsSchema.parse(args);
+	const thread = getThread(guild, parsed.thread_id);
+	if (!thread || !thread.setLocked) {
+		return {
+			toolCallId: "",
+			functionName: "unlock_thread",
+			success: false,
+			message: `Thread ${parsed.thread_id} not found`,
+		};
+	}
+	await thread.setLocked(false);
+	return {
+		toolCallId: "",
+		functionName: "unlock_thread",
+		success: true,
+		message: `Unlocked thread "${thread.name}"`,
+	};
+}
+
 export async function executeToolCall(guild: Guild, functionName: string, args: Record<string, unknown>): Promise<ActionResult> {
 	const executors: Record<string, (guild: Guild, args: Record<string, unknown>) => Promise<ActionResult>> = {
 		create_channel: executeCreateChannel,
@@ -672,6 +1076,13 @@ export async function executeToolCall(guild: Guild, functionName: string, args: 
 		create_category: executeCreateCategory,
 		assign_role: executeAssignRole,
 		remove_role: executeRemoveRole,
+		apply_forum_tags: executeApplyForumTags,
+		add_forum_channel_tag: executeAddForumChannelTag,
+		remove_forum_channel_tag: executeRemoveForumChannelTag,
+		close_thread: executeCloseThread,
+		reopen_thread: executeReopenThread,
+		lock_thread: executeLockThread,
+		unlock_thread: executeUnlockThread,
 	};
 
 	const executor = executors[functionName];
@@ -779,6 +1190,46 @@ export function generateActionSummary(functionName: string, args: Record<string,
 			const role = guildContext.roles.find((r) => r.id === a.role_id);
 			const roleStr = role ? `@${role.name}` : `<@&${a.role_id}>`;
 			return `Remove ${roleStr} from <@${a.member_id}>`;
+		}
+		case "apply_forum_tags": {
+			const a = args as { thread_id: string; tag_ids: string[] };
+			const resolveTagName = (id: string) => {
+				for (const ch of guildContext.channels) {
+					const t = ch.forumTags?.find((tag) => tag.id === id);
+					if (t) return `"${t.name}"`;
+				}
+				return id;
+			};
+			if (a.tag_ids.length === 0) return `Clear all tags on thread <#${a.thread_id}>`;
+			return `Apply tags [${a.tag_ids.map(resolveTagName).join(", ")}] to thread <#${a.thread_id}>`;
+		}
+		case "add_forum_channel_tag": {
+			const a = args as { forum_channel_id: string; name: string; emoji_unicode?: string; moderated?: boolean };
+			const emoji = a.emoji_unicode ? ` ${a.emoji_unicode}` : "";
+			const mod = a.moderated ? " (moderated)" : "";
+			return `Add tag "${a.name}"${emoji}${mod} to ${resolveChannelName(a.forum_channel_id)}`;
+		}
+		case "remove_forum_channel_tag": {
+			const a = args as { forum_channel_id: string; tag_id: string };
+			const ch = guildContext.channels.find((c) => c.id === a.forum_channel_id);
+			const tagName = ch?.forumTags?.find((t) => t.id === a.tag_id)?.name ?? a.tag_id;
+			return `Remove tag "${tagName}" from ${resolveChannelName(a.forum_channel_id)}`;
+		}
+		case "close_thread": {
+			const a = args as { thread_id: string; lock?: boolean };
+			return `Close${a.lock ? " + lock" : ""} thread <#${a.thread_id}>`;
+		}
+		case "reopen_thread": {
+			const a = args as { thread_id: string; unlock?: boolean };
+			return `Reopen${a.unlock ? " + unlock" : ""} thread <#${a.thread_id}>`;
+		}
+		case "lock_thread": {
+			const a = args as { thread_id: string };
+			return `Lock thread <#${a.thread_id}>`;
+		}
+		case "unlock_thread": {
+			const a = args as { thread_id: string };
+			return `Unlock thread <#${a.thread_id}>`;
 		}
 		default:
 			return `Unknown action: ${functionName}`;

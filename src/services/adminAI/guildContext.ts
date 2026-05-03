@@ -1,5 +1,5 @@
 import { ChannelType, type Guild } from "discord.js";
-import type { GuildChannelInfo, GuildContext, GuildRoleInfo } from "./types.ts";
+import type { ForumTagInfo, GuildChannelInfo, GuildContext, GuildRoleInfo } from "./types.ts";
 
 function getChannelTypeName(type: ChannelType): string {
 	const typeNames: Record<number, string> = {
@@ -50,14 +50,32 @@ export function gatherGuildContext(guild: Guild): GuildContext {
 		const parentId = "parentId" in channel ? channel.parentId : null;
 		const parent = parentId ? guild.channels.cache.get(parentId) : null;
 
-		channels.push({
+		const info: GuildChannelInfo = {
 			id: channel.id,
 			name: channel.name,
 			type: getChannelTypeName(channel.type),
 			categoryId: parentId ?? null,
 			categoryName: parent?.name ?? null,
 			position: "position" in channel ? channel.position : 0,
-		});
+		};
+
+		// Forum channels expose their availableTags so the admin AI can apply
+		// existing tags to threads / posts without needing a separate fetch.
+		if (
+			(channel.type === ChannelType.GuildForum || channel.type === ChannelType.GuildMedia) &&
+			"availableTags" in channel &&
+			Array.isArray((channel as { availableTags: unknown }).availableTags)
+		) {
+			const rawTags = (channel as { availableTags: Array<{ id: string; name: string; emoji?: { name: string | null } | null; moderated: boolean }> }).availableTags;
+			const tags: ForumTagInfo[] = rawTags.map((t) => {
+				const tag: ForumTagInfo = { id: t.id, name: t.name, moderated: Boolean(t.moderated) };
+				if (t.emoji?.name) tag.emoji = t.emoji.name;
+				return tag;
+			});
+			if (tags.length > 0) info.forumTags = tags;
+		}
+
+		channels.push(info);
 	}
 
 	// Collect and sort roles by position (descending, highest first)

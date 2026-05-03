@@ -6,16 +6,24 @@ import {
 	PERMISSION_MAP,
 } from "./tools.ts";
 import {
+	AddForumChannelTagArgsSchema,
+	ApplyForumTagsArgsSchema,
 	AssignRoleArgsSchema,
 	CloneChannelArgsSchema,
+	CloseThreadArgsSchema,
 	CreateCategoryArgsSchema,
 	CreateChannelArgsSchema,
 	DeleteChannelArgsSchema,
+	ListForumThreadsArgsSchema,
+	LockThreadArgsSchema,
 	MoveChannelArgsSchema,
 	QueryAuditLogArgsSchema,
+	RemoveForumChannelTagArgsSchema,
 	RemoveRoleArgsSchema,
 	RenameChannelArgsSchema,
+	ReopenThreadArgsSchema,
 	SetChannelPermissionArgsSchema,
+	UnlockThreadArgsSchema,
 	UpdateChannelArgsSchema,
 } from "./types.ts";
 import type { GuildContext } from "./types.ts";
@@ -35,7 +43,7 @@ const testContext: GuildContext = {
 
 describe("adminToolDefinitions", () => {
 	it("has 10 tool definitions", () => {
-		expect(adminToolDefinitions).toHaveLength(11);
+		expect(adminToolDefinitions).toHaveLength(18);
 	});
 
 	it("all tools have type function", () => {
@@ -101,10 +109,21 @@ describe("adminToolDefinitions", () => {
 		expect(tool).toBeDefined();
 	});
 
-	it("includes update_channel tool", () => {
-		const tool = adminToolDefinitions.find((t) => t.function.name === "update_channel");
-		expect(tool).toBeDefined();
-	});
+	for (const name of [
+		"apply_forum_tags",
+		"add_forum_channel_tag",
+		"remove_forum_channel_tag",
+		"close_thread",
+		"reopen_thread",
+		"lock_thread",
+		"unlock_thread",
+		"list_forum_threads",
+	]) {
+		it(`includes ${name} tool`, () => {
+			const tool = adminToolDefinitions.find((t) => t.function.name === name);
+			expect(tool).toBeDefined();
+		});
+	}
 });
 
 describe("INFO_TOOLS", () => {
@@ -112,10 +131,16 @@ describe("INFO_TOOLS", () => {
 		expect(INFO_TOOLS.has("query_audit_log")).toBe(true);
 	});
 
+	it("contains list_forum_threads", () => {
+		expect(INFO_TOOLS.has("list_forum_threads")).toBe(true);
+	});
+
 	it("does not contain action tools", () => {
 		expect(INFO_TOOLS.has("create_channel")).toBe(false);
 		expect(INFO_TOOLS.has("delete_channel")).toBe(false);
 		expect(INFO_TOOLS.has("assign_role")).toBe(false);
+		expect(INFO_TOOLS.has("apply_forum_tags")).toBe(false);
+		expect(INFO_TOOLS.has("close_thread")).toBe(false);
 	});
 });
 
@@ -337,6 +362,109 @@ describe("Zod schemas", () => {
 		});
 	});
 
+	describe("ApplyForumTagsArgsSchema", () => {
+		it("accepts thread + tag set", () => {
+			const r = ApplyForumTagsArgsSchema.safeParse({ thread_id: "t1", tag_ids: ["tag1", "tag2"] });
+			expect(r.success).toBe(true);
+		});
+		it("accepts empty tag_ids (clear all)", () => {
+			const r = ApplyForumTagsArgsSchema.safeParse({ thread_id: "t1", tag_ids: [] });
+			expect(r.success).toBe(true);
+		});
+		it("rejects more than 5 tag_ids (Discord limit)", () => {
+			const r = ApplyForumTagsArgsSchema.safeParse({ thread_id: "t1", tag_ids: ["1", "2", "3", "4", "5", "6"] });
+			expect(r.success).toBe(false);
+		});
+	});
+
+	describe("AddForumChannelTagArgsSchema", () => {
+		it("accepts name only", () => {
+			const r = AddForumChannelTagArgsSchema.safeParse({ forum_channel_id: "f1", name: "bug" });
+			expect(r.success).toBe(true);
+		});
+		it("accepts emoji + moderated", () => {
+			const r = AddForumChannelTagArgsSchema.safeParse({
+				forum_channel_id: "f1",
+				name: "important",
+				emoji_unicode: "🔥",
+				moderated: true,
+			});
+			expect(r.success).toBe(true);
+		});
+		it("rejects empty name", () => {
+			const r = AddForumChannelTagArgsSchema.safeParse({ forum_channel_id: "f1", name: "" });
+			expect(r.success).toBe(false);
+		});
+		it("rejects name over 20 chars", () => {
+			const r = AddForumChannelTagArgsSchema.safeParse({ forum_channel_id: "f1", name: "a".repeat(21) });
+			expect(r.success).toBe(false);
+		});
+	});
+
+	describe("RemoveForumChannelTagArgsSchema", () => {
+		it("accepts forum + tag id", () => {
+			const r = RemoveForumChannelTagArgsSchema.safeParse({ forum_channel_id: "f1", tag_id: "t1" });
+			expect(r.success).toBe(true);
+		});
+		it("rejects missing tag_id", () => {
+			const r = RemoveForumChannelTagArgsSchema.safeParse({ forum_channel_id: "f1" });
+			expect(r.success).toBe(false);
+		});
+	});
+
+	describe("CloseThreadArgsSchema", () => {
+		it("accepts thread id only", () => {
+			const r = CloseThreadArgsSchema.safeParse({ thread_id: "t1" });
+			expect(r.success).toBe(true);
+		});
+		it("accepts lock + reason", () => {
+			const r = CloseThreadArgsSchema.safeParse({ thread_id: "t1", lock: true, reason: "spam" });
+			expect(r.success).toBe(true);
+		});
+		it("rejects reason over 512 chars", () => {
+			const r = CloseThreadArgsSchema.safeParse({ thread_id: "t1", reason: "a".repeat(513) });
+			expect(r.success).toBe(false);
+		});
+	});
+
+	describe("ReopenThreadArgsSchema", () => {
+		it("accepts thread id only", () => {
+			const r = ReopenThreadArgsSchema.safeParse({ thread_id: "t1" });
+			expect(r.success).toBe(true);
+		});
+		it("accepts unlock", () => {
+			const r = ReopenThreadArgsSchema.safeParse({ thread_id: "t1", unlock: true });
+			expect(r.success).toBe(true);
+		});
+	});
+
+	describe("LockThreadArgsSchema / UnlockThreadArgsSchema", () => {
+		it("lock accepts thread id + reason", () => {
+			const r = LockThreadArgsSchema.safeParse({ thread_id: "t1", reason: "off-topic" });
+			expect(r.success).toBe(true);
+		});
+		it("unlock accepts thread id", () => {
+			const r = UnlockThreadArgsSchema.safeParse({ thread_id: "t1" });
+			expect(r.success).toBe(true);
+		});
+		it("unlock rejects missing thread id", () => {
+			const r = UnlockThreadArgsSchema.safeParse({});
+			expect(r.success).toBe(false);
+		});
+	});
+
+	describe("ListForumThreadsArgsSchema", () => {
+		it("accepts forum id only", () => {
+			const r = ListForumThreadsArgsSchema.safeParse({ forum_channel_id: "f1" });
+			expect(r.success).toBe(true);
+		});
+		it("accepts include_archived + limit", () => {
+			const r = ListForumThreadsArgsSchema.safeParse({ forum_channel_id: "f1", include_archived: true, limit: 50 });
+			expect(r.success).toBe(true);
+		});
+		it("rejects limit above 100", () => {
+			const r = ListForumThreadsArgsSchema.safeParse({ forum_channel_id: "f1", limit: 200 });
+			expect(r.success).toBe(false);
 	describe("UpdateChannelArgsSchema", () => {
 		it("accepts topic-only update", () => {
 			const result = UpdateChannelArgsSchema.safeParse({
@@ -590,6 +718,69 @@ describe("generateActionSummary", () => {
 		expect(summary).toContain("<@user-1>");
 	});
 
+	it("summarizes apply_forum_tags with resolved tag names", () => {
+		const ctxWithForum: GuildContext = {
+			...testContext,
+			channels: [
+				...testContext.channels,
+				{
+					id: "forum-1",
+					name: "support",
+					type: "Forum",
+					categoryId: null,
+					categoryName: null,
+					position: 5,
+					forumTags: [
+						{ id: "tag-1", name: "bug", moderated: false },
+						{ id: "tag-2", name: "wontfix", moderated: true },
+					],
+				},
+			],
+		};
+		const summary = generateActionSummary(
+			"apply_forum_tags",
+			{ thread_id: "thr-1", tag_ids: ["tag-1", "tag-2"] },
+			ctxWithForum,
+		);
+		expect(summary).toContain('"bug"');
+		expect(summary).toContain('"wontfix"');
+		expect(summary).toContain("<#thr-1>");
+	});
+
+	it("summarizes apply_forum_tags clear-all", () => {
+		const summary = generateActionSummary(
+			"apply_forum_tags",
+			{ thread_id: "thr-1", tag_ids: [] },
+			testContext,
+		);
+		expect(summary).toContain("Clear all tags");
+	});
+
+	it("summarizes close_thread (with lock)", () => {
+		const summary = generateActionSummary(
+			"close_thread",
+			{ thread_id: "thr-1", lock: true },
+			testContext,
+		);
+		expect(summary).toContain("Close + lock");
+	});
+
+	it("summarizes lock_thread / unlock_thread", () => {
+		const lock = generateActionSummary("lock_thread", { thread_id: "thr-1" }, testContext);
+		expect(lock).toContain("Lock thread");
+		const unlock = generateActionSummary("unlock_thread", { thread_id: "thr-1" }, testContext);
+		expect(unlock).toContain("Unlock thread");
+	});
+
+	it("summarizes add_forum_channel_tag with emoji + moderated", () => {
+		const summary = generateActionSummary(
+			"add_forum_channel_tag",
+			{ forum_channel_id: "ch-1", name: "release", emoji_unicode: "🚀", moderated: true },
+			testContext,
+		);
+		expect(summary).toContain('"release"');
+		expect(summary).toContain("🚀");
+		expect(summary).toContain("(moderated)");
 	it("summarizes update_channel topic+slowmode", () => {
 		const summary = generateActionSummary(
 			"update_channel",

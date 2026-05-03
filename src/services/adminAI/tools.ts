@@ -462,26 +462,48 @@ async function executeQueryAuditLog(guild: Guild, args: Record<string, unknown>)
 	const parsed = QueryAuditLogArgsSchema.parse(args);
 
 	const limit = parsed.limit ?? 20;
-	const primaryType = parsed.action_types?.[0];
-	const typeFilter = primaryType ? resolveAuditLogEvent(primaryType) : null;
+	// Discord's fetchAuditLogs accepts only ONE action type per call. To honor
+	// multiple action_types correctly, fan out to one fetch per type and merge
+	// the results client-side. Single-type and no-type cases use one fetch.
+	const requestedTypes = parsed.action_types ?? [];
+	const fetches: Promise<Array<import("discord.js").GuildAuditLogsEntry>>[] = [];
 
-	const fetchOptions: { limit: number; type?: AuditLogEvent; user?: string } = { limit };
-	if (typeFilter !== null) fetchOptions.type = typeFilter;
-	if (parsed.user_id) fetchOptions.user = parsed.user_id;
+	if (requestedTypes.length === 0) {
+		const opts: { limit: number; user?: string } = { limit };
+		if (parsed.user_id) opts.user = parsed.user_id;
+		fetches.push(
+			guild.fetchAuditLogs(opts).then((logs) => [...logs.entries.values()]),
+		);
+	} else {
+		for (const typeName of requestedTypes) {
+			const typeFilter = resolveAuditLogEvent(typeName);
+			if (typeFilter === null) continue; // skip unknown event names
+			const opts: { limit: number; type: AuditLogEvent; user?: string } = { limit, type: typeFilter };
+			if (parsed.user_id) opts.user = parsed.user_id;
+			fetches.push(
+				guild.fetchAuditLogs(opts).then((logs) => [...logs.entries.values()]),
+			);
+		}
+		if (fetches.length === 0) {
+			return `No valid action_types provided. Got: ${requestedTypes.join(", ")}.`;
+		}
+	}
 
-	const logs = await guild.fetchAuditLogs(fetchOptions);
-	let entries = [...logs.entries.values()];
+	const results = await Promise.all(fetches);
+	const seen = new Set<string>();
+	let entries = results.flat().filter((e) => {
+		if (seen.has(e.id)) return false;
+		seen.add(e.id);
+		return true;
+	});
 
 	if (parsed.target_id) {
 		entries = entries.filter((e) => e.targetId === parsed.target_id);
 	}
-	if (parsed.action_types && parsed.action_types.length > 1) {
-		const allowed = new Set(parsed.action_types);
-		entries = entries.filter((e) => {
-			const name = AuditLogEvent[e.action];
-			return name !== undefined && allowed.has(name);
-		});
-	}
+
+	// Sort newest first across the merged result set, then cap to limit
+	entries.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+	entries = entries.slice(0, limit);
 
 	if (entries.length === 0) {
 		return "No audit log entries match the filter.";

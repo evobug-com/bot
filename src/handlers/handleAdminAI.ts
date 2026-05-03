@@ -108,37 +108,58 @@ export function handleAdminAI(client: Client<true>): void {
 				const actionCalls = functionCalls.filter((tc) => !INFO_TOOLS.has(tc.function.name));
 				const infoCalls = functionCalls.filter((tc) => INFO_TOOLS.has(tc.function.name));
 
-				if (actionCalls.length > 0) {
-					actions = actionCalls.map((tc) => {
-						const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
-						return {
-							toolCallId: tc.id,
-							functionName: tc.function.name,
-							arguments: args,
-							displaySummary: generateActionSummary(tc.function.name, args, guildContext),
-						};
-					});
-					finalText = assistantMessage.content ?? null;
-					break;
-				}
-
-				// All info tools — execute, feed results back, loop
-				messages.push({
-					role: "assistant",
-					content: assistantMessage.content ?? null,
-					tool_calls: assistantMessage.tool_calls,
-				});
-
-				// eslint-disable-next-line no-await-in-loop -- Sequential tool execution to preserve order
-				for (const ic of infoCalls) {
-					const args = JSON.parse(ic.function.arguments) as Record<string, unknown>;
-					const result = await executeInfoTool(message.guild, ic.function.name, args);
+				// If model returned info calls (alone or mixed with actions), execute
+				// them FIRST and feed results back. The OpenAI tool-call protocol
+				// requires a tool result for every tool_call in the assistant message
+				// before the next assistant turn — so when we have info calls, we
+				// must satisfy ALL tool_calls (including action ones with a stub
+				// result) before looping. Discarding the action plan here is correct:
+				// the model gets fresh info on the next iteration and re-plans.
+				if (infoCalls.length > 0) {
 					messages.push({
-						role: "tool",
-						tool_call_id: ic.id,
-						content: result,
+						role: "assistant",
+						content: assistantMessage.content ?? null,
+						tool_calls: assistantMessage.tool_calls,
 					});
+
+					// eslint-disable-next-line no-await-in-loop -- Sequential tool execution to preserve order
+					for (const ic of infoCalls) {
+						const args = JSON.parse(ic.function.arguments) as Record<string, unknown>;
+						const result = await executeInfoTool(message.guild, ic.function.name, args);
+						messages.push({
+							role: "tool",
+							tool_call_id: ic.id,
+							content: result,
+						});
+					}
+
+					// Stub results for action tool_calls so the protocol stays valid.
+					// The action plan from this turn is intentionally discarded; the
+					// model will re-plan on the next iteration with the info results
+					// in context.
+					for (const ac of actionCalls) {
+						messages.push({
+							role: "tool",
+							tool_call_id: ac.id,
+							content: "(deferred: action plans must be issued in a separate turn after info results)",
+						});
+					}
+
+					continue;
 				}
+
+				// Pure action turn — plan for confirmation and exit loop
+				actions = actionCalls.map((tc) => {
+					const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+					return {
+						toolCallId: tc.id,
+						functionName: tc.function.name,
+						arguments: args,
+						displaySummary: generateActionSummary(tc.function.name, args, guildContext),
+					};
+				});
+				finalText = assistantMessage.content ?? null;
+				break;
 			}
 
 			if (actions.length === 0) {

@@ -18,6 +18,7 @@ import {
 	RemoveRoleArgsSchema,
 	RenameChannelArgsSchema,
 	SetChannelPermissionArgsSchema,
+	UpdateChannelArgsSchema,
 } from "./types.ts";
 import type { ChatCompletionFunctionTool } from "openai/resources/chat/completions";
 
@@ -94,6 +95,37 @@ export const adminToolDefinitions: ChatCompletionFunctionTool[] = [
 					new_name: { type: "string", description: "New name for the channel" },
 				},
 				required: ["channel_id", "new_name"],
+			},
+		},
+	},
+	{
+		type: "function",
+		function: {
+			name: "update_channel",
+			description: "Update a channel's settings: topic/description, slowmode, NSFW, voice user limit, voice bitrate. Pass only the fields you want to change. At least one field is required.",
+			parameters: {
+				type: "object",
+				properties: {
+					channel_id: { type: "string", description: "Channel ID to update" },
+					topic: {
+						type: ["string", "null"],
+						description: "Channel topic / description. Max 1024 chars on text/announcement channels; up to 4096 chars on forum/media channels (their long-form post guidelines). Pass null to clear.",
+					},
+					slowmode_seconds: {
+						type: "number",
+						description: "Slowmode rate limit in seconds (0–21600, where 0 disables it). Text channels only.",
+					},
+					nsfw: { type: "boolean", description: "Mark channel as age-restricted." },
+					user_limit: {
+						type: "number",
+						description: "Max users in a voice channel (0–99, where 0 means unlimited). Voice channels only.",
+					},
+					bitrate: {
+						type: "number",
+						description: "Voice channel bitrate in bits per second (8000–96000 default; up to 384000 with server boosts). Voice channels only.",
+					},
+				},
+				required: ["channel_id"],
 			},
 		},
 	},
@@ -348,6 +380,64 @@ async function executeRenameChannel(guild: Guild, args: Record<string, unknown>)
 	};
 }
 
+async function executeUpdateChannel(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
+	const parsed = UpdateChannelArgsSchema.parse(args);
+	const channel = guild.channels.cache.get(parsed.channel_id) as GuildChannel | undefined;
+
+	if (!channel) {
+		return {
+			toolCallId: "",
+			functionName: "update_channel",
+			success: false,
+			message: `Channel ${parsed.channel_id} not found`,
+		};
+	}
+
+	// Build edit payload — discord.js validates per-channel-type and rejects
+	// fields that don't apply (e.g. bitrate on a text channel) so we let it.
+	type EditPayload = {
+		topic?: string | null;
+		rateLimitPerUser?: number;
+		nsfw?: boolean;
+		userLimit?: number;
+		bitrate?: number;
+	};
+	const edit: EditPayload = {};
+	const changedFields: string[] = [];
+
+	if (parsed.topic !== undefined) {
+		edit.topic = parsed.topic;
+		changedFields.push(`topic=${parsed.topic === null ? "(cleared)" : `"${parsed.topic.slice(0, 60)}${parsed.topic.length > 60 ? "…" : ""}"`}`);
+	}
+	if (parsed.slowmode_seconds !== undefined) {
+		edit.rateLimitPerUser = parsed.slowmode_seconds;
+		changedFields.push(`slowmode=${parsed.slowmode_seconds}s`);
+	}
+	if (parsed.nsfw !== undefined) {
+		edit.nsfw = parsed.nsfw;
+		changedFields.push(`nsfw=${parsed.nsfw}`);
+	}
+	if (parsed.user_limit !== undefined) {
+		edit.userLimit = parsed.user_limit;
+		changedFields.push(`user_limit=${parsed.user_limit}`);
+	}
+	if (parsed.bitrate !== undefined) {
+		edit.bitrate = parsed.bitrate;
+		changedFields.push(`bitrate=${parsed.bitrate}`);
+	}
+
+	// Type-safe call — discord.js GuildChannel.edit accepts a union; cast via
+	// a narrow record so we don't import the full GuildChannelEditOptions type.
+	await (channel as GuildChannel & { edit: (options: EditPayload) => Promise<unknown> }).edit(edit);
+
+	return {
+		toolCallId: "",
+		functionName: "update_channel",
+		success: true,
+		message: `Updated "${channel.name}": ${changedFields.join(", ")}`,
+	};
+}
+
 async function executeCloneChannel(guild: Guild, args: Record<string, unknown>): Promise<ActionResult> {
 	const parsed = CloneChannelArgsSchema.parse(args);
 	const source = guild.channels.cache.get(parsed.source_channel_id);
@@ -573,6 +663,7 @@ async function executeRemoveRole(guild: Guild, args: Record<string, unknown>): P
 export async function executeToolCall(guild: Guild, functionName: string, args: Record<string, unknown>): Promise<ActionResult> {
 	const executors: Record<string, (guild: Guild, args: Record<string, unknown>) => Promise<ActionResult>> = {
 		create_channel: executeCreateChannel,
+		update_channel: executeUpdateChannel,
 		set_channel_permission: executeSetChannelPermission,
 		move_channel: executeMoveChannel,
 		rename_channel: executeRenameChannel,
@@ -648,6 +739,25 @@ export function generateActionSummary(functionName: string, args: Record<string,
 			const a = args as { source_channel_id: string; new_name: string; position?: number };
 			const posStr = a.position !== undefined ? ` at position ${a.position}` : "";
 			return `Clone ${resolveChannelName(a.source_channel_id)} as "${a.new_name}"${posStr}`;
+		}
+		case "update_channel": {
+			const a = args as {
+				channel_id: string;
+				topic?: string | null;
+				slowmode_seconds?: number;
+				nsfw?: boolean;
+				user_limit?: number;
+				bitrate?: number;
+			};
+			const parts: string[] = [];
+			if (a.topic !== undefined) {
+				parts.push(`topic=${a.topic === null ? "(cleared)" : `"${a.topic.slice(0, 60)}${a.topic.length > 60 ? "…" : ""}"`}`);
+			}
+			if (a.slowmode_seconds !== undefined) parts.push(`slowmode=${a.slowmode_seconds}s`);
+			if (a.nsfw !== undefined) parts.push(`nsfw=${a.nsfw}`);
+			if (a.user_limit !== undefined) parts.push(`user_limit=${a.user_limit}`);
+			if (a.bitrate !== undefined) parts.push(`bitrate=${a.bitrate}`);
+			return `Update ${resolveChannelName(a.channel_id)}: ${parts.join(", ")}`;
 		}
 		case "delete_channel": {
 			const a = args as { channel_id: string };

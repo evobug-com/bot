@@ -19,6 +19,12 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after XXX -->
 
 
+## [2.8.5] - 2026-05-03
+
+### Přidáno
+- Admin AI: nový nástroj `update_channel` — upravuje nastavení kanálu (topic/popis, slowmode v sekundách, NSFW flag, voice user limit, voice bitrate). Mění pouze pole, která admin výslovně požádal.
+
+
 ## [2.8.4] - 2026-05-03
 
 ### Přidáno

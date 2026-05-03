@@ -19,6 +19,14 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after XXX -->
 
 
+## [2.8.6] - 2026-05-03
+
+### Přidáno
+- Admin AI: nástroje pro forum kanály — `apply_forum_tags` (přiřadit tagy postu), `add_forum_channel_tag` / `remove_forum_channel_tag` (správa tagů na fóru), `close_thread` / `reopen_thread` (zavřít/otevřít post, volitelně i lock), `lock_thread` / `unlock_thread` (zámek bez archivace).
+- Admin AI: nový read-only nástroj `list_forum_threads` — vypíše posty (threads) ve forum kanálu pro získání jejich ID.
+- Admin AI: prompt context nyní u forum kanálů vypisuje i jejich `availableTags` (id, jméno, emoji), takže model může okamžitě přiřadit existující tagy bez extra fetche.
+
+
 ## [2.8.4] - 2026-05-03
 
 ### Přidáno

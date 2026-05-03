@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export interface ForumTagInfo {
+	id: string;
+	name: string;
+	emoji?: string;
+	moderated: boolean;
+}
+
 export interface GuildChannelInfo {
 	id: string;
 	name: string;
@@ -7,6 +14,8 @@ export interface GuildChannelInfo {
 	categoryId: string | null;
 	categoryName: string | null;
 	position: number;
+	/** Available tags on a Forum channel (only present when type === "Forum"). */
+	forumTags?: ForumTagInfo[];
 }
 
 export interface GuildRoleInfo {
@@ -98,6 +107,65 @@ export const QueryAuditLogArgsSchema = z.object({
 });
 
 export type QueryAuditLogArgs = z.infer<typeof QueryAuditLogArgsSchema>;
+
+export const ApplyForumTagsArgsSchema = z.object({
+	thread_id: z.string(),
+	tag_ids: z.array(z.string()).max(5),
+});
+
+export type ApplyForumTagsArgs = z.infer<typeof ApplyForumTagsArgsSchema>;
+
+export const AddForumChannelTagArgsSchema = z.object({
+	forum_channel_id: z.string(),
+	name: z.string().min(1).max(20),
+	emoji_unicode: z.string().optional(),
+	moderated: z.boolean().optional(),
+});
+
+export type AddForumChannelTagArgs = z.infer<typeof AddForumChannelTagArgsSchema>;
+
+export const RemoveForumChannelTagArgsSchema = z.object({
+	forum_channel_id: z.string(),
+	tag_id: z.string(),
+});
+
+export type RemoveForumChannelTagArgs = z.infer<typeof RemoveForumChannelTagArgsSchema>;
+
+export const CloseThreadArgsSchema = z.object({
+	thread_id: z.string(),
+	lock: z.boolean().optional(),
+	reason: z.string().max(512).optional(),
+});
+
+export type CloseThreadArgs = z.infer<typeof CloseThreadArgsSchema>;
+
+export const ReopenThreadArgsSchema = z.object({
+	thread_id: z.string(),
+	unlock: z.boolean().optional(),
+});
+
+export type ReopenThreadArgs = z.infer<typeof ReopenThreadArgsSchema>;
+
+export const LockThreadArgsSchema = z.object({
+	thread_id: z.string(),
+	reason: z.string().max(512).optional(),
+});
+
+export type LockThreadArgs = z.infer<typeof LockThreadArgsSchema>;
+
+export const UnlockThreadArgsSchema = z.object({
+	thread_id: z.string(),
+});
+
+export type UnlockThreadArgs = z.infer<typeof UnlockThreadArgsSchema>;
+
+export const ListForumThreadsArgsSchema = z.object({
+	forum_channel_id: z.string(),
+	include_archived: z.boolean().optional(),
+	limit: z.number().int().min(1).max(100).optional(),
+});
+
+export type ListForumThreadsArgs = z.infer<typeof ListForumThreadsArgsSchema>;
 
 export interface PlannedAction {
 	toolCallId: string;

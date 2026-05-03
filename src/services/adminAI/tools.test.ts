@@ -2,11 +2,18 @@ import { describe, expect, it } from "bun:test";
 import {
 	adminToolDefinitions,
 	generateActionSummary,
+	INFO_TOOLS,
 	PERMISSION_MAP,
 } from "./tools.ts";
 import {
+	AssignRoleArgsSchema,
+	CloneChannelArgsSchema,
+	CreateCategoryArgsSchema,
 	CreateChannelArgsSchema,
+	DeleteChannelArgsSchema,
 	MoveChannelArgsSchema,
+	QueryAuditLogArgsSchema,
+	RemoveRoleArgsSchema,
 	RenameChannelArgsSchema,
 	SetChannelPermissionArgsSchema,
 } from "./types.ts";
@@ -26,8 +33,8 @@ const testContext: GuildContext = {
 };
 
 describe("adminToolDefinitions", () => {
-	it("has 4 tool definitions", () => {
-		expect(adminToolDefinitions).toHaveLength(4);
+	it("has 10 tool definitions", () => {
+		expect(adminToolDefinitions).toHaveLength(10);
 	});
 
 	it("all tools have type function", () => {
@@ -61,6 +68,48 @@ describe("adminToolDefinitions", () => {
 	it("includes rename_channel tool", () => {
 		const tool = adminToolDefinitions.find((t) => t.function.name === "rename_channel");
 		expect(tool).toBeDefined();
+	});
+
+	it("includes clone_channel tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "clone_channel");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes delete_channel tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "delete_channel");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes create_category tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "create_category");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes assign_role tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "assign_role");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes remove_role tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "remove_role");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes query_audit_log tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "query_audit_log");
+		expect(tool).toBeDefined();
+	});
+});
+
+describe("INFO_TOOLS", () => {
+	it("contains query_audit_log", () => {
+		expect(INFO_TOOLS.has("query_audit_log")).toBe(true);
+	});
+
+	it("does not contain action tools", () => {
+		expect(INFO_TOOLS.has("create_channel")).toBe(false);
+		expect(INFO_TOOLS.has("delete_channel")).toBe(false);
+		expect(INFO_TOOLS.has("assign_role")).toBe(false);
 	});
 });
 
@@ -171,6 +220,116 @@ describe("Zod schemas", () => {
 			expect(result.success).toBe(false);
 		});
 	});
+
+	describe("CloneChannelArgsSchema", () => {
+		it("accepts valid args", () => {
+			const result = CloneChannelArgsSchema.safeParse({
+				source_channel_id: "ch-1",
+				new_name: "tiskar",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts optional position", () => {
+			const result = CloneChannelArgsSchema.safeParse({
+				source_channel_id: "ch-1",
+				new_name: "tiskar",
+				position: 5,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects missing source_channel_id", () => {
+			const result = CloneChannelArgsSchema.safeParse({ new_name: "tiskar" });
+			expect(result.success).toBe(false);
+		});
+	});
+
+	describe("DeleteChannelArgsSchema", () => {
+		it("accepts valid args", () => {
+			const result = DeleteChannelArgsSchema.safeParse({ channel_id: "ch-1" });
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects missing channel_id", () => {
+			const result = DeleteChannelArgsSchema.safeParse({});
+			expect(result.success).toBe(false);
+		});
+	});
+
+	describe("CreateCategoryArgsSchema", () => {
+		it("accepts valid args", () => {
+			const result = CreateCategoryArgsSchema.safeParse({ name: "Public" });
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts optional position", () => {
+			const result = CreateCategoryArgsSchema.safeParse({ name: "Public", position: 0 });
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects missing name", () => {
+			const result = CreateCategoryArgsSchema.safeParse({});
+			expect(result.success).toBe(false);
+		});
+	});
+
+	describe("AssignRoleArgsSchema", () => {
+		it("accepts valid args", () => {
+			const result = AssignRoleArgsSchema.safeParse({
+				member_id: "user-1",
+				role_id: "role-1",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects missing role_id", () => {
+			const result = AssignRoleArgsSchema.safeParse({ member_id: "user-1" });
+			expect(result.success).toBe(false);
+		});
+	});
+
+	describe("RemoveRoleArgsSchema", () => {
+		it("accepts valid args", () => {
+			const result = RemoveRoleArgsSchema.safeParse({
+				member_id: "user-1",
+				role_id: "role-1",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects missing member_id", () => {
+			const result = RemoveRoleArgsSchema.safeParse({ role_id: "role-1" });
+			expect(result.success).toBe(false);
+		});
+	});
+
+	describe("QueryAuditLogArgsSchema", () => {
+		it("accepts empty args (no filters)", () => {
+			const result = QueryAuditLogArgsSchema.safeParse({});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts all optional fields", () => {
+			const result = QueryAuditLogArgsSchema.safeParse({
+				action_types: ["ChannelDelete"],
+				limit: 10,
+				target_id: "ch-1",
+				user_id: "user-1",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects limit above 50", () => {
+			const result = QueryAuditLogArgsSchema.safeParse({ limit: 100 });
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects limit below 1", () => {
+			const result = QueryAuditLogArgsSchema.safeParse({ limit: 0 });
+			expect(result.success).toBe(false);
+		});
+	});
 });
 
 describe("PERMISSION_MAP", () => {
@@ -272,5 +431,64 @@ describe("generateActionSummary", () => {
 		const summary = generateActionSummary("unknown_tool", {}, testContext);
 
 		expect(summary).toContain("Unknown action");
+	});
+
+	it("summarizes clone_channel action", () => {
+		const summary = generateActionSummary(
+			"clone_channel",
+			{ source_channel_id: "ch-1", new_name: "tiskar" },
+			testContext,
+		);
+
+		expect(summary).toContain("Clone");
+		expect(summary).toContain("#general");
+		expect(summary).toContain('"tiskar"');
+	});
+
+	it("summarizes delete_channel action with destructive marker", () => {
+		const summary = generateActionSummary(
+			"delete_channel",
+			{ channel_id: "ch-1" },
+			testContext,
+		);
+
+		expect(summary).toContain("DELETE");
+		expect(summary).toContain("irreversible");
+		expect(summary).toContain("#general");
+	});
+
+	it("summarizes create_category action", () => {
+		const summary = generateActionSummary(
+			"create_category",
+			{ name: "New Cat" },
+			testContext,
+		);
+
+		expect(summary).toContain("Create category");
+		expect(summary).toContain('"New Cat"');
+	});
+
+	it("summarizes assign_role action with known role", () => {
+		const summary = generateActionSummary(
+			"assign_role",
+			{ member_id: "user-1", role_id: "role-1" },
+			testContext,
+		);
+
+		expect(summary).toContain("Assign");
+		expect(summary).toContain("@Admin");
+		expect(summary).toContain("<@user-1>");
+	});
+
+	it("summarizes remove_role action", () => {
+		const summary = generateActionSummary(
+			"remove_role",
+			{ member_id: "user-1", role_id: "role-2" },
+			testContext,
+		);
+
+		expect(summary).toContain("Remove");
+		expect(summary).toContain("@Member");
+		expect(summary).toContain("<@user-1>");
 	});
 });

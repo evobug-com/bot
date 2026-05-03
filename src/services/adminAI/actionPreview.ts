@@ -18,15 +18,16 @@ export function buildPreviewEmbed(actions: PlannedAction[], aiMessage?: string):
 }
 
 export function buildConfirmButtons(sessionId: string): ActionRowBuilder {
+	// Note: emoji omitted because @discordjs/builders v2 prerelease validator
+	// rejects single-codepoint unicode emoji names (>=2 chars required, bug).
+	// Label-only buttons render fine in Discord.
 	const confirmButton = new PrimaryButtonBuilder()
 		.setCustomId(`admin_ai_confirm_${sessionId}`)
-		.setLabel("Potvrdit")
-		.setEmoji({ name: "✅" });
+		.setLabel("✅ Potvrdit");
 
 	const cancelButton = new DangerButtonBuilder()
 		.setCustomId(`admin_ai_cancel_${sessionId}`)
-		.setLabel("Zrusit")
-		.setEmoji({ name: "❌" });
+		.setLabel("❌ Zrusit");
 
 	return new ActionRowBuilder().addComponents(confirmButton, cancelButton);
 }

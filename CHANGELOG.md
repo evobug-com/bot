@@ -19,6 +19,26 @@ Formát je založen na [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 <!-- commits after XXX -->
 
 
+## [2.8.4] - 2026-05-03
+
+### Přidáno
+- Admin AI: paměť konverzace přes Discord reply chain — když admin odpoví na botovu zprávu, bot rekonstruuje historii (až 10 zpráv) a má kontext pro upřesňující dotazy
+- Admin AI: nový nástroj `clone_channel` — zkopíruje typ, topic, slowmode, NSFW i per-channel oprávnění ze zdrojového kanálu (řeší "vytvoř kanál podle stávajících sourozenců")
+- Admin AI: nový nástroj `delete_channel` — destruktivní mazání kanálu s explicitním varováním v náhledu
+- Admin AI: nový nástroj `create_category` — vytvoření nové kategorie
+- Admin AI: nové nástroje `assign_role` a `remove_role` — přiřazení/odebrání role členovi
+- Admin AI: nový read-only nástroj `query_audit_log` — bot umí odpovídat na otázky typu "kdo smazal #foo" nebo "kdo banoval @user" čtením Discord audit logu (filtry: typ akce, cíl, vykonavatel, limit)
+- Admin AI: vícekrokový tool loop (max 5 iterací) — bot může nejprve zavolat info nástroj, dostat výsledek a pak teprve naplánovat akce; info nástroje běží okamžitě bez potvrzování, akce stále vyžadují kliknutí Potvrdit
+
+### Změněno
+- Admin AI: přidáno striktní pravidlo pro vyjasnění — pokud zpráva obsahuje token, který nelze jednoznačně přiřadit ke kanálu/kategorii/roli, bot se nejprve zeptá místo hádání
+- Admin AI: prompt explicitně říká, že nové kanály dědí oprávnění kategorie (per-channel overrides nelze kopírovat) a kdy použít `clone_channel` vs `create_channel`, požadavky na identifikaci členů u rolí, a oddělení info/akce volání do samostatných tahů
+
+### Opraveno
+- Admin AI používalo neplatné model ID `anthropic/claude-sonnet-4-20250514` (OpenRouter vracel 400) — přepnuto na alias `anthropic/claude-sonnet-latest`, který automaticky ukazuje na nejnovější Sonnet
+- Admin AI: tlačítka Potvrdit/Zrušit padala při odeslání kvůli chybě v `@discordjs/builders` v2 prerelease (validátor odmítal jednoznakové unicode emoji v `setEmoji`); emoji přesunuto do textu tlačítka
+
+
 ## [2.8.2] - 2026-03-30
 
 ### Přidáno

@@ -42,8 +42,8 @@ const testContext: GuildContext = {
 };
 
 describe("adminToolDefinitions", () => {
-	it("has 10 tool definitions", () => {
-		expect(adminToolDefinitions).toHaveLength(18);
+	it("has 19 tool definitions", () => {
+		expect(adminToolDefinitions).toHaveLength(19);
 	});
 
 	it("all tools have type function", () => {
@@ -465,6 +465,9 @@ describe("Zod schemas", () => {
 		it("rejects limit above 100", () => {
 			const r = ListForumThreadsArgsSchema.safeParse({ forum_channel_id: "f1", limit: 200 });
 			expect(r.success).toBe(false);
+		});
+	});
+
 	describe("UpdateChannelArgsSchema", () => {
 		it("accepts topic-only update", () => {
 			const result = UpdateChannelArgsSchema.safeParse({
@@ -781,6 +784,8 @@ describe("generateActionSummary", () => {
 		expect(summary).toContain('"release"');
 		expect(summary).toContain("🚀");
 		expect(summary).toContain("(moderated)");
+	});
+
 	it("summarizes update_channel topic+slowmode", () => {
 		const summary = generateActionSummary(
 			"update_channel",

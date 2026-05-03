@@ -43,6 +43,7 @@ import "../util/storytelling/stories/parking-war-branching.ts";
 import "../util/storytelling/stories/reply-all-branching.ts";
 import "../util/storytelling/stories/salary-negotiation-branching.ts";
 import "../util/storytelling/stories/team-building-branching.ts";
+import "../util/storytelling/stories/mcdonalds-mega-order-branching.ts";
 
 // ============================================================================
 // TYPES
@@ -996,6 +997,13 @@ export const workActivities = [
 		activity: "Připojuješ se na videokonferenci s indickými kolegy... (interaktivní příběh)",
 		category: "story:work",
 		branchingStoryId: "video_conference_branching",
+	},
+	{
+		id: "mcdonalds-mega-order-branching",
+		title: "🍔 Interaktivní mega objednávka v McDonalds",
+		activity: "Tým slíbil oběd z McDonalds a padlo to na tebe — 21 položek, 45 minut, jeden stand-up... (interaktivní příběh)",
+		category: "story:work",
+		branchingStoryId: "mcdonalds_mega_order_branching",
 	},
 	// ============================================================================
 	// STORY:CRIME - Theft/moral choice stories

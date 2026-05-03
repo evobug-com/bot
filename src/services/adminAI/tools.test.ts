@@ -401,10 +401,29 @@ describe("Zod schemas", () => {
 			expect(result.success).toBe(false);
 		});
 
-		it("rejects topic over 1024 chars", () => {
+		it("accepts topic between 1025 and 4096 chars (forum/media long-form)", () => {
+			// 1024 is the text-channel cap; 4096 is the forum/media cap. Schema
+			// uses the wider limit so legitimate forum guideline updates aren't
+			// rejected client-side. Discord enforces the per-type cap server-side.
 			const result = UpdateChannelArgsSchema.safeParse({
 				channel_id: "ch-1",
-				topic: "a".repeat(1025),
+				topic: "a".repeat(2048),
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts topic at exactly 4096 chars (forum/media max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(4096),
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects topic over 4096 chars (above any Discord cap)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(4097),
 			});
 			expect(result.success).toBe(false);
 		});

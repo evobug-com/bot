@@ -109,7 +109,7 @@ export const adminToolDefinitions: ChatCompletionFunctionTool[] = [
 					channel_id: { type: "string", description: "Channel ID to update" },
 					topic: {
 						type: ["string", "null"],
-						description: "Channel topic / description (text/announcement/forum). Max 1024 chars. Pass null to clear.",
+						description: "Channel topic / description. Max 1024 chars on text/announcement channels; up to 4096 chars on forum/media channels (their long-form post guidelines). Pass null to clear.",
 					},
 					slowmode_seconds: {
 						type: "number",

@@ -43,6 +43,7 @@ import "../util/storytelling/stories/parking-war-branching.ts";
 import "../util/storytelling/stories/reply-all-branching.ts";
 import "../util/storytelling/stories/salary-negotiation-branching.ts";
 import "../util/storytelling/stories/team-building-branching.ts";
+import "../util/storytelling/stories/mcdonalds-mega-order-branching.ts";
 
 // ============================================================================
 // TYPES

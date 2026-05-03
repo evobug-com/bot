@@ -16,6 +16,7 @@ import {
 	RemoveRoleArgsSchema,
 	RenameChannelArgsSchema,
 	SetChannelPermissionArgsSchema,
+	UpdateChannelArgsSchema,
 } from "./types.ts";
 import type { GuildContext } from "./types.ts";
 
@@ -34,7 +35,7 @@ const testContext: GuildContext = {
 
 describe("adminToolDefinitions", () => {
 	it("has 10 tool definitions", () => {
-		expect(adminToolDefinitions).toHaveLength(10);
+		expect(adminToolDefinitions).toHaveLength(11);
 	});
 
 	it("all tools have type function", () => {
@@ -97,6 +98,11 @@ describe("adminToolDefinitions", () => {
 
 	it("includes query_audit_log tool", () => {
 		const tool = adminToolDefinitions.find((t) => t.function.name === "query_audit_log");
+		expect(tool).toBeDefined();
+	});
+
+	it("includes update_channel tool", () => {
+		const tool = adminToolDefinitions.find((t) => t.function.name === "update_channel");
 		expect(tool).toBeDefined();
 	});
 });
@@ -330,6 +336,79 @@ describe("Zod schemas", () => {
 			expect(result.success).toBe(false);
 		});
 	});
+
+	describe("UpdateChannelArgsSchema", () => {
+		it("accepts topic-only update", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "New description",
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts slowmode-only update", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: 300,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts topic=null to clear it", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: null,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("accepts multiple fields together", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "Voice room",
+				user_limit: 10,
+				bitrate: 64000,
+			});
+			expect(result.success).toBe(true);
+		});
+
+		it("rejects when no update fields are provided", () => {
+			const result = UpdateChannelArgsSchema.safeParse({ channel_id: "ch-1" });
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects slowmode above 21600 (Discord max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: 30000,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects negative slowmode", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				slowmode_seconds: -1,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects user_limit above 99 (Discord max)", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				user_limit: 200,
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects topic over 1024 chars", () => {
+			const result = UpdateChannelArgsSchema.safeParse({
+				channel_id: "ch-1",
+				topic: "a".repeat(1025),
+			});
+			expect(result.success).toBe(false);
+		});
+	});
 });
 
 describe("PERMISSION_MAP", () => {
@@ -490,5 +569,40 @@ describe("generateActionSummary", () => {
 		expect(summary).toContain("Remove");
 		expect(summary).toContain("@Member");
 		expect(summary).toContain("<@user-1>");
+	});
+
+	it("summarizes update_channel topic+slowmode", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", topic: "New desc", slowmode_seconds: 60 },
+			testContext,
+		);
+
+		expect(summary).toContain("Update");
+		expect(summary).toContain("#general");
+		expect(summary).toContain('topic="New desc"');
+		expect(summary).toContain("slowmode=60s");
+	});
+
+	it("summarizes update_channel topic cleared (null)", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", topic: null },
+			testContext,
+		);
+
+		expect(summary).toContain("topic=(cleared)");
+	});
+
+	it("summarizes update_channel voice fields", () => {
+		const summary = generateActionSummary(
+			"update_channel",
+			{ channel_id: "ch-1", user_limit: 5, bitrate: 64000, nsfw: true },
+			testContext,
+		);
+
+		expect(summary).toContain("user_limit=5");
+		expect(summary).toContain("bitrate=64000");
+		expect(summary).toContain("nsfw=true");
 	});
 });

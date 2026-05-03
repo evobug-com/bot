@@ -5,15 +5,18 @@ import { openrouter } from "../utils/openrouter.ts";
 import { createLogger } from "../util/logger.ts";
 import { gatherGuildContext } from "../services/adminAI/guildContext.ts";
 import { buildSystemPrompt } from "../services/adminAI/prompt.ts";
-import { adminToolDefinitions, executeToolCall, generateActionSummary } from "../services/adminAI/tools.ts";
+import { adminToolDefinitions, executeInfoTool, executeToolCall, generateActionSummary, INFO_TOOLS } from "../services/adminAI/tools.ts";
 import { buildCancelledEmbed, buildConfirmButtons, buildPreviewEmbed, buildResultEmbed } from "../services/adminAI/actionPreview.ts";
+import { gatherConversationHistory } from "../services/adminAI/conversationHistory.ts";
 import type { ActionResult, PendingAdminAction, PlannedAction } from "../services/adminAI/types.ts";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 const log = createLogger("AdminAI");
 
-const ADMIN_AI_MODEL = "anthropic/claude-sonnet-4-20250514";
+const ADMIN_AI_MODEL = "anthropic/claude-sonnet-latest";
 const SESSION_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const ACTION_DELAY_MS = 300;
+const MAX_TOOL_LOOP_ITERATIONS = 5;
 
 const pendingActions = new Map<string, PendingAdminAction>();
 
@@ -66,53 +69,86 @@ export function handleAdminAI(client: Client<true>): void {
 			const guildContext = gatherGuildContext(message.guild);
 			const systemPrompt = buildSystemPrompt(guildContext);
 
-			// Call Claude via OpenRouter
-			const response = await ai.chat.completions.create({
-				model: ADMIN_AI_MODEL,
-				messages: [
-					{ role: "system", content: systemPrompt },
-					{ role: "user", content },
-				],
-				tools: adminToolDefinitions,
-				temperature: 0,
-			});
+			// Walk reply chain to reconstruct prior conversation with this admin
+			const history = await gatherConversationHistory(message, client.user.id);
 
-			const choice = response.choices[0];
-			if (!choice) {
-				await message.reply("Nedostal jsem odpoved od AI.");
-				return;
+			const messages: ChatCompletionMessageParam[] = [
+				{ role: "system", content: systemPrompt },
+				...history.map<ChatCompletionMessageParam>((h) => ({ role: h.role, content: h.content })),
+				{ role: "user", content },
+			];
+
+			// Multi-step tool loop: info tools execute inline, action tools collect for confirmation
+			let actions: PlannedAction[] = [];
+			let finalText: string | null = null;
+
+			// eslint-disable-next-line no-await-in-loop -- Each AI call depends on prior tool results
+			for (let iter = 0; iter < MAX_TOOL_LOOP_ITERATIONS; iter++) {
+				const response = await ai.chat.completions.create({
+					model: ADMIN_AI_MODEL,
+					messages,
+					tools: adminToolDefinitions,
+					temperature: 0,
+				});
+
+				const choice = response.choices[0];
+				if (!choice) {
+					finalText = "Nedostal jsem odpoved od AI.";
+					break;
+				}
+
+				const assistantMessage = choice.message;
+				const functionCalls = (assistantMessage.tool_calls ?? []).filter((tc) => tc.type === "function");
+
+				if (functionCalls.length === 0) {
+					finalText = assistantMessage.content ?? "Nemam co odpovedet.";
+					break;
+				}
+
+				const actionCalls = functionCalls.filter((tc) => !INFO_TOOLS.has(tc.function.name));
+				const infoCalls = functionCalls.filter((tc) => INFO_TOOLS.has(tc.function.name));
+
+				if (actionCalls.length > 0) {
+					actions = actionCalls.map((tc) => {
+						const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+						return {
+							toolCallId: tc.id,
+							functionName: tc.function.name,
+							arguments: args,
+							displaySummary: generateActionSummary(tc.function.name, args, guildContext),
+						};
+					});
+					finalText = assistantMessage.content ?? null;
+					break;
+				}
+
+				// All info tools — execute, feed results back, loop
+				messages.push({
+					role: "assistant",
+					content: assistantMessage.content ?? null,
+					tool_calls: assistantMessage.tool_calls,
+				});
+
+				// eslint-disable-next-line no-await-in-loop -- Sequential tool execution to preserve order
+				for (const ic of infoCalls) {
+					const args = JSON.parse(ic.function.arguments) as Record<string, unknown>;
+					const result = await executeInfoTool(message.guild, ic.function.name, args);
+					messages.push({
+						role: "tool",
+						tool_call_id: ic.id,
+						content: result,
+					});
+				}
 			}
-
-			const assistantMessage = choice.message;
-
-			// If text-only response (clarification/refusal)
-			if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {
-				const textContent = assistantMessage.content ?? "Nemam co odpovedet.";
-				await message.reply(textContent);
-				return;
-			}
-
-			// Parse function tool calls into planned actions
-			const functionCalls = assistantMessage.tool_calls.filter((tc) => tc.type === "function");
-			const actions: PlannedAction[] = functionCalls.map((tc) => {
-				const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
-				return {
-					toolCallId: tc.id,
-					functionName: tc.function.name,
-					arguments: args,
-					displaySummary: generateActionSummary(tc.function.name, args, guildContext),
-				};
-			});
 
 			if (actions.length === 0) {
-				const textContent = assistantMessage.content ?? "Nemam co odpovedet.";
-				await message.reply(textContent);
+				await message.reply(finalText ?? "Nemam co odpovedet.");
 				return;
 			}
 
-			// Build preview
+			// Build preview for action confirmation
 			const sessionId = generateSessionId();
-			const previewEmbed = buildPreviewEmbed(actions, assistantMessage.content ?? undefined);
+			const previewEmbed = buildPreviewEmbed(actions, finalText ?? undefined);
 			const buttons = buildConfirmButtons(sessionId);
 
 			const reply = await message.reply({
@@ -120,7 +156,6 @@ export function handleAdminAI(client: Client<true>): void {
 				components: [buttons.toJSON()],
 			});
 
-			// Store pending action
 			pendingActions.set(sessionId, {
 				id: sessionId,
 				guildId: message.guild.id,

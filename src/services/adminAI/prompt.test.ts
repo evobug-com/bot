@@ -61,6 +61,18 @@ describe("buildSystemPrompt", () => {
 		expect(prompt).toContain("NEVER guess");
 	});
 
+	it("includes strict clarification rule for ambiguous tokens", () => {
+		const prompt = buildSystemPrompt(testContext);
+
+		expect(prompt).toContain("STRICT CLARIFICATION RULE");
+	});
+
+	it("notes that new channels inherit category permissions", () => {
+		const prompt = buildSystemPrompt(testContext);
+
+		expect(prompt).toContain("inherit the category's permission overwrites");
+	});
+
 	it("includes instruction to respond in Czech", () => {
 		const prompt = buildSystemPrompt(testContext);
 

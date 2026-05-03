@@ -55,6 +55,50 @@ export const RenameChannelArgsSchema = z.object({
 
 export type RenameChannelArgs = z.infer<typeof RenameChannelArgsSchema>;
 
+export const CloneChannelArgsSchema = z.object({
+	source_channel_id: z.string(),
+	new_name: z.string(),
+	position: z.number().optional(),
+});
+
+export type CloneChannelArgs = z.infer<typeof CloneChannelArgsSchema>;
+
+export const DeleteChannelArgsSchema = z.object({
+	channel_id: z.string(),
+});
+
+export type DeleteChannelArgs = z.infer<typeof DeleteChannelArgsSchema>;
+
+export const CreateCategoryArgsSchema = z.object({
+	name: z.string(),
+	position: z.number().optional(),
+});
+
+export type CreateCategoryArgs = z.infer<typeof CreateCategoryArgsSchema>;
+
+export const AssignRoleArgsSchema = z.object({
+	member_id: z.string(),
+	role_id: z.string(),
+});
+
+export type AssignRoleArgs = z.infer<typeof AssignRoleArgsSchema>;
+
+export const RemoveRoleArgsSchema = z.object({
+	member_id: z.string(),
+	role_id: z.string(),
+});
+
+export type RemoveRoleArgs = z.infer<typeof RemoveRoleArgsSchema>;
+
+export const QueryAuditLogArgsSchema = z.object({
+	action_types: z.array(z.string()).optional(),
+	limit: z.number().int().min(1).max(50).optional(),
+	target_id: z.string().optional(),
+	user_id: z.string().optional(),
+});
+
+export type QueryAuditLogArgs = z.infer<typeof QueryAuditLogArgsSchema>;
+
 export interface PlannedAction {
 	toolCallId: string;
 	functionName: string;

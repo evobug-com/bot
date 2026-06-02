@@ -15,7 +15,7 @@
         "execa": "^9.6.1",
         "ffmpeg-static": "^5.3.0",
         "glob": "^13.0.6",
-        "livekit-server-sdk": "^2.15.3",
+        "livekit-server-sdk": "^2.15.4",
         "openai": "^6.41.0",
         "zod": "^4.4.3",
       },
@@ -57,7 +57,7 @@
 
     "@faker-js/faker": ["@faker-js/faker@10.4.0", "", {}, "sha512-sDBWI3yLy8EcDzgobvJTWq1MJYzAkQdpjXuPukga9wXonhpMRvd1Izuo2Qgwey2OiEoRIBr35RMU9HJRoOHzpw=="],
 
-    "@livekit/protocol": ["@livekit/protocol@1.45.8", "", { "dependencies": { "@bufbuild/protobuf": "^1.10.0" } }, "sha512-Q+l57E7w/xxOBFVWzdX5rkAZO7ffyF+rlDzNUYq2SU114+5aTyCq+PK4unaEVDNd4952Af7wteKr3sOgasGuaA=="],
+    "@livekit/protocol": ["@livekit/protocol@1.46.4", "", { "dependencies": { "@bufbuild/protobuf": "^1.10.0" } }, "sha512-yJZ8xvyVcs9CczK2V/EQQrSW0MA9VaZ1vL+FI6fd85KhIjfOg26HvrdUl2LZPT78Tu4R4opV4AW58eN5vgmzqg=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.2", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-sNXv5oLJ7ob93xkZ1XnxisYhGYXfaG9f65/ZgYuAu3qt7b3NadcOEhLvx28hv31PgX8SZJRYrAIPQilQmFpLVw=="],
 
@@ -261,7 +261,7 @@
 
     "jose": ["jose@5.10.0", "", {}, "sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg=="],
 
-    "livekit-server-sdk": ["livekit-server-sdk@2.15.3", "", { "dependencies": { "@bufbuild/protobuf": "^1.10.1", "@livekit/protocol": "^1.45.6", "camelcase-keys": "^9.0.0", "jose": "^5.1.2" } }, "sha512-CU+CaOsyiKR/8BW7myJ2LGNg7T66MV/HZx+AMeAiiGu8PQnVDwqJ42HEH61o20fH68e4cI+hYQcPA5Fs2aKv1g=="],
+    "livekit-server-sdk": ["livekit-server-sdk@2.15.4", "", { "dependencies": { "@bufbuild/protobuf": "^1.10.1", "@livekit/protocol": "^1.46.3", "camelcase-keys": "^9.0.0", "jose": "^5.1.2" } }, "sha512-L/Ynu5zH1Qjfifmk3LnymL2JpvtisMFCM2wf7iM6H42WZRx6yvRECXa0hiK9/zi7br8d1x/a7fQIw1yJ/bneOA=="],
 
     "lodash.snakecase": ["lodash.snakecase@4.1.1", "", {}, "sha512-QZ1d4xoBHYUeuouhEq3lk3Uq7ldgyFXGBhg04+oRLnIz8o9T65Eh+8YdroUwn846zchkA9yDsDl5CVVaV2nqYw=="],
 

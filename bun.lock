@@ -17,7 +17,7 @@
         "glob": "^13.0.6",
         "livekit-server-sdk": "^2.18.0",
         "openai": "^6.49.0",
-        "zod": "^4.5.4",
+        "zod": "^4.6.2",
       },
       "devDependencies": {
         "@faker-js/faker": "^10.6.0",
@@ -337,7 +337,7 @@
 
     "yoctocolors": ["yoctocolors@2.1.2", "", {}, "sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug=="],
 
-    "zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
+    "zod": ["zod@4.6.2", "", {}, "sha512-lh5RCAGFa1Cm2hjtNwLQhSs/AsqdWnTQaBER9fEwN/88pSh7KOtJavtBx/0VlkN/uFd61SwYmljLMDAsHlvzBQ=="],
 
     "@discordjs/rest/@discordjs/util": ["@discordjs/util@2.0.0-dev.1786968995-99af6d8be", "", { "dependencies": { "discord-api-types": "^0.38.50" } }, "sha512-oa9tqOKU9QdDUArlHbKEuWIAJC+/qak7fU5x9ZLolF1TIOlKEdceg36MEyoHvgCIlrLSQmIrfYSwGb0Bc9JgwA=="],
 

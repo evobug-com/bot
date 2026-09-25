@@ -11,7 +11,7 @@
         "@orpc/client": "^1.15.2",
         "@orpc/server": "^1.15.3",
         "discord.js": "dev",
-        "dotenv": "^17.4.2",
+        "dotenv": "^18.0.2",
         "execa": "^9.6.1",
         "ffmpeg-static": "^5.3.0",
         "glob": "^13.0.6",
@@ -223,7 +223,7 @@
 
     "discord.js": ["discord.js@15.0.0-dev.1790035407-dbb749062", "", { "dependencies": { "@discordjs/collection": "3.0.0-dev.1790035407-dbb749062", "@discordjs/formatters": "1.0.0-dev.1790035407-dbb749062", "@discordjs/rest": "3.0.0-dev.1790035407-dbb749062", "@discordjs/util": "2.0.0-dev.1790035407-dbb749062", "@discordjs/ws": "3.0.0-dev.1790035407-dbb749062", "@sapphire/snowflake": "3.5.5", "@vladfrangu/async_event_emitter": "^2.4.7", "discord-api-types": "^0.38.54", "fast-deep-equal": "3.1.3", "lodash.snakecase": "4.1.1", "magic-bytes.js": "^1.13.1", "tslib": "^2.8.1", "undici": "^8.10.1" } }, "sha512-3IGVjPQ5yNNEiD+x5cVcnXMQ/ItaBRhy/newffygagJiRGaE7k9WuG5OthGdkWU1hXC2zdQFQLS6nHzdqx/KOQ=="],
 
-    "dotenv": ["dotenv@17.4.2", "", {}, "sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw=="],
+    "dotenv": ["dotenv@18.0.2", "", { "bin": { "dotenv": "dist/index.cjs" } }, "sha512-wl0U3CxC0iobaryqEKpFJxzyp4AxQFYAKj/WWszXZr87vVHLi2yJv2syax5Vxt+u02xqNgE277rsc3lOKg9sPg=="],
 
     "env-paths": ["env-paths@2.2.1", "", {}, "sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A=="],
 
